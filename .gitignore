@@ -1,2 +1,16 @@
 
 .DS_Store
+ftl/AleAntlr3Grammar/aleGrammar/ALELexer.java
+ftl/AleAntlr3Grammar/aleGrammar/ALEParser.java
+ftl/AleAntlr3Grammar/aleGrammar/FTLCheckIdentifiers_FTLSurface.java
+ftl/AleAntlr3Grammar/aleGrammar/FTLCheckIdentifiersLexer.java
+ftl/AleAntlr3Grammar/aleGrammar/FTLCheckIdentifiersParser.java
+ftl/AleAntlr3Grammar/aleGrammar/FTLExpandTraits_FTLSurface.java
+ftl/AleAntlr3Grammar/aleGrammar/FTLExpandTraitsLexer.java
+ftl/AleAntlr3Grammar/aleGrammar/FTLExpandTraitsParser.java
+ftl/AleAntlr3Grammar/aleGrammar/FTLReorderToplevels_FTLSurface.java
+ftl/AleAntlr3Grammar/aleGrammar/FTLReorderToplevelsLexer.java
+ftl/AleAntlr3Grammar/aleGrammar/FTLReorderToplevelsParser.java
+ftl/AleAntlr3Grammar/aleGrammar/FTLSyntax_FTLSurface.java
+ftl/AleAntlr3Grammar/aleGrammar/FTLSyntaxLexer.java
+ftl/AleAntlr3Grammar/aleGrammar/FTLSyntaxParser.java
