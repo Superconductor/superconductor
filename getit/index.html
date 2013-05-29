@@ -1,0 +1,80 @@
+---
+layout: standard
+title: 'Get It'
+section: 'getit'
+---
+
+<div class="page-header">
+	<h1>Get Superconductor <small>view and create visualizations</small></h1>
+</div>
+
+
+<div class="row">
+	<div class="span10 offset1">
+		{% include caution-preview.html %}
+	</div>
+</div>
+
+<div class="row">	
+	<!-- Content -->
+	<div class="span12">
+		<p>If you want to get started viewing or creating Superconductor visualizations, you're in the right place. The instructions below will walk you through downloading and installing Superconductor for yourself.</p>
+				
+		<div class="section">
+			<h2 id="requirements">Requirements</h2>
+			<p>Because Superconductor is currently a developer preview, it requires the following: </p>
+			<ul>
+				<li>An Apple laptop or desktop computer</li>
+				<li>Mac OS X 10.8 ('Mountain Lion') or newer</li>
+				<li>A discrete GPU &mdash; an NVIDIA (preferred) or ATI graphics card available in your computer</l1>
+			</ul>
+			<p>We're working hard to add support for more platforms. Check back regularly if your platform is not currently supported.</p>
+		</div>
+		
+		<div class="section">
+			<h2 id="downloading">Downloading</h2>
+			
+			<p>The Superconductor code includes everything you need to create your own visualizations. If you just want to view visualizations, it's not strictly necessary. However, it does include a number of demo visualizations to try out.</p>
+			
+			<p>The best way to obtain a copy of the code is to clone our our <a href="https://github.com/Superconductor/superconductor">GitHub repo</a>. This will give you the latest copy of Superconductor, and allow you to keep up to date with a <code>git pull</code>.</p>
+			
+			<p>You can also download a snapshot of the latest version of our code from GitHub <a href="https://github.com/Superconductor/superconductor/archive/master.zip">here</a>.</p>
+		</div>
+		
+		<div class="section">	
+			<h2 id="viewing">Viewing Visualizations</h2>
+			<p>Underneath the hood, Superconductor uses the power of <a href="http://www.khronos.org/webcl/">WebCL</a> and <a href="http://www.khronos.org/webgl/">WebGL</a> to unleash your GPU to run big, interactive visualizations. <strong>To view Superconductor visualizations, you'll need a web browser which supports both together.</strong></p>
+			
+			<p>At present, WebCL is right on the bleeding edge of web standards, and so <strong>the only browser we are aware of that supports both WebCL and WebGL together is Samsung's version of WebKit</strong><!-- <sup><a id="footnote-browsers-origin" href="#footnote-browsers">1</a></sup> -->. As WebCL matures, we hope to see wider browser support. We are also actively working on alternative runtimes for when WebCL isn't available.</p>
+			
+			<p>To get and run WebKit-WebCL:
+				<ol>
+					<li>Be sure you've installed the latest version of Apple XCode from the app store, and have installed its Command Line Tools from XCode's preferences.</li>
+					<li>Clone Samsung's <a href="https://github.com/SRA-SiliconValley/webkit-webcl">WebKit-WebCL GitHub repo</a> (this may take a while to complete.)</li>
+					<li>In a Terminal window, <code>cd</code> to the root of the cloned repo and run <code>./Tools/Scripts/build-webkit</code> (this may take a while to complete.)</li>
+					<li>If WebKit-WebCL built successfully, you can now run a WebCL-enabled version of Safari by running <code>./Tools/Scripts/run-safari</code></li>
+				</ol>
+			</p>
+
+			<p class="warning-block"><span class="label label-warning">Warning</span> You will need to run the <code>run-safari</code> script from WebKit-WebCL every time you want to launch WebCL-enabled Safari. Running Safari any other way will launch the normal version of Safari, without WebCL support.</p>
+				
+			<p>You can test WebCL is enabled by opening the <code>./Examples/WebCL/Hello/index.html</code> web page included in WebKit-WebCL &mdash; you should see a message like "Computed 1014/1024 correct values" (it's OK if not all values were correct in this demo.)</p>
+			
+			<p>For more information on viewing the included Superconductor demo visualizations, see <a href="{{site.url}}demos/">the demo page</a>.</p>
+			
+			
+			
+			<!-- <small class="footnote" id="footnote-browsers"><sup><a href="#footnote-browsers-origin">1</a></sup>Nokia has <a href="http://webcl.nokiaresearch.com/">an implementation of WebCL for Firefox</a>, and while it supports both WebCL and WebGL, it does not support interaction between them, and so does not work with Superconductor.</small> -->
+
+		</div>
+		
+		
+		<div class="section">
+			<h2 id="viewing">Creating Visualizations</h2>
+			<p>Instructions coming soon!</p>
+		</div>
+		
+	
+		
+	</div> <!-- /Content -->
+</div> <!-- /.row -->
