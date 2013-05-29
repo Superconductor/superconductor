@@ -4,6 +4,8 @@
   {% assign getit_button_class = 'active' %}
 {% elsif page.section == 'demos' %}
   {% assign contact_button_class = 'active' %}
+{% elsif page.section == 'docs' %}
+    {% assign documents_button_class = 'active' %}
 {% endif %}
 
 <div class="navbar navbar-fixed-top">
@@ -19,19 +21,8 @@
         <ul class="nav">
           <li class="{{ home_button_class }}"><a href="{{ site.url }}index.html">Home</a></li>
           <li class="{{ getit_button_class }}"><a href="{{ site.url }}getit/">Get It</a></li>
-          <li class="{{ contact_button_class }}"><a href="{{ site.url }}demos/">Demos</a></li>
-          <li class="dropdown">
-            <a href="{{ site.url }}docs/" class="dropdown-toggle" data-toggle="dropdown">Documentation <b class="caret"></b></a>
-            <ul class="dropdown-menu">
-              <li><a href="#">Action</a></li>
-              <li><a href="#">Another action</a></li>
-              <li><a href="#">Something else here</a></li>
-              <li class="divider"></li>
-              <li class="nav-header">Nav header</li>
-              <li><a href="#">Separated link</a></li>
-              <li><a href="#">One more separated link</a></li>
-            </ul>
-          </li>
+          <li class="{{ contact_button_class }}"><a href="{{ site.url }}demos/">Examples</a></li>
+          <li class="{{ documents_button_class }}"><a href="{{ site.url }}docs/">Documentation</a></li>
         </ul>
       </div><!--/.nav-collapse -->
     </div>
