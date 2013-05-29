@@ -67,3 +67,11 @@
 .infobox p {
 	margin: 0;
 }
+
+.section p {
+	margin-top: 0em;
+}
+
+.section p + p {
+	margin-top: 1.75em;
+}
