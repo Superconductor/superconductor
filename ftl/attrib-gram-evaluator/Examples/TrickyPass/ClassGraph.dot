@@ -1,0 +1,83 @@
+digraph G{
+	subgraph cluster0{
+		color=black;
+		label="top-graph";
+		subgraph cluster1{
+			label="top";
+			node[style=filled];
+			top_d[label="d"];
+			top_b[label="b"];
+			top_a[label="a"];
+			top_c[label="$c"];
+			top_zero[label="$zero", shape=box];
+		}
+		subgraph cluster2{
+			label="midLevel";
+			node[style=filled];
+			top_midLevel_f[label="f"];
+			top_midLevel_g[label="g"];
+			top_midLevel_e[label="e"];
+			top_midLevel_h[label="h"];
+			top_midLevel_i[label="i"];
+		}
+		top_zero -> top_a[color=blue];
+		top_a -> top_midLevel_e[color=blue];
+		top_midLevel_e -> top_b[color=blue];
+		top_b -> top_midLevel_f[color=blue];
+		top_midLevel_g -> top_c[color=darkgreen];
+		top_midLevel_h -> top_c[color=darkgreen];
+		top_c -> top_d[color=darkgreen];
+		top_d -> top_midLevel_i[color=darkgreen];
+	}
+	subgraph cluster3{
+		color=black;
+		label="mid-graph";
+		subgraph cluster4{
+			label="mid";
+			node[style=filled];
+			mid_f[label="f"];
+			mid_g[label="g"];
+			mid_e[label="e"];
+			mid_h[label="h"];
+			mid_i[label="i"];
+			mid_o[label="$o"];
+		}
+		subgraph cluster5{
+			label="botLevel";
+			node[style=filled];
+			mid_botLevel_n[label="n"];
+			mid_botLevel_l[label="l"];
+			mid_botLevel_m[label="m"];
+			mid_botLevel_j[label="j"];
+			mid_botLevel_k[label="k"];
+		}
+		parent0[label="Parent",style=dotted];
+		mid_f -> mid_botLevel_j[color=blue];
+		mid_botLevel_k -> mid_g[color=darkgreen];
+		mid_g -> mid_botLevel_l[color=darkgreen];
+		mid_botLevel_m -> mid_h[color=indigo];
+		mid_h -> mid_o[color=indigo];
+		mid_i -> mid_o[color=indigo];
+		mid_o -> mid_botLevel_n[color=indigo];
+		mid_g -> parent0[color=darkgreen,label="1",fontcolor=darkgreen];
+		mid_h -> parent0[color=indigo,label="1",fontcolor=darkgreen];
+	}
+	subgraph cluster6{
+		color=black;
+		label="bot-graph";
+		subgraph cluster7{
+			label="bot";
+			node[style=filled];
+			bot_n[label="n"];
+			bot_l[label="l"];
+			bot_m[label="m"];
+			bot_j[label="j"];
+			bot_k[label="k"];
+		}
+		parent1[label="Parent",style=dotted];
+		bot_j -> bot_k[color=blue];
+		bot_l -> bot_m[color=blue];
+		bot_k -> parent1[color=blue,label="1",fontcolor=darkgreen];
+		bot_m -> parent1[color=blue,label="2",fontcolor=indigo];
+	}
+}

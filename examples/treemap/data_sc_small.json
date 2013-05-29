@@ -1,0 +1,566 @@
+data = {
+	"class": "Root",
+	"width": 400, "height": 400,
+	"fixWidth": 1.0,
+	"minTurnout": 0.1, "maxTurnout": 0.3,
+	"showFraud": 0.0, "showProjected": 0.0,
+	"showJavaScript": 0.0,
+	"children":{"childs": {"class":"CountryContainer",
+		"children": {"childs": [
+			{"class":"Region",
+			"children":{"childs": [
+				{"class":"District",
+				"children":{ "childs": [
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 335, "totalVotesUR": 280, "urVotes": 0.835820895522388, "urVotesProjected": 0.552417918141777, "turnout": 0.797619047619048, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 220, "totalVotesUR": 158, "urVotes": 0.718181818181818, "urVotesProjected": 0.552417918141777, "turnout": 0.753424657534247, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1417, "totalVotesUR": 921, "urVotes": 0.649964714184898, "urVotesProjected": 0.552417918141777, "turnout": 0.80465644520159, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1406, "totalVotesUR": 988, "urVotes": 0.702702702702703, "urVotesProjected": 0.552417918141777, "turnout": 0.797504254112309, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1009, "totalVotesUR": 834, "urVotes": 0.826560951437066, "urVotesProjected": 0.552417918141777, "turnout": 0.911472448057814, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1956, "totalVotesUR": 1319, "urVotes": 0.674335378323108, "urVotesProjected": 0.552417918141777, "turnout": 0.863957597173145, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1118, "totalVotesUR": 774, "urVotes": 0.692307692307692, "urVotesProjected": 0.552417918141777, "turnout": 0.696573208722741, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 540, "totalVotesUR": 496, "urVotes": 0.918518518518519, "urVotesProjected": 0.552417918141777, "turnout": 0.906040268456376, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1465, "totalVotesUR": 1208, "urVotes": 0.82457337883959, "urVotesProjected": 0.552417918141777, "turnout": 0.936102236421725, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1334, "totalVotesUR": 1183, "urVotes": 0.886806596701649, "urVotesProjected": 0.552417918141777, "turnout": 0.897108271687962, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 970, "totalVotesUR": 651, "urVotes": 0.671134020618557, "urVotesProjected": 0.552417918141777, "turnout": 0.766192733017378, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}}
+				]}},
+				{"class":"District",
+				"children":{ "childs": [
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 396, "totalVotesUR": 356, "urVotes": 0.898989898989899, "urVotesProjected": 0.496239381661162, "turnout": 0.635634028892456, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 962, "totalVotesUR": 560, "urVotes": 0.582120582120582, "urVotesProjected": 0.496239381661162, "turnout": 0.532668881506091, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 459, "totalVotesUR": 329, "urVotes": 0.71677559912854, "urVotesProjected": 0.496239381661162, "turnout": 0.767558528428094, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 990, "totalVotesUR": 376, "urVotes": 0.37979797979798, "urVotesProjected": 0.496239381661162, "turnout": 0.471653168175322, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1317, "totalVotesUR": 661, "urVotes": 0.501898253606682, "urVotesProjected": 0.496239381661162, "turnout": 0.638700290979631, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 184, "totalVotesUR": 89, "urVotes": 0.483695652173913, "urVotesProjected": 0.496239381661162, "turnout": 0.578616352201258, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 2515, "totalVotesUR": 1880, "urVotes": 0.747514910536779, "urVotesProjected": 0.496239381661162, "turnout": 0.955910300266058, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 505, "totalVotesUR": 248, "urVotes": 0.491089108910891, "urVotesProjected": 0.496239381661162, "turnout": 0.424013434089001, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 771, "totalVotesUR": 397, "urVotes": 0.514915693904021, "urVotesProjected": 0.496239381661162, "turnout": 0.445407279029463, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1010, "totalVotesUR": 746, "urVotes": 0.738613861386139, "urVotesProjected": 0.496239381661162, "turnout": 0.75037147102526, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 916, "totalVotesUR": 422, "urVotes": 0.460698689956332, "urVotesProjected": 0.496239381661162, "turnout": 0.416552978626648, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 563, "totalVotesUR": 300, "urVotes": 0.532859680284192, "urVotesProjected": 0.496239381661162, "turnout": 0.543961352657005, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 547, "totalVotesUR": 214, "urVotes": 0.391224862888483, "urVotesProjected": 0.496239381661162, "turnout": 0.535749265426053, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 876, "totalVotesUR": 534, "urVotes": 0.60958904109589, "urVotesProjected": 0.496239381661162, "turnout": 0.467449306296692, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 497, "totalVotesUR": 285, "urVotes": 0.573440643863179, "urVotesProjected": 0.496239381661162, "turnout": 0.468426013195099, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1133, "totalVotesUR": 574, "urVotes": 0.506619593998235, "urVotesProjected": 0.496239381661162, "turnout": 0.397125832457063, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1332, "totalVotesUR": 675, "urVotes": 0.506756756756757, "urVotesProjected": 0.496239381661162, "turnout": 0.480692890653194, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 937, "totalVotesUR": 431, "urVotes": 0.459978655282818, "urVotesProjected": 0.496239381661162, "turnout": 0.454413191076625, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 715, "totalVotesUR": 223, "urVotes": 0.311888111888112, "urVotesProjected": 0.496239381661162, "turnout": 0.456577266922094, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 182, "totalVotesUR": 95, "urVotes": 0.521978021978022, "urVotesProjected": 0.496239381661162, "turnout": 0.5814696485623, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 644, "totalVotesUR": 276, "urVotes": 0.428571428571429, "urVotesProjected": 0.496239381661162, "turnout": 0.355604638321369, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1318, "totalVotesUR": 713, "urVotes": 0.540971168437026, "urVotesProjected": 0.496239381661162, "turnout": 0.542833607907743, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}}
+				]}},
+				{"class":"District",
+				"children":{ "childs": [
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 877, "totalVotesUR": 301, "urVotes": 0.343215507411631, "urVotesProjected": 0.35679396492211, "turnout": 0.590572390572391, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 80, "totalVotesUR": 60, "urVotes": 0.75, "urVotesProjected": 0.35679396492211, "turnout": 0.73394495412844, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 653, "totalVotesUR": 254, "urVotes": 0.388973966309342, "urVotesProjected": 0.35679396492211, "turnout": 0.440026954177898, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 100, "totalVotesUR": 37, "urVotes": 0.37, "urVotesProjected": 0.35679396492211, "turnout": 0.884955752212389, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 287, "totalVotesUR": 125, "urVotes": 0.435540069686411, "urVotesProjected": 0.35679396492211, "turnout": 0.59297520661157, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 536, "totalVotesUR": 264, "urVotes": 0.492537313432836, "urVotesProjected": 0.35679396492211, "turnout": 0.554291623578076, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 838, "totalVotesUR": 346, "urVotes": 0.412887828162291, "urVotesProjected": 0.35679396492211, "turnout": 0.737676056338028, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 91, "totalVotesUR": 57, "urVotes": 0.626373626373626, "urVotesProjected": 0.35679396492211, "turnout": 0.834862385321101, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 164, "totalVotesUR": 79, "urVotes": 0.481707317073171, "urVotesProjected": 0.35679396492211, "turnout": 0.796116504854369, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 70, "totalVotesUR": 43, "urVotes": 0.614285714285714, "urVotesProjected": 0.35679396492211, "turnout": 0.625, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 100, "totalVotesUR": 61, "urVotes": 0.61, "urVotesProjected": 0.35679396492211, "turnout": 0.568181818181818, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 533, "totalVotesUR": 140, "urVotes": 0.26266416510319, "urVotesProjected": 0.35679396492211, "turnout": 0.443796835970025, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 333, "totalVotesUR": 127, "urVotes": 0.381381381381381, "urVotesProjected": 0.35679396492211, "turnout": 0.591474245115453, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 860, "totalVotesUR": 340, "urVotes": 0.395348837209302, "urVotesProjected": 0.35679396492211, "turnout": 0.528580208973571, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 367, "totalVotesUR": 232, "urVotes": 0.632152588555858, "urVotesProjected": 0.35679396492211, "turnout": 0.656529516994633, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 392, "totalVotesUR": 205, "urVotes": 0.522959183673469, "urVotesProjected": 0.35679396492211, "turnout": 0.537722908093278, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 760, "totalVotesUR": 306, "urVotes": 0.402631578947368, "urVotesProjected": 0.35679396492211, "turnout": 0.520547945205479, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}}
+				]}},
+				{"class":"District",
+				"children":{ "childs": [
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 190, "totalVotesUR": 92, "urVotes": 0.484210526315789, "urVotesProjected": 0.338543724789932, "turnout": 0.558823529411765, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 147, "totalVotesUR": 97, "urVotes": 0.659863945578231, "urVotesProjected": 0.338543724789932, "turnout": 0.620253164556962, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1160, "totalVotesUR": 380, "urVotes": 0.327586206896552, "urVotesProjected": 0.338543724789932, "turnout": 0.56779246206559, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 101, "totalVotesUR": 43, "urVotes": 0.425742574257426, "urVotesProjected": 0.338543724789932, "turnout": 0.795275590551181, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 224, "totalVotesUR": 87, "urVotes": 0.388392857142857, "urVotesProjected": 0.338543724789932, "turnout": 0.620498614958449, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 234, "totalVotesUR": 70, "urVotes": 0.299145299145299, "urVotesProjected": 0.338543724789932, "turnout": 0.627345844504021, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 222, "totalVotesUR": 90, "urVotes": 0.405405405405405, "urVotesProjected": 0.338543724789932, "turnout": 0.510344827586207, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 118, "totalVotesUR": 70, "urVotes": 0.593220338983051, "urVotesProjected": 0.338543724789932, "turnout": 0.710843373493976, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1413, "totalVotesUR": 402, "urVotes": 0.284501061571125, "urVotesProjected": 0.338543724789932, "turnout": 0.532805429864253, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 853, "totalVotesUR": 260, "urVotes": 0.304806565064478, "urVotesProjected": 0.338543724789932, "turnout": 0.983852364475202, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 179, "totalVotesUR": 79, "urVotes": 0.441340782122905, "urVotesProjected": 0.338543724789932, "turnout": 0.637010676156584, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 154, "totalVotesUR": 62, "urVotes": 0.402597402597403, "urVotesProjected": 0.338543724789932, "turnout": 0.693693693693694, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 61, "totalVotesUR": 29, "urVotes": 0.475409836065574, "urVotesProjected": 0.338543724789932, "turnout": 0.448529411764706, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 273, "totalVotesUR": 139, "urVotes": 0.509157509157509, "urVotesProjected": 0.338543724789932, "turnout": 0.714659685863874, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 125, "totalVotesUR": 68, "urVotes": 0.544, "urVotesProjected": 0.338543724789932, "turnout": 0.657894736842105, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 173, "totalVotesUR": 91, "urVotes": 0.526011560693642, "urVotesProjected": 0.338543724789932, "turnout": 0.729957805907173, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}}
+				]}},
+				{"class":"District",
+				"children":{ "childs": [
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 217, "totalVotesUR": 195, "urVotes": 0.898617511520737, "urVotesProjected": 0.428197391143625, "turnout": 0.923404255319149, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1712, "totalVotesUR": 1459, "urVotes": 0.852219626168224, "urVotesProjected": 0.428197391143625, "turnout": 0.958566629339306, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 541, "totalVotesUR": 355, "urVotes": 0.656192236598891, "urVotesProjected": 0.428197391143625, "turnout": 0.947460595446585, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 368, "totalVotesUR": 298, "urVotes": 0.809782608695652, "urVotesProjected": 0.428197391143625, "turnout": 0.926952141057935, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 466, "totalVotesUR": 420, "urVotes": 0.901287553648069, "urVotesProjected": 0.428197391143625, "turnout": 0.919132149901381, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+
+						]}}
+					]}}
+				]}},
+				{"class":"District",
+				"children":{ "childs": [
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1075, "totalVotesUR": 323, "urVotes": 0.30046511627907, "urVotesProjected": 0.481762219632354, "turnout": 0.58202490525176, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 460, "totalVotesUR": 253, "urVotes": 0.55, "urVotesProjected": 0.481762219632354, "turnout": 0.543735224586288, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 289, "totalVotesUR": 130, "urVotes": 0.449826989619377, "urVotesProjected": 0.481762219632354, "turnout": 0.7225, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 80, "totalVotesUR": 62, "urVotes": 0.775, "urVotesProjected": 0.481762219632354, "turnout": 0.754716981132076, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 528, "totalVotesUR": 342, "urVotes": 0.647727272727273, "urVotesProjected": 0.481762219632354, "turnout": 0.587973273942094, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 199, "totalVotesUR": 97, "urVotes": 0.487437185929648, "urVotesProjected": 0.481762219632354, "turnout": 0.995, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 213, "totalVotesUR": 148, "urVotes": 0.694835680751174, "urVotesProjected": 0.481762219632354, "turnout": 0.719594594594595, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 329, "totalVotesUR": 213, "urVotes": 0.64741641337386, "urVotesProjected": 0.481762219632354, "turnout": 0.702991452991453, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 76, "totalVotesUR": 40, "urVotes": 0.526315789473684, "urVotesProjected": 0.481762219632354, "turnout": 0.730769230769231, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 309, "totalVotesUR": 174, "urVotes": 0.563106796116505, "urVotesProjected": 0.481762219632354, "turnout": 0.705479452054795, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 110, "totalVotesUR": 50, "urVotes": 0.454545454545455, "urVotesProjected": 0.481762219632354, "turnout": 0.670731707317073, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 33, "totalVotesUR": 5, "urVotes": 0.151515151515152, "urVotesProjected": 0.481762219632354, "turnout": 0.66, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 341, "totalVotesUR": 142, "urVotes": 0.416422287390029, "urVotesProjected": 0.481762219632354, "turnout": 0.613309352517986, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 304, "totalVotesUR": 175, "urVotes": 0.575657894736842, "urVotesProjected": 0.481762219632354, "turnout": 0.725536992840095, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 218, "totalVotesUR": 122, "urVotes": 0.559633027522936, "urVotesProjected": 0.481762219632354, "turnout": 0.801470588235294, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 532, "totalVotesUR": 316, "urVotes": 0.593984962406015, "urVotesProjected": 0.481762219632354, "turnout": 0.610792192881745, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 117, "totalVotesUR": 68, "urVotes": 0.581196581196581, "urVotesProjected": 0.481762219632354, "turnout": 0.735849056603774, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}}
+				]}},
+				{"class":"District",
+				"children":{ "childs": [
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1703, "totalVotesUR": 847, "urVotes": 0.497357604227833, "urVotesProjected": 0.628553932289388, "turnout": 0.757899421450823, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1068, "totalVotesUR": 923, "urVotes": 0.864232209737828, "urVotesProjected": 0.628553932289388, "turnout": 0.907391673746814, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1421, "totalVotesUR": 700, "urVotes": 0.492610837438424, "urVotesProjected": 0.628553932289388, "turnout": 0.822337962962963, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1631, "totalVotesUR": 1441, "urVotes": 0.883507050889025, "urVotesProjected": 0.628553932289388, "turnout": 0.9504662004662, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 2133, "totalVotesUR": 1145, "urVotes": 0.53680262541022, "urVotesProjected": 0.628553932289388, "turnout": 0.70981697171381, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1184, "totalVotesUR": 1057, "urVotes": 0.892736486486487, "urVotesProjected": 0.628553932289388, "turnout": 0.937450514647664, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 722, "totalVotesUR": 432, "urVotes": 0.598337950138504, "urVotesProjected": 0.628553932289388, "turnout": 0.655172413793103, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1524, "totalVotesUR": 750, "urVotes": 0.492125984251969, "urVotesProjected": 0.628553932289388, "turnout": 0.724679029957204, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1105, "totalVotesUR": 638, "urVotes": 0.57737556561086, "urVotesProjected": 0.628553932289388, "turnout": 0.634328358208955, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 2400, "totalVotesUR": 2152, "urVotes": 0.896666666666667, "urVotesProjected": 0.628553932289388, "turnout": 0.937866354044549, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1446, "totalVotesUR": 777, "urVotes": 0.537344398340249, "urVotesProjected": 0.628553932289388, "turnout": 0.700581395348837, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1579, "totalVotesUR": 818, "urVotes": 0.518049398353388, "urVotesProjected": 0.628553932289388, "turnout": 0.784401390958768, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1999, "totalVotesUR": 1014, "urVotes": 0.507253626813407, "urVotesProjected": 0.628553932289388, "turnout": 0.761523809523809, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1245, "totalVotesUR": 638, "urVotes": 0.512449799196787, "urVotesProjected": 0.628553932289388, "turnout": 0.914096916299559, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1890, "totalVotesUR": 1353, "urVotes": 0.715873015873016, "urVotesProjected": 0.628553932289388, "turnout": 0.736268017140631, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1512, "totalVotesUR": 1097, "urVotes": 0.725529100529101, "urVotesProjected": 0.628553932289388, "turnout": 0.750744786494538, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 2047, "totalVotesUR": 1814, "urVotes": 0.886174890083048, "urVotesProjected": 0.628553932289388, "turnout": 0.925825418362732, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1531, "totalVotesUR": 600, "urVotes": 0.391900718484651, "urVotesProjected": 0.628553932289388, "turnout": 0.74356483729966, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 641, "totalVotesUR": 426, "urVotes": 0.664586583463339, "urVotesProjected": 0.628553932289388, "turnout": 0.814485387547649, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1867, "totalVotesUR": 925, "urVotes": 0.495447241564006, "urVotesProjected": 0.628553932289388, "turnout": 0.849795175238962, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 427, "totalVotesUR": 258, "urVotes": 0.604215456674473, "urVotesProjected": 0.628553932289388, "turnout": 0.885892116182573, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 967, "totalVotesUR": 582, "urVotes": 0.601861427094106, "urVotesProjected": 0.628553932289388, "turnout": 0.636603028308097, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1766, "totalVotesUR": 1309, "urVotes": 0.741223103057758, "urVotesProjected": 0.628553932289388, "turnout": 0.82794186591655, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 757, "totalVotesUR": 435, "urVotes": 0.574636723910172, "urVotesProjected": 0.628553932289388, "turnout": 0.896919431279621, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 304, "totalVotesUR": 211, "urVotes": 0.694078947368421, "urVotesProjected": 0.628553932289388, "turnout": 0.91566265060241, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1080, "totalVotesUR": 645, "urVotes": 0.597222222222222, "urVotesProjected": 0.628553932289388, "turnout": 0.72972972972973, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1702, "totalVotesUR": 853, "urVotes": 0.50117508813161, "urVotesProjected": 0.628553932289388, "turnout": 0.767357980162308, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1199, "totalVotesUR": 787, "urVotes": 0.656380316930776, "urVotesProjected": 0.628553932289388, "turnout": 0.836122733612273, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1148, "totalVotesUR": 949, "urVotes": 0.826655052264808, "urVotesProjected": 0.628553932289388, "turnout": 0.956666666666667, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 768, "totalVotesUR": 443, "urVotes": 0.576822916666667, "urVotesProjected": 0.628553932289388, "turnout": 0.722483537158984, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 167, "totalVotesUR": 133, "urVotes": 0.796407185628742, "urVotesProjected": 0.628553932289388, "turnout": 0.888297872340426, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 641, "totalVotesUR": 274, "urVotes": 0.427457098283931, "urVotesProjected": 0.628553932289388, "turnout": 0.94962962962963, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1689, "totalVotesUR": 875, "urVotes": 0.51805802249852, "urVotesProjected": 0.628553932289388, "turnout": 0.710260723296888, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1016, "totalVotesUR": 717, "urVotes": 0.705708661417323, "urVotesProjected": 0.628553932289388, "turnout": 0.897526501766785, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}}
+				]}}
+			]}}
+,
+			{"class":"Region",
+			"children":{"childs": [
+				{"class":"District",
+				"children":{ "childs": [
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 180, "totalVotesUR": 75, "urVotes": 0.416666666666667, "urVotesProjected": 0.29354735118871, "turnout": 0.746887966804979, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 674, "totalVotesUR": 190, "urVotes": 0.281899109792285, "urVotesProjected": 0.29354735118871, "turnout": 0.57167090754877, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 115, "totalVotesUR": 50, "urVotes": 0.434782608695652, "urVotesProjected": 0.29354735118871, "turnout": 0.649717514124294, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 869, "totalVotesUR": 243, "urVotes": 0.279631760644419, "urVotesProjected": 0.29354735118871, "turnout": 0.500864553314121, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 950, "totalVotesUR": 205, "urVotes": 0.215789473684211, "urVotesProjected": 0.29354735118871, "turnout": 0.556531927357938, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 159, "totalVotesUR": 51, "urVotes": 0.320754716981132, "urVotesProjected": 0.29354735118871, "turnout": 0.554006968641115, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 288, "totalVotesUR": 127, "urVotes": 0.440972222222222, "urVotesProjected": 0.29354735118871, "turnout": 0.663594470046083, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 135, "totalVotesUR": 77, "urVotes": 0.57037037037037, "urVotesProjected": 0.29354735118871, "turnout": 0.76271186440678, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1148, "totalVotesUR": 249, "urVotes": 0.216898954703833, "urVotesProjected": 0.29354735118871, "turnout": 0.575150300601202, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 948, "totalVotesUR": 275, "urVotes": 0.290084388185654, "urVotesProjected": 0.29354735118871, "turnout": 0.522890237175952, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 812, "totalVotesUR": 204, "urVotes": 0.251231527093596, "urVotesProjected": 0.29354735118871, "turnout": 0.52522639068564, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1053, "totalVotesUR": 283, "urVotes": 0.268755935422602, "urVotesProjected": 0.29354735118871, "turnout": 0.618683901292597, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 76, "totalVotesUR": 38, "urVotes": 0.5, "urVotesProjected": 0.29354735118871, "turnout": 0.808510638297872, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 154, "totalVotesUR": 44, "urVotes": 0.285714285714286, "urVotesProjected": 0.29354735118871, "turnout": 0.758620689655172, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1083, "totalVotesUR": 290, "urVotes": 0.267774699907664, "urVotesProjected": 0.29354735118871, "turnout": 0.576063829787234, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 162, "totalVotesUR": 64, "urVotes": 0.395061728395062, "urVotesProjected": 0.29354735118871, "turnout": 0.630350194552529, "inJavascript": 1, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 998, "totalVotesUR": 249, "urVotes": 0.249498997995992, "urVotesProjected": 0.29354735118871, "turnout": 0.583625730994152, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1124, "totalVotesUR": 264, "urVotes": 0.234875444839858, "urVotesProjected": 0.29354735118871, "turnout": 0.599466666666667, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1005, "totalVotesUR": 238, "urVotes": 0.23681592039801, "urVotesProjected": 0.29354735118871, "turnout": 0.548880393227744, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 980, "totalVotesUR": 201, "urVotes": 0.205102040816327, "urVotesProjected": 0.29354735118871, "turnout": 0.59286146400484, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 199, "totalVotesUR": 83, "urVotes": 0.417085427135678, "urVotesProjected": 0.29354735118871, "turnout": 0.750943396226415, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1059, "totalVotesUR": 288, "urVotes": 0.271954674220963, "urVotesProjected": 0.29354735118871, "turnout": 0.573983739837398, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 995, "totalVotesUR": 309, "urVotes": 0.310552763819095, "urVotesProjected": 0.29354735118871, "turnout": 0.541643984757757, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 181, "totalVotesUR": 81, "urVotes": 0.447513812154696, "urVotesProjected": 0.29354735118871, "turnout": 0.685606060606061, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 884, "totalVotesUR": 275, "urVotes": 0.311085972850679, "urVotesProjected": 0.29354735118871, "turnout": 0.558080808080808, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 1052, "totalVotesUR": 295, "urVotes": 0.28041825095057, "urVotesProjected": 0.29354735118871, "turnout": 0.604250430786904, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 863, "totalVotesUR": 179, "urVotes": 0.207415990730012, "urVotesProjected": 0.29354735118871, "turnout": 0.5493316359007, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 654, "totalVotesUR": 173, "urVotes": 0.264525993883792, "urVotesProjected": 0.29354735118871, "turnout": 0.395166163141994, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}}
+				]}},
+				{"class":"District",
+				"children":{ "childs": [
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 43, "totalVotesUR": 20, "urVotes": 0.465116279069767, "urVotesProjected": 0.429103672236012, "turnout": 0.914893617021277, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 276, "totalVotesUR": 161, "urVotes": 0.583333333333333, "urVotesProjected": 0.429103672236012, "turnout": 0.715025906735751, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 305, "totalVotesUR": 162, "urVotes": 0.531147540983607, "urVotesProjected": 0.429103672236012, "turnout": 0.749385749385749, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 62, "totalVotesUR": 33, "urVotes": 0.532258064516129, "urVotesProjected": 0.429103672236012, "turnout": 0.849315068493151, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 369, "totalVotesUR": 152, "urVotes": 0.411924119241192, "urVotesProjected": 0.429103672236012, "turnout": 0.508264462809917, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 103, "totalVotesUR": 44, "urVotes": 0.427184466019417, "urVotesProjected": 0.429103672236012, "turnout": 0.677631578947368, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 310, "totalVotesUR": 208, "urVotes": 0.670967741935484, "urVotesProjected": 0.429103672236012, "turnout": 0.754257907542579, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 112, "totalVotesUR": 59, "urVotes": 0.526785714285714, "urVotesProjected": 0.429103672236012, "turnout": 0.73202614379085, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 138, "totalVotesUR": 90, "urVotes": 0.652173913043478, "urVotesProjected": 0.429103672236012, "turnout": 0.907894736842105, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 111, "totalVotesUR": 49, "urVotes": 0.441441441441441, "urVotesProjected": 0.429103672236012, "turnout": 0.552238805970149, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 74, "totalVotesUR": 36, "urVotes": 0.486486486486487, "urVotesProjected": 0.429103672236012, "turnout": 0.973684210526316, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 967, "totalVotesUR": 387, "urVotes": 0.400206825232678, "urVotesProjected": 0.429103672236012, "turnout": 0.591437308868502, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 269, "totalVotesUR": 168, "urVotes": 0.62453531598513, "urVotesProjected": 0.429103672236012, "turnout": 0.905723905723906, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 250, "totalVotesUR": 124, "urVotes": 0.496, "urVotesProjected": 0.429103672236012, "turnout": 0.58411214953271, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 182, "totalVotesUR": 100, "urVotes": 0.549450549450549, "urVotesProjected": 0.429103672236012, "turnout": 0.598684210526316, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 569, "totalVotesUR": 334, "urVotes": 0.586994727592267, "urVotesProjected": 0.429103672236012, "turnout": 0.666276346604215, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 265, "totalVotesUR": 109, "urVotes": 0.411320754716981, "urVotesProjected": 0.429103672236012, "turnout": 0.33083645443196, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 1002, "totalVotesUR": 375, "urVotes": 0.374251497005988, "urVotesProjected": 0.429103672236012, "turnout": 0.529878371232152, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 168, "totalVotesUR": 120, "urVotes": 0.714285714285714, "urVotesProjected": 0.429103672236012, "turnout": 0.8, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 507, "totalVotesUR": 192, "urVotes": 0.378698224852071, "urVotesProjected": 0.429103672236012, "turnout": 0.388208269525268, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 366, "totalVotesUR": 146, "urVotes": 0.398907103825137, "urVotesProjected": 0.429103672236012, "turnout": 0.412626832018038, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 78, "totalVotesUR": 28, "urVotes": 0.358974358974359, "urVotesProjected": 0.429103672236012, "turnout": 0.516556291390728, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 138, "totalVotesUR": 60, "urVotes": 0.434782608695652, "urVotesProjected": 0.429103672236012, "turnout": 0.567901234567901, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 893, "totalVotesUR": 313, "urVotes": 0.3505039193729, "urVotesProjected": 0.429103672236012, "turnout": 0.588274044795784, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 352, "totalVotesUR": 195, "urVotes": 0.553977272727273, "urVotesProjected": 0.429103672236012, "turnout": 0.60377358490566, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 407, "totalVotesUR": 169, "urVotes": 0.415233415233415, "urVotesProjected": 0.429103672236012, "turnout": 0.459367945823928, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 287, "totalVotesUR": 109, "urVotes": 0.379790940766551, "urVotesProjected": 0.429103672236012, "turnout": 0.63215859030837, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 152, "totalVotesUR": 87, "urVotes": 0.572368421052632, "urVotesProjected": 0.429103672236012, "turnout": 0.44574780058651, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 177, "totalVotesUR": 63, "urVotes": 0.355932203389831, "urVotesProjected": 0.429103672236012, "turnout": 0.302564102564103, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 48, "totalVotesUR": 20, "urVotes": 0.416666666666667, "urVotesProjected": 0.429103672236012, "turnout": 1, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}},
+					{"class":"HSquare",
+					"children":{ "childs": [
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 78, "totalVotesUR": 53, "urVotes": 0.67948717948718, "urVotesProjected": 0.429103672236012, "turnout": 0.702702702702703, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 359, "totalVotesUR": 125, "urVotes": 0.348189415041783, "urVotesProjected": 0.429103672236012, "turnout": 0.51878612716763, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 859, "totalVotesUR": 288, "urVotes": 0.335273573923166, "urVotesProjected": 0.429103672236012, "turnout": 0.386067415730337, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 40, "totalVotesUR": 25, "urVotes": 0.625, "urVotesProjected": 0.429103672236012, "turnout": 0.701754385964912, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 482, "totalVotesUR": 213, "urVotes": 0.441908713692946, "urVotesProjected": 0.429103672236012, "turnout": 0.444649446494465, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}},
+						{"class":"VSquare",
+						"children":{ "childs": [
+							{"class":"PollingPlace","totalVotes": 447, "totalVotesUR": 145, "urVotes": 0.324384787472036, "urVotesProjected": 0.429103672236012, "turnout": 0.428571428571429, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 599, "totalVotesUR": 195, "urVotes": 0.325542570951586, "urVotesProjected": 0.429103672236012, "turnout": 0.450037565740045, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 214, "totalVotesUR": 126, "urVotes": 0.588785046728972, "urVotesProjected": 0.429103672236012, "turnout": 0.725423728813559, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 466, "totalVotesUR": 194, "urVotes": 0.416309012875536, "urVotesProjected": 0.429103672236012, "turnout": 0.353297952994693, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0},
+							{"class":"PollingPlace","totalVotes": 97, "totalVotesUR": 42, "urVotes": 0.43298969072165, "urVotesProjected": 0.429103672236012, "turnout": 0.524324324324324, "inJavascript": 0, "defcolor": 16777215, "urcolor": 16711680,"fraudcolor": 0}
+						]}}
+					]}}
+				]}}
+			]}}
+		]}
+	}
+}};

@@ -1,0 +1,11 @@
+interface I { 
+  input x : int;
+}
+class C : I {
+  attributes {
+    var y : int;
+  }
+  actions {
+    y := x;
+  }
+}

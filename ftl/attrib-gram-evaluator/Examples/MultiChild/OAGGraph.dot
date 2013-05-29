@@ -1,0 +1,87 @@
+digraph G{
+	subgraph cluster0{
+		color=blue;
+		node[style=filled];
+		label="childA";
+		childA_f[label="f", shape=box];
+		childA_c[label="c"];
+		childA_d[label="d"];
+	}
+	subgraph cluster1{
+		color=blue;
+		node[style=filled];
+		label="top";
+		top_x[label="x"];
+		top_y[label="y"];
+	}
+	subgraph cluster2{
+		color=blue;
+		node[style=filled];
+		label="node";
+		node_a[label="a"];
+		node_b[label="b"];
+		node_z[label="z"];
+	}
+	subgraph cluster3{
+		color=blue;
+		node[style=filled];
+		label="childB";
+		childB_g[label="g", shape=box];
+		childB_e[label="e"];
+		childB_h[label="h"];
+	}
+	subgraph cluster4{
+		color=black;
+		node[style=filled];
+		label="childAImp";
+		childAImp_c[label="c"];
+		childAImp_d[label="d"];
+		childAImp_f[label="f", shape=box];
+	}
+	subgraph cluster5{
+		color=black;
+		node[style=filled];
+		label="childBImp";
+		childBImp_e[label="e"];
+		childBImp_h[label="h"];
+		childBImp_g[label="g", shape=box];
+	}
+	subgraph cluster6{
+		color=black;
+		node[style=filled];
+		label="nodeImp";
+		nodeImp_a[label="a"];
+		nodeImp_b[label="b"];
+		nodeImp_z[label="z"];
+	}
+	subgraph cluster7{
+		color=black;
+		node[style=filled];
+		label="topImp";
+		topImp_x[label="x"];
+		topImp_y[label="y"];
+		topImp_w[label="$w", shape=box];
+	}
+	childB_e -> childB_h[style=dotted];
+	childBImp_g -> childBImp_h;
+	childAImp_f -> childAImp_d[style=dotted];
+	childAImp_f -> childAImp_c;
+	nodeImp_b -> childA_d;
+	nodeImp_z -> nodeImp_b;
+	topImp_w -> topImp_x;
+	childA_c -> childA_d[style=dotted];
+	childA_c -> nodeImp_a;
+	top_y -> top_x[style=dotted];
+	childB_h -> nodeImp_b;
+	topImp_x -> node_z;
+	node_z -> node_b[style=dotted];
+	node_a -> node_b[style=dotted];
+	node_a -> node_z[style=dotted];
+	node_a -> topImp_y;
+	childBImp_e -> childBImp_h;
+	topImp_y -> topImp_x;
+	nodeImp_a -> childB_e;
+	nodeImp_a -> nodeImp_b[style=dotted];
+	nodeImp_a -> nodeImp_z[style=dotted];
+	childAImp_c -> childAImp_d[style=dotted];
+}

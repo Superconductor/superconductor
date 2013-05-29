@@ -1,0 +1,63 @@
+digraph G{
+	subgraph cluster0{
+		color=black;
+		label="parent-graph";
+		subgraph cluster1{
+			label="parent";
+			node[style=filled];
+			parent_ph[label="ph"];
+			parent_pw[label="pw"];
+			parent_f[label="f"];
+			parent_pwf[label="$pwf", shape=box];
+		}
+		subgraph cluster2{
+			label="node";
+			node[style=filled];
+			parent_node_h[label="h", shape=box];
+			parent_node_w[label="w"];
+			parent_node_p[label="p"];
+			parent_node_g[label="g"];
+			parent_node_i[label="i"];
+		}
+		parent_f -> parent_node_i[color=darkgreen];
+		parent_pw -> parent_node_w[color=blue];
+		parent_ph -> parent_node_p[color=blue];
+		parent_node_g -> parent_f[color=darkgreen];
+		parent_pwf -> parent_pw[color=blue];
+		parent_node_h -> parent_ph[color=blue];
+	}
+	subgraph cluster3{
+		color=black;
+		label="child2-graph";
+		subgraph cluster4{
+			label="child2";
+			node[style=filled];
+			child2_w[label="w"];
+			child2_p[label="p"];
+			child2_g[label="g"];
+			child2_i[label="i"];
+			child2_h[label="h", shape=box];
+			child2_b[label="$b", shape=box];
+		}
+		parent0[label="Parent",style=dotted];
+		child2_p -> child2_g[color=blue];
+		child2_b -> child2_g[color=blue];
+		child2_g -> parent0[color=blue,label="1",fontcolor=darkgreen];
+	}
+	subgraph cluster5{
+		color=black;
+		label="child1-graph";
+		subgraph cluster6{
+			label="child1";
+			node[style=filled];
+			child1_w[label="w"];
+			child1_p[label="p"];
+			child1_g[label="g"];
+			child1_i[label="i"];
+			child1_h[label="h", shape=box];
+		}
+		parent1[label="Parent",style=dotted];
+		child1_p -> child1_g[color=blue];
+		child1_g -> parent1[color=blue,label="1",fontcolor=darkgreen];
+	}
+}

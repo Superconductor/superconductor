@@ -1,0 +1,64 @@
+While collections are a useful AG extension, they may be undesirable due to memory requirements; we can still consider DAGs where they are provided as input and therefore not require collections. The challenge is that we can no longer rewrite the grammar to propagate phantom attributes alongside references in order to schedule reads of non-local attributes. Our basic solution is to require \emph{all} instance of an attribute to be solved before \emph{any} are accessed.  
+
+In terms of our original rewrite, instead of propagating phantom attributes alongside reference values, we conservatively assume the propagation is universal. Our rewrite is now to \emph{gather} all phantom instances of an attributes and then \emph{broadcast} a joined phantom value. Consider our ongoing example, where we must gather all instances of attribute \code{width} of node \code{Cell} and broadcast when they are all ready to any dereference of any instance (i.e., in \code{Column}). We reuse primitives from before, but also introduce $\O(\cdot, \cdot)$ to join two dependencies:
+
+\pagebreak
+\begin{lstlisting}[mathescape]
+//grammar schema
+@Start Table $\rightarrow$ Row Column { 
+  phantom c_w_gather : int;
+  phantom c_w_broadcast : int
+}
+Cell $\rightarrow$ $\epsilon$ { 
+  input width : int;
+  phantom c_w_gather : int;
+  phantom c_w_broadcast : int
+}
+Row $\rightarrow$ Cell { 
+  phantom c_w_gather : int;
+  phantom c_w_broadcast : int
+}
+Column $\rightarrow$ $\epsilon$ { 
+  input CellAlias : ref Cell; 
+  var width : int;
+  phantom c_w_gather : int;
+  phantom c_w_broadcast : int
+}
+
+//attribute constraints
+Table { 
+  Col.CellAlias := @(Row.Cell_ptr);
+  c_w_gather := $\O$(Row.c_w_gather, Col.c_w_gather);
+  c_w_broadcast := c_w_gather;
+  Row.c_w_broadcast = c_w_broadcast;
+  Col.c_w_broadcast = c_w_broadcast;
+}
+Column { 
+  width := $\rightarrow$(CellAlias.width, c_w_broadcast);     
+  c_w_gather := true;
+}
+Row { 
+  c_w_gather := $\O$(Row.c_w_gather, Col.c_w_gather);  
+  cell.c_w_broadcast = c_w_broadcast;
+}
+Cell {
+  c_w_gather := width;
+}
+\end{lstlisting}
+
+Our example has several important properties:
+
+\begin{enumerate}
+\item \textbf{Input graph}. Note that the schema of \text{Column} treats \code{myCellAlias} as an input. Our input is thus a minimum spanning tree (MST) augmented with non-local edges. 
+\item \textbf{Global propagation}. We add phantom attributes \code{c_w_gather} and \code{c_w_broadcast} to all nodes.  
+\item \textbf{Gathering.} The first step is to \emph{gather} all uses of an attribute into one dependency; we do this in a bottom-up flow on the MST. Phantom attribute \code{c_w_gather} is ready when all of the \code{width} attributes of its subtree (in the MST) is ready. Most nodes are propagation nodes, e.g., \code{Row}, which merges flows from its children. Leaves such as \code{Column} have nothing to gather. \code{Cell} provides a \code{width} value in the original grammar, so it adds a dependency from where.
+\item \textbf{Broadcasting.} Phantom attribute \code{c_w_broadcast} is ready when all instances of \code{c_w_gather} are ready. \code{Table} is the root of any tree allowed by our grammar, so it is responsible for this transfer. The remaining types further broadcast to their children.
+\item \textbf{Dependent dereferences.} The non-local attribute read in \code{Column} is dependent on the broadcast of the attribute; it occurs after all instances of the attribute have been gathered.
+\end{enumerate}
+
+Finally, as with our dynamically computed graph connections, we use phantom attributes and operations to track non-local dependencies while still using the appropriate pointer-based code generation. Phantom code is not emitted.
+
+\subsection{Rewrite rules}
+
+See Figure~\ref{fig:statrewrites}.
+\input{rewritestatic}

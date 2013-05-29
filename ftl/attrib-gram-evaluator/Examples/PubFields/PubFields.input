@@ -1,0 +1,37 @@
+// Fields & Multiple Children Test
+
+        // define Frame interface
+        IFace frame = new IFace("frame");
+        frame.addAttribute("ph"); frame.addAttribute("pw"); frame.addAttribute("f");
+        
+        // define Node interface
+        IFace node = new IFace("node");
+        node.addAttribute("w"); node.addAttribute("p"); node.addField("h"); node.addAttribute("g"); node.addAttribute("i");
+        
+        // define Parent Class
+        Class parent = new Class("parent", frame);
+        parent.addField("pwf");
+        parent.apply("sum", "ph", "c1@h", "c2@h");
+        parent.apply("sum", "f", "c1@g", "c2@g");
+        parent.setAllTo("ph", "c1@p", "c2@p");
+        parent.set("pw", "pwf");
+        parent.setAllTo("pw", "c1@w", "c2@w");
+        parent.setAllTo("f", "c1@i", "c2@i");
+        
+        // define Child1 Class
+        Class child1 = new Class("child1", node);
+        child1.set("g", "p");
+        
+        // define Child2 Class
+        Class child2 = new Class("child2", node);
+        child2.addField("b");
+        child2.apply("sum", "g", "b", "p");
+        
+        // define children relationships
+        parent.addChild("c1", node);
+        parent.addChild("c2", node);
+        
+        ArrayList<IFace> inter = new ArrayList<IFace>();
+        ArrayList<Class> classes = new ArrayList<Class>();
+        inter.add(frame); inter.add(node);
+        classes.add(parent); classes.add(child1); classes.add(child2);

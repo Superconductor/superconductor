@@ -1,0 +1,113 @@
+We support nested references by extending our restricted notion node references as a set of read-only attributes. 
+
+Nested references are useful. Consider our motivating example. Without nested references, we had to manually add declarations to classes \code{Table} and \code{Row} as they are intermediate nodes along the propagation path between a \code{Cell} node and a \code{Column} node. This is awkward. The goal was simply for a \code{Column} node to inspect the \code{width} attribute of a nearby \code{Cell} as part of its computations; we can directly write this in the context of a \code{Column} node using nested references:
+
+
+\begin{lstlisting}[mathescape]
+//grammar schema
+@Start Table $\rightarrow$ Row Column { }
+Cell $\rightarrow$ { input width : int }
+Row $\rightarrow$ Cell { }
+Column $\rightarrow$ { width : int; }
+
+//attribute constraints
+Column { width := parent$\rightarrow$Row$\rightarrow$Cell$\rightarrow$width; }
+
+\end{lstlisting}
+
+Note that we implicitly assume every child link is a reference (supporting term $Row \rightarrow Cell$ and there is a reference \code{parent} to the parent of a node. The former can be encoded as nodes creating a reference for every child and the latter as parent nodes setting the parent attribute in every child (except for the start node).
+
+The basic intuition for nested references follows that of non-nested references. Passing a non-nested reference to a node was equated to passing its set of attributes. Passing a reference to node containing a reference to another node can be equated to passing the attributes of both nodes. This can be repeated for each level of indirection. Determining the set of attributes to pass is more complicated in the case of nested references. 
+
+A na\"{i}ve recursive rewrite rule for nested references leads to potentially infinite expansions. Essentially, a cyclic dependency between two attributes will cause an explosion. Consider the following grammar where, on each \code{A} node, we compute the bottom-most \code{A} node, and the same for \code{B} nodes.
+
+
+\begin{lstlisting}[mathescape]
+@Start A $\rightarrow$ A | $\epsilon$ { var r : ref A; }
+${^1}$A $\rightarrow$ ${^2}$A { r := ${^2}$A.r$\rightarrow$r }
+A $\rightarrow$ $\epsilon$ { r := @A; }
+\end{lstlisting}
+
+After 1 iteration of rewriting, we achieve the following grammar:
+
+\begin{lstlisting}[mathescape]
+@Start A $\rightarrow$ A | $\epsilon$ { 
+  var r : ref A; 
+  var r$_r$ : ref A;
+}
+${^1}$A $\rightarrow$ ${^2}$A { 
+  r := $\rightarrow$(${^2}$A.r, A#2.r$_r$);
+  r$_r$ := $\O$(${^2}$A.r$_{r_r}$);
+}
+$\ldots$
+\end{lstlisting}
+
+Attribute ${^1}A.r_r$ is defined in terms of ${^2}A.r_{r_r}$, which requires another level of expansion to make available:
+
+\begin{lstlisting}[mathescape]
+@Start A $\rightarrow$ A | $\epsilon$ { 
+  var r : ref A; 
+  var r$_r$ : ref A;
+  var r$_{r_r}$ : ref A;
+}
+${^1}$A $\rightarrow$ ${^2}$A { 
+  r := $\rightarrow$(${^2}$A.r, ${^2}$A.r$_r$);
+  r$_r$ := $\O$(${^2}$A.r$_{r_r}$);
+  r$_{r_r}$ := $\O$(${^2}$A.r$_{r_{r_r}}$);
+}
+$\ldots$
+\end{lstlisting}
+
+This expansion repeats infinitely. To avoid an explosion, we disallow these grammars by including a recursion check during type and dereference analysis (which is distinct from the traditional AG circularity check).
+
+\subsection{Usage Analysis}
+
+For non-nested references, our type, usage, and safety checks are simple. 
+
+\begin{itemize}
+\item \textbf{Type analysis.}
+First, we perform a basic type inference to label each term as belonging to the following family:
+
+$$\tau = \{ \text{bool}, \text{int} \} \cup \{ \text{ref} \{ \ldots id : \upsilon \ldots \} \} ~~ \text{where} ~\upsilon \in \tau $$
+
+The type analysis guarantees references are homogenous. Consider the following declaration: 
+$$N ~ \{ v := (a = 1 ~?~ b : c)\rightarrow d \rightarrow e \} $$
+
+In it, our type inference determines both $b \rightarrow d \rightarrow e$ and $c \rightarrow d \rightarrow e$ point to a node of the same type (and the principle type). The importance is that, when reference passing is rewritten to also pass attributes, we can guarantee the attributes are proper fields.
+
+\item \textbf{Usage analysis.}
+
+To determine the attributes to be propagated with each reference, we perform a modified type analysis (given the previous type analysis). For example, in the above statement, we generate the following 3 constraints:
+
+\begin{align*}
+N \supseteq & ~ \{ v: N_v, ~b: N_b, ~c: N_c \} \\
+N_b \supseteq & ~ \{d: \{e: N_v \} \} \\
+N_c \supseteq & ~ \{d: \{e: N_v \} \}
+\end{align*}
+
+Note that we do $not$ create a constraint for $N_{b_d}$, $N_{b_{d_e}}$, etc.: reference passing is equated with passing the (potentially) used attributes.
+
+By expanding the equation for $N.b$ until termination, e.g., if $N_v = \text{int}$, we see the requirements for assigning to it:
+
+$$N_b \supseteq \{d: \{e: \text{int} \}\}$$
+
+This signifies, for some statement \code{N \{ b := h \} }, we must also add phantom assignment \code{ N \{ b}${_{d_e}}$\code{ := h}${_{d_e}}$\code{\}}. If $N_v$ was left unconstrained, no attribute would need to be passed: the reference is never used. 
+
+To combine constraints across nodes, we use types. E.g., for additional declarations 
+
+\begin{lstlisting}[mathescape]
+M $\rightarrow$ { var n : ref N; var x : int; }
+M $\rightarrow$ { x := n$\rightarrow$b$\rightarrow$d }
+\end{lstlisting}
+
+we generate constraints 
+\begin{align*}
+M_n = & ~ N \\
+M_n \supseteq & ~ \{b: \{d: M_x \} \}
+\end{align*}
+
+Our reference usage analysis deviates from a normal type analysis by only considering statements involving dereferences or reference passing. If an attribute is read or written without involving a reference, there is no need to propagate it. 
+
+\item \textbf{Cycle checks.}
+Cyclic constraints, where expanding a constraint leads to the same variable on both the left and right hand side of an equation, correspond to recursive types. Rewriting such a type would be infinitely expanding, which we already identified as problematic. For now, we statically detect this occurence and treat it as an error. \textbf{[[relation to occurs check?]]}
+\end{itemize}

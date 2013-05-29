@@ -1,0 +1,81 @@
+ometa TraitParser <: FTL{
+    tlBlock = spaces "trait" id:name '{' innerClass*:block spaces '}' spaces    -> ['trait', name, block]
+            | spaces "class" id:name '(' listOf('id', ','):traits ')' spaces ':' id:inter '{' innerClass*:block spaces '}' spaces    -> ['class', name, traits, inter, block]
+            | ^tlBlock
+}
+
+ometa TraitDesugar <: TransBase{
+    node = ['trait' :name :ns]                   ->  {self.addTrait(name, ns); []}
+         | ['class' :n [string*:ts] :i :r]       -> ['class', n,  i,  r.concat(self.getTraits(ts))]
+         | ^node
+}
+
+ometa ClassComb <: TransBase{
+    classElems = ['actions' :a]                -> {self.addField('actions', a); ['actions', a]}
+         | ['attributes' :a]                   -> {self.addField('attributes', a); ['attributes', a]}
+         | ['children' :c]                     -> {self.addField('children', c); ['children', c]},
+
+    node = ['class' :n :i [classElems*:r]]             -> {var ret = ['class', n, i, self.getFields()]; self.initFields(); ret}
+        | ^node
+}
+
+ometa TraitGen <: FTLGen{
+    block = []      -> ''
+          | ^block
+}
+
+TraitDesugar.initialize = function(){
+    this.traits = {};
+    var x = this;
+    this.addTrait = function(t, v){
+        x.traits[t] = v;
+    }
+    this.getTraits = function(ts){
+        var ret = [];
+        for (var i = 0; i < ts.length; i++) {
+            ret = ret.concat(x.getTrait(ts[i]))
+        }
+        return ret;
+    }
+    this.getTrait = function(t){
+        if(!x.traits[t])
+            throw new Error("ERROR: trait used before define: " + t);
+
+        return x.traits[t];
+    }
+}
+
+ClassComb.initialize = function() {
+    this.fields = {};
+    var x = this;
+    this.initFields = function(){
+        x.fields = {};
+    }
+    this.addField = function(f, a){
+        if (!x.fields[f]){
+            x.fields[f] = a;
+        } else {
+            x.fields[f] = x.fields[f].concat(a);
+        }
+    }
+    this.getFields = function(){
+        var ret = [];
+        if(x.fields['children'])
+            ret = ret.concat([['children', x.fields['children']]]);
+        if(x.fields['actions'])
+            ret = ret.concat([['actions', x.fields['actions']]]);
+        if(x.fields['attributes'])
+            ret = ret.concat([['attributes', x.fields['attributes']]]);
+        return ret;
+    }
+}
+
+function translate(input){
+    var tree = TraitParser.matchAll(input, "topLevel");
+    console.log("PARSE TREE");
+    console.log(util.inspect(tree, false, null));
+    var dTree = TraitDesugar.match(tree, "topLevel");
+    var aTree = ClassComb.match(dTree, "topLevel");
+    var out = TraitGen.match(aTree, "topLevel");
+    return out;
+}

@@ -1,0 +1,130 @@
+digraph G{
+	subgraph cluster0{
+		color=blue;
+		node[style=filled];
+		label="topLevel";
+		topLevel_d[label="d"];
+		topLevel_b[label="b"];
+		topLevel_a[label="a"];
+	}
+	subgraph cluster1{
+		color=blue;
+		node[style=filled];
+		label="midLevel";
+		midLevel_f[label="f"];
+		midLevel_g[label="g"];
+		midLevel_e[label="e"];
+		midLevel_h[label="h"];
+		midLevel_i[label="i"];
+	}
+	subgraph cluster2{
+		color=blue;
+		node[style=filled];
+		label="botLevel";
+		botLevel_n[label="n"];
+		botLevel_l[label="l"];
+		botLevel_m[label="m"];
+		botLevel_j[label="j"];
+		botLevel_k[label="k"];
+	}
+	subgraph cluster3{
+		color=black;
+		node[style=filled];
+		label="top";
+		top_d[label="d"];
+		top_b[label="b"];
+		top_a[label="a"];
+		top_c[label="$c"];
+		top_zero[label="$zero", shape=box];
+	}
+	subgraph cluster4{
+		color=black;
+		node[style=filled];
+		label="mid";
+		mid_f[label="f"];
+		mid_g[label="g"];
+		mid_e[label="e"];
+		mid_h[label="h"];
+		mid_i[label="i"];
+		mid_o[label="$o"];
+	}
+	subgraph cluster5{
+		color=black;
+		node[style=filled];
+		label="bot";
+		bot_n[label="n"];
+		bot_l[label="l"];
+		bot_m[label="m"];
+		bot_j[label="j"];
+		bot_k[label="k"];
+	}
+	top_b -> top_c[style=dotted];
+	top_b -> midLevel_f;
+	top_b -> top_d[style=dotted];
+	bot_k -> bot_n[style=dotted];
+	bot_k -> bot_m[style=dotted];
+	bot_k -> bot_l[style=dotted];
+	midLevel_g -> top_c;
+	midLevel_g -> midLevel_i[style=dotted];
+	midLevel_g -> midLevel_h[style=dotted];
+	topLevel_b -> topLevel_d[style=dotted];
+	mid_f -> mid_h[style=dotted];
+	mid_f -> mid_i[style=dotted];
+	mid_f -> mid_g[style=dotted];
+	mid_f -> botLevel_j;
+	mid_f -> mid_o[style=dotted];
+	midLevel_h -> top_c;
+	midLevel_h -> midLevel_i[style=dotted];
+	botLevel_l -> botLevel_m[style=dotted];
+	botLevel_l -> botLevel_n[style=dotted];
+	mid_h -> mid_i[style=dotted];
+	mid_h -> mid_o;
+	mid_g -> mid_h[style=dotted];
+	mid_g -> mid_i[style=dotted];
+	mid_g -> botLevel_l;
+	mid_g -> mid_o[style=dotted];
+	botLevel_k -> mid_g;
+	botLevel_k -> botLevel_m[style=dotted];
+	botLevel_k -> botLevel_n[style=dotted];
+	botLevel_k -> botLevel_l[style=dotted];
+	top_d -> midLevel_i;
+	bot_l -> bot_n[style=dotted];
+	bot_l -> bot_m;
+	midLevel_e -> top_b;
+	midLevel_e -> midLevel_f[style=dotted];
+	midLevel_e -> midLevel_g[style=dotted];
+	midLevel_e -> midLevel_i[style=dotted];
+	midLevel_e -> midLevel_h[style=dotted];
+	mid_o -> botLevel_n;
+	top_c -> top_d;
+	topLevel_a -> topLevel_d[style=dotted];
+	topLevel_a -> topLevel_b[style=dotted];
+	mid_i -> mid_o;
+	botLevel_j -> botLevel_k[style=dotted];
+	botLevel_j -> botLevel_m[style=dotted];
+	botLevel_j -> botLevel_n[style=dotted];
+	botLevel_j -> botLevel_l[style=dotted];
+	top_a -> top_c[style=dotted];
+	top_a -> top_b[style=dotted];
+	top_a -> top_d[style=dotted];
+	top_a -> midLevel_e;
+	midLevel_f -> midLevel_g[style=dotted];
+	midLevel_f -> midLevel_i[style=dotted];
+	midLevel_f -> midLevel_h[style=dotted];
+	bot_m -> bot_n[style=dotted];
+	top_zero -> top_c[style=dotted];
+	top_zero -> top_b[style=dotted];
+	top_zero -> top_a;
+	top_zero -> top_d[style=dotted];
+	botLevel_m -> mid_h;
+	botLevel_m -> botLevel_n[style=dotted];
+	bot_j -> bot_k;
+	bot_j -> bot_n[style=dotted];
+	bot_j -> bot_m[style=dotted];
+	bot_j -> bot_l[style=dotted];
+	mid_e -> mid_h[style=dotted];
+	mid_e -> mid_f[style=dotted];
+	mid_e -> mid_i[style=dotted];
+	mid_e -> mid_g[style=dotted];
+	mid_e -> mid_o[style=dotted];
+}

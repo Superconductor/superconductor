@@ -1,0 +1,102 @@
+interface Root {
+	var x: float;
+	var y: float;
+	var _port_1: float;
+	var _port_0: float;
+	var _port_2: float;
+	var _port_3: float;
+}
+interface VBox2 {
+	var h: float;
+	var w: float;
+	var x: float;
+	var y: float;
+	var t: float;
+	var l: float;
+	var b: float;
+	var r: float;
+	var _port_5: float;
+	var _port_9: float;
+	var _port_6: float;
+	var _port_8: float;
+	var _port_7: float;
+	var _port_4: float;
+	var _port_10: float;
+}
+interface Leaf {
+	var x: float;
+	var y: float;
+	var t: float;
+	var l: float;
+	var b: float;
+	var r: float;
+	var w: float;
+	var h: float;
+	var _port_19: float;
+	var _port_18: float;
+}
+class Root0 {
+	attributes {}
+	children {VBox20: VBox2}
+	actions {
+		y = VBox20._port_10;
+		x = VBox20._port_9;
+		_port_3 = VBox20.l;
+		_port_2 = VBox20.t;
+		_port_1 = VBox20.w;
+		_port_0 = VBox20.h;
+		y = pfun0_y();
+		x = pfun1_x();
+		_port_0 = pfun2__port_0();
+		_port_1 = pfun3__port_1();
+		_port_2 = pfun4__port_2();
+		_port_3 = pfun5__port_3();
+	}
+}
+class VBox20 {
+	attributes {}
+	children {Leaf0: Leaf; Leaf1: Leaf}
+	actions {
+		_port_8 = Leaf0.t;
+		_port_6 = Leaf1.l;
+		_port_6 = Leaf0.l;
+		x = Leaf1._port_18;
+		x = Leaf0._port_18;
+		_port_5 = Leaf1.w;
+		_port_5 = Leaf0.w;
+		y = Leaf1._port_19;
+		y = Leaf0._port_19;
+		_port_7 = Leaf1.t;
+		_port_4 = Leaf1.h;
+		_port_4 = Leaf0.h;
+		_port_8 = pfun6__port_8();
+		_port_6 = pfun7__port_6();
+		x = pfun36_x(w, l, _port_9);
+		r = pfun36_r(w, l, _port_9);
+		_port_5 = pfun36__port_5(w, l, _port_9);
+		_port_4 = pfun18__port_4(t, _port_10, h);
+		_port_7 = pfun18__port_7(t, _port_10, h);
+		y = pfun18_y(t, _port_10, h);
+		b = pfun18_b(t, _port_10, h);
+	}
+}
+class Leaf0 {
+	attributes {}
+	children {}
+	actions {
+		x = pfun44_x(w, l, _port_18);
+		r = pfun44_r(w, l, _port_18);
+		b = pfun51_b(_port_19, h, t);
+		y = pfun51_y(_port_19, h, t);
+	}
+}
+class Leaf1 {
+	attributes {}
+	children {}
+	actions {
+		x = pfun44_x(w, l, _port_18);
+		r = pfun44_r(w, l, _port_18);
+		b = pfun51_b(_port_19, h, t);
+		y = pfun51_y(_port_19, h, t);
+	}
+}

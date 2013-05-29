@@ -1,0 +1,9 @@
+#!/bin/bash
+pdflatex main.tex
+bibtex main
+pdflatex main.tex
+
+#pdflatex main-alternate.tex
+#bibtex main-alternate
+#pdflatex main-alternate.tex
+

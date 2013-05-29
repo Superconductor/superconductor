@@ -1,0 +1,97 @@
+			IFace Top = new IFace("Top");
+			Top.addAttributesOfType("int", "x", "y", "w", "h");
+        	Top.addPassiveField("borderColor", "string");
+        	Top.addPassiveField("borderWidth", "int", "1");
+        	Top.addPassiveField("visible", "boolean", "true");
+
+			IFace State = new IFace("State");
+			State.addAttributesOfType("int", "x", "y", "w", "h");
+			State.addPassiveField("borderColor", "string");
+        	State.addPassiveField("borderWidth", "int", "1");
+        	State.addPassiveField("visible", "boolean", "true");
+
+			IFace Node = new IFace("Node");
+			Node.addAttributesOfType("int", "x", "y", "w", "h");
+			Node.addPassiveField("borderColor", "string");
+			Node.addPassiveField("borderWidth", "int", "1");
+			Node.addPassiveField("visible", "bool", "true");
+
+			Class TopBox = new Class("TopBox", Top);
+			TopBox.addChild("root", State);
+			TopBox.addField("fx", "int");
+			TopBox.addField("fy", "int");
+			TopBox.set("x", "fx");
+			TopBox.set("y", "fy");
+			TopBox.set("root@x", "x");
+			TopBox.set("root@y", "y");
+			TopBox.set("h", "root@h");
+			TopBox.set("w", "root@w");
+
+			Class StateBox = new Class("StateBox", State);
+			StateBox.addAttribute("temph", "int");
+			StateBox.addChild("name", Node);
+			StateBox.addChild("reps", Node);
+			StateBox.setAllTo("x", "name@x", "reps@x");
+			StateBox.set("name@y", "y");
+			StateBox.apply("sum", "temph", "y", "name@h");
+			StateBox.set("reps@y", "temph");
+			StateBox.apply("sum", "h", "name@h", "reps@h");
+			StateBox.apply("max", "w", "name@w", "reps@w");
+
+			Class VBox = new Class("VBox", Node);
+			VBox.addAttribute("temph", "int");
+			VBox.addChild("child1", Node);
+			VBox.addChild("child2", Node);
+			VBox.setAllTo("x", "child1@x", "child2@x");
+			VBox.set("child1@y", "y");
+			VBox.apply("sum", "temph", "y", "child1@h");
+			VBox.set("child2@y", "temph");
+			VBox.apply("sum", "h", "child1@h", "child2@h");
+			VBox.apply("max", "w", "child1@w", "child2@w");
+			
+			Class HBox = new Class("HBox", Node);
+			HBox.addAttribute("tempw", "int");
+			HBox.addChild("child1", Node);
+			HBox.addChild("child2", Node);
+			HBox.setAllTo("y", "child1@y", "child2@y");
+			HBox.set("child1@x", "x");
+			HBox.apply("sum", "tempw", "x", "child1@w");
+			HBox.set("child2@x", "tempw");
+			HBox.apply("sum", "w", "child1@w", "child2@w");
+			HBox.apply("max", "h", "child1@h", "child2@h");
+
+			Class LeafBox = new Class("LeafBox", Node);
+			LeafBox.addField("fh", "int");
+			LeafBox.addField("fw", "int");
+			LeafBox.set("h", "fh");
+			LeafBox.set("w", "fw");
+	        LeafBox.addPassiveField("align", "string");
+	        LeafBox.addPassiveField("bgColor", "string");
+	        LeafBox.addPassiveField("bold", "boolean");
+	        LeafBox.addPassiveField("clipsChildren","bool");
+	        LeafBox.addPassiveField("clipsSelf","bool");
+	        LeafBox.addPassiveField("font", "string");
+	        LeafBox.addPassiveField("italic", "boolean");
+	        LeafBox.addPassiveField("lgradPCs", "string");
+	        LeafBox.addPassiveField("lgradStart", "string");
+	        LeafBox.addPassiveField("lgradSLeafBox", "string");
+	        LeafBox.addPassiveField("opacity", "float", "1.0f");
+	        LeafBox.addPassiveField("rgradCenter", "string");
+	        LeafBox.addPassiveField("rgradFP", "string");
+	        LeafBox.addPassiveField("rgradPCs", "string");
+	        LeafBox.addPassiveField("rgradRadius", "string");
+	        LeafBox.addPassiveField("shape", "string");
+	        LeafBox.addPassiveField("text", "string");
+	        LeafBox.addPassiveField("textColor", "string");
+	        LeafBox.addPassiveField("textWeight", "int", "50");     
+	        LeafBox.addPassiveField("underline", "boolean");
+	        LeafBox.addPassiveField("z", "int");
+	        LeafBox.addPassiveField("cornerxRadius","float");
+	        LeafBox.addPassiveField("corneryRadius","float");
+	        LeafBox.addPassiveField("fontSize","int");
+	        LeafBox.addPassiveField("image","string");
+					
+			ArrayList<IFace> inter = new ArrayList<IFace>();
+			ArrayList<Class> classes = new ArrayList<Class>();
+			inter.add(Top); inter.add(State); inter.add(Node);
+			classes.add(TopBox); classes.add(StateBox); classes.add(VBox); classes.add(HBox); classes.add(LeafBox);

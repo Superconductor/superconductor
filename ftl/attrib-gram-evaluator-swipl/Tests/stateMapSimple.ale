@@ -1,0 +1,72 @@
+interface Top {
+  var x : int;
+  var y : int;
+  var w : int;
+  var h : int;  
+}
+
+interface State {
+  var x : int;
+  var y : int;
+  var w : int;
+  var h : int;  
+}
+
+interface Node {
+  var x : int;
+  var y : int;
+  var w : int;
+  var h : int;
+}
+
+class TopBox : Top {
+  children { root : State; }
+  attributes { 
+    input fx : int;
+    input fy : int; 
+  }
+  actions {
+    x := fx;
+    y := fy;
+    root.x := x;
+    root.y := y;
+    h := root.h;
+    w := root.w;
+  }
+}
+
+class StateBox : State {
+  children {
+    name : Node;
+  }
+  actions {
+    name.x := x;
+    name.y := y;
+    h := name.h;// + reps.h;
+    w := name.w;// > reps.w ? name.w : reps.w;
+  }
+}
+
+class VBox : Node {
+  children {
+    child1 : Node;
+  }
+  actions {
+    child1.x := x;
+    child1.y := y;
+    h := child1.h;// + child2.h;
+    w := child1.w;// > child2.w ? child1.w : child2.w;
+  }
+}
+
+class LeafBox : Node {
+  attributes { 
+    input fh : int;
+    input fw : int; 
+
+  }
+  actions {
+    h := fh;
+    w := fw;
+  }
+}

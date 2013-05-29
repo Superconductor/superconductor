@@ -1,0 +1,36 @@
+interface start { var result1 : int; var result2 : int;}
+interface node { 
+  var label : int;
+  var subtreeSize : int;
+  var outLabel : int;
+}
+
+class root : start {
+  children { tree : node; }
+  actions {
+    tree.label := 1;
+    result1 := tree.subtreeSize;
+    result2 := tree.outLabel;    
+  }
+}
+
+class intermediate : node {
+  children { left: node; right: node; }
+  actions {
+    subtreeSize := 1 + left.subtreeSize + right.subtreeSize;
+    left.label := label + 1;
+    right.label := left.outLabel + left.subtreeSize;
+    outLabel := right.outLabel;
+  }  
+} 
+
+class leaf : node {
+  actions {
+    subtreeSize := 1;
+    outLabel := label;
+  }
+}
+
+
+
+

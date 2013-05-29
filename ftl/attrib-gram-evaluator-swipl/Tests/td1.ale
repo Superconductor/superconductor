@@ -1,0 +1,13 @@
+interface Root { input x : int; }
+interface List { var y : int; }
+class Start : Root { 
+  children { next : List; }
+  actions { next.y := x; }  
+}
+
+class Cons : List {
+  children { next : List; }
+  actions { next.y := y + 1; }
+}
+class Mt : List { }   
+

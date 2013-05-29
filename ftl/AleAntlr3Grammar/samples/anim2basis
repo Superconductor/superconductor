@@ -1,0 +1,31 @@
+//bottom up
+
+cData:
+  heightCurr (x)
+  widthCurr (x)
+  positioningCurr
+
+root, vbox =>
+  heightCurr  = sum child.cData.heightCurr | child.cData.positioningCurr != auto
+  widthCurr = max child.cData.widthCurr | child.cData.positioningCurr != auto
+  
+hbox =>
+  heightCurr  = max child.cData.heightCurr | child.cData.positioningCurr != auto
+  widthCurr = sum child.cData.widthCurr | child.cData.positioningCurr != auto
+
+//top down
+
+  xCurr (x)
+  yCurr (y)
+
+root, vbox =>
+  forall child: child.cData.xCurr == xCurr
+  forall child: child.cData.yCurr == yCurr + sum(child.cData.heightCurr | child prev)
+    + (child.cData.positioningCurr == relative ? child.cdata.yCurr : 0)
+
+hbox =>
+  forall child: child.cData.yCurr = yCurr + child.cData.positioningCurr == relative ? child.cData.yCurr : 0
+  forall child: child.cData.xCurr == xCurr + sum(child.cData.widthCurr | child prev)
+    + (child.cData.positioningCurr == relative ? child.cdata.xCurr : 0)
+    
+    

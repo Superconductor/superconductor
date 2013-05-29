@@ -1,0 +1,7 @@
+#!/bin/bash
+
+#Usage: ./runFtlHtml <input file> <output folder>
+
+ant -DaleGrammar=$1 run-alegen-webcl -Doutput.dir=$2
+
+

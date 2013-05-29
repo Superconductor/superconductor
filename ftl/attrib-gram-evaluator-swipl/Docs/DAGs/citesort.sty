@@ -1,0 +1,56 @@
+%NAME: citesort.sty
+% A replacement for \@citex which sorts citation numbers as well as
+% compressing and allowing breaks.  Based on cite.sty by Donald
+% Arseneau.
+%
+% for use in LaTeX say, \documentstyle[...,citesort,...]{...}
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%     Allow, but strongly discourage, line breaks within a long
+%     series of citations.  Compress lists of successive numbers
+%     to one number range, e.g., 5,6,7,8,9 --> 5--9.  Compatible
+%     with versions of \@cite that use exponents.
+%              -- Donald Arseneau  1989
+%
+% Modified to sort the numbers so they come out in increasing order,
+% regardless of the way they appear in the source. O(N^2) sort!
+% Ian Green, CUED, 10-Dec-1991.  Improvements to img@eng.cam.ac.uk
+% please. Version 1
+
+\newcount\@minsofar
+\newcount\@min
+\newcount\@cite@temp
+\def\@citex[#1]#2{%
+\if@filesw \immediate \write \@auxout {\string \citation {#2}}\fi
+\@tempcntb\m@ne \let\@h@ld\relax \def\@citea{}%
+\@min\m@ne%
+\@cite{%
+  \@for \@citeb:=#2\do {\@ifundefined {b@\@citeb}%
+    {\@h@ld\@citea\@tempcntb\m@ne{\bf ?}%
+    \@warning {Citation `\@citeb ' on page \thepage \space undefined}}%
+{\@minsofar\z@ \@for \@scan@cites:=#2\do {%
+  \@ifundefined{b@\@scan@cites}%
+    {\@cite@temp\m@ne}
+    {\@cite@temp\number\csname b@\@scan@cites \endcsname \relax}%
+\ifnum\@cite@temp > \@min% select the next one to list
+    \ifnum\@minsofar = \z@
+      \@minsofar\number\@cite@temp
+      \edef\@scan@copy{\@scan@cites}\else
+    \ifnum\@cite@temp < \@minsofar
+      \@minsofar\number\@cite@temp
+      \edef\@scan@copy{\@scan@cites}\fi\fi\fi}\@tempcnta\@min
+  \ifnum\@minsofar > \z@ % some more
+    \advance\@tempcnta\@ne
+    \@min\@minsofar
+    \ifnum\@tempcnta=\@minsofar %   Number follows previous--hold on to it
+      \ifx\@h@ld\relax
+        \edef \@h@ld{\@citea\csname b@\@scan@copy\endcsname}%
+      \else \edef\@h@ld{\ifmmode{-}\else--\fi\csname b@\@scan@copy\endcsname}%
+      \fi
+    \else \@h@ld\@citea\csname b@\@scan@copy\endcsname
+          \let\@h@ld\relax
+  \fi % no more
+\fi}%
+\def\@citea{,\penalty\@highpenalty\,}}\@h@ld}{#1}}
+
+% end of citesort.sty

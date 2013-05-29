@@ -1,0 +1,139 @@
+<html><head><title>html5 backend: everything2</title>
+<script>
+state = undefined;
+</script>
+<script src="everything.js"></script>
+<script src="render.js"></script>
+<script src="jquery-1.6.1.js"></script>
+<script>
+logger = {log: function () {}, group: function (){}, groupEnd: function(){}, error: function() {} };
+</script>
+</head>
+<body>
+<h2>Node types:</h2>
+<ul>
+<li style="border: 1px black solid; margin: 10px; padding: 5px">Black: leaf</li>
+<li style="border: 1px red solid; margin: 10px; padding: 5px">Red: horizontal box</li>
+<li style="border: 1px #00FF00 solid; margin: 10px; padding: 5px">Green: vertical box</li>
+<li style="border: 1px blue solid; margin: 10px; padding: 5px">Blue: word wrap box</li>
+<li style="border: 1px #777 solid; margin: 10px; padding: 5px">Grey: rows box (header, rows, footer)</li>
+<li style="border: 1px #F0F solid; margin: 10px; padding: 5px">Magenta: list</li>
+</ul>
+<h2>Output: </h2>
+<div><canvas id="canvas"/></div>
+<contents id="contents">
+<Top>
+  <VBox refname="child">
+    <HBox refname="childs">
+        <Leaf refname="childs"></Leaf>
+        <HBox refname="childs">
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>
+        </HBox>
+        <Leaf refname="childs"></Leaf>
+        <HBox refname="childs"></HBox>
+        <VBox refname="childs">
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>    
+          <HBox refname="childs">
+            <Leaf refname="childs"></Leaf>
+            <Leaf refname="childs"></Leaf>
+          </HBox>        
+        </VBox>
+        <WrapBox refname="childs">
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>
+          <HBox refname="childs">
+            <Leaf refname="childs"></Leaf>
+            <Leaf refname="childs"></Leaf>
+          </HBox>    
+        </WrapBox>   
+    </HBox>
+    <HBox refname="childs">
+        <Leaf refname="childs"></Leaf>
+        <HBox refname="childs"></HBox>
+        <VBox refname="childs"></VBox>
+        <WrapBox refname="childs"></WrapBox>
+    </HBox>  
+    <HBox refname="childs">
+        <Leaf refname="childs"></Leaf>
+        <HBox refname="childs"></HBox>
+        <VBox refname="childs"></VBox>
+        <WrapBox refname="childs"></WrapBox>
+    </HBox>  
+    <HBox refname="childs">
+        <Leaf refname="childs"></Leaf>
+        <HBox refname="childs"></HBox>
+        <VBox refname="childs"></VBox>
+        <WrapBox refname="childs"></WrapBox>
+    </HBox>
+    <Rows refname="childs">
+      <HBox refname="header">
+        <Leaf refname="childs"></Leaf>
+      </HBox>
+      <Leaf refname="footer"></Leaf>
+      <Row refname="rows">
+        <Leaf refname="childs"></Leaf>
+        <VBox refname="childs">
+          <Leaf refname="childs"></Leaf>
+        </VBox>
+        <Leaf refname="childs"></Leaf>
+      </Row>
+      <Row refname="rows">
+        <Leaf refname="childs"></Leaf>
+        <Leaf refname="childs"></Leaf>
+      </Row>
+      <Row refname="rows">
+      </Row>
+      <Row refname="rows">
+        <Leaf refname="childs"></Leaf>      
+      </Row>
+    </Rows>
+    <Rows refname="childs">
+      <HBox refname="header">
+        <Leaf refname="childs"></Leaf>
+      </HBox>
+      <Leaf refname="footer"></Leaf>
+    </Rows>
+    <ListBox refname="childs">
+        <Leaf refname="childs"></Leaf>
+        <HBox refname="childs">
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>        
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>        
+        </HBox>
+        <VBox refname="childs">
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>        
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>        
+        </VBox>
+        <WrapBox refname="childs">
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>        
+          <Leaf refname="childs"></Leaf>
+          <Leaf refname="childs"></Leaf>                
+        </WrapBox>   
+        <Leaf refname="childs"></Leaf>
+        <Leaf refname="childs"></Leaf>        
+    </ListBox>    
+    <HBox refname="childs">some text</HBox>
+    <HBox refname="childs">some text</HBox>    
+  </VBox>
+</Top>
+</contents>
+</body>
+</html>

@@ -1,0 +1,50 @@
+        IFace Top = new IFace("Top");
+        Top.addField("x", "int");
+        Top.addField("y", "int");
+        Top.addField("w", "int");
+        Top.addAttribute("h", "int");
+        
+        IFace Node = new IFace("Node");
+        Node.addField("type", "int");
+        Node.addField("wInput", "int");
+        Node.addAttribute("w", "int");
+        Node.addAttribute("h", "int");
+        Node.addAttribute("x", "int");
+        Node.addAttribute("y", "int");
+        Node.addAttribute("parentWidth", "int");
+        
+        Class TopBox = new Class("TopBox", Top);
+        TopBox.addChild("root", Node);
+        TopBox.set("root@x", "x");
+        TopBox.set("root@y", "y");
+        TopBox.set("h", "root@h");
+        TopBox.set("root@parentWidth", "w");
+        
+        Class HBox = new Class("HBox", Node);
+        HBox.addChild("child1", Node);
+        HBox.addChild("child2", Node);
+        HBox.addAttribute("cursor", "int");
+        HBox.addAttribute("childPercs", "int");
+        HBox.addAttribute("childPx", "int");
+        HBox.set("child1@x", "x");
+        HBox.set("cursor", "child1@w");
+        HBox.apply("sum", "child2@x", "x", "cursor");
+        HBox.apply("findPercs", "childPercs", "child1@type", "child1@wInput", "child2@type", "child2@wInput");
+        HBox.apply("findPx", "childPx", "child1@type", "child1@wInput", "child2@type", "child2@wInput");
+        HBox.apply("calcWidth", "w", "type", "wInput", "childPercs", "childPx", "parentWidth");
+        HBox.apply("max", "h", "child1@h", "child2@h");
+        HBox.set("child1@y", "y");
+        HBox.set("child2@y", "y");
+        HBox.set("child1@parentWidth", "w");
+        HBox.set("child2@parentWidth", "w");
+        
+        Class LeafBox = new Class("LeafBox", Node);
+        LeafBox.addField("hInput", "int");
+        LeafBox.apply("calcWidthLeaf", "w", "type", "wInput", "parentWidth");
+        LeafBox.set("h", "hInput");
+        
+        ArrayList<IFace> inter = new ArrayList<IFace>();
+        ArrayList<Class> classes = new ArrayList<Class>();
+        inter.add(Top); inter.add(Node);
+        classes.add(TopBox); classes.add(HBox); classes.add(LeafBox);
+        

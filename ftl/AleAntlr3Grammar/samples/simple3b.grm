@@ -1,0 +1,322 @@
+interface Root {
+	var x: float;
+	var y: float;
+	var h: float;
+	var w: float;
+	var GGGportGGG1: float;
+	var GGGportGGG0: float;
+	var GGGportGGG2: float;
+	var GGGportGGG3: float;
+}
+interface VBox2 {
+	var h: float;
+	var w: float;
+	var x: float;
+	var y: float;
+	var t: float;
+	var l: float;
+	var b: float;
+	var r: float;
+	var GGGportGGG5: float;
+	var GGGportGGG9: float;
+	var GGGportGGG6: float;
+	var GGGportGGG8: float;
+	var GGGportGGG7: float;
+	var GGGportGGG4: float;
+	var GGGportGGG10: float;
+}
+interface HBox2 {
+	var h: float;
+	var w: float;
+	var x: float;
+	var y: float;
+	var t: float;
+	var l: float;
+	var b: float;
+	var r: float;
+	var GGGportGGG13: float;
+	var GGGportGGG17: float;
+	var GGGportGGG16: float;
+	var GGGportGGG11: float;
+	var GGGportGGG15: float;
+	var GGGportGGG12: float;
+	var GGGportGGG14: float;
+}
+interface Leaf {
+	var x: float;
+	var y: float;
+	var t: float;
+	var l: float;
+	var b: float;
+	var r: float;
+	var w: float;
+	var h: float;
+	var GGGportGGG19: float;
+	var GGGportGGG18: float;
+}
+class Root1 : Root {
+	attributes {}
+	children {VBox24: VBox2}
+	actions {
+		VBox24.GGGportGGG10 = y;
+		VBox24.GGGportGGG9 = x;
+		VBox24.l = GGGportGGG3;
+		VBox24.t = GGGportGGG2;
+		VBox24.w = GGGportGGG1;
+		VBox24.h = GGGportGGG0;
+		h = pfun107GGGh();
+		y = pfun108GGGy();
+		x = pfun109GGGx();
+		w = pfun110GGGw();
+		GGGportGGG2 = pfun111GGGGGGportGGG2();
+		GGGportGGG0 = pfun112GGGGGGportGGG0();
+		GGGportGGG1 = pfun113GGGGGGportGGG1();
+		GGGportGGG3 = pfun114GGGGGGportGGG3();
+
+	}
+}
+class VBox24 : VBox2 {
+	attributes {}
+	children {HBox20: HBox2; HBox21: HBox2}
+	actions {
+		HBox20.t = GGGportGGG8;
+		HBox21.l = GGGportGGG6;
+		HBox20.l = GGGportGGG6;
+		HBox21.GGGportGGG16 = x;
+		HBox20.GGGportGGG16 = x;
+		HBox21.w = GGGportGGG5;
+		HBox20.w = GGGportGGG5;
+		HBox21.GGGportGGG17 = y;
+		HBox20.GGGportGGG17 = y;
+		HBox21.t = GGGportGGG7;
+		HBox21.h = GGGportGGG4;
+		HBox20.h = GGGportGGG4;
+		GGGportGGG8 = pfun115GGGGGGportGGG8();
+		GGGportGGG6 = pfun116GGGGGGportGGG6();
+		x = pfun145GGGx(w, l, GGGportGGG9);
+		r = pfun145GGGr(w, l, GGGportGGG9);
+		GGGportGGG5 = pfun145GGGGGGportGGG5(w, l, GGGportGGG9);
+		GGGportGGG4 = pfun127GGGGGGportGGG4(t, GGGportGGG10, h);
+		GGGportGGG7 = pfun127GGGGGGportGGG7(t, GGGportGGG10, h);
+		y = pfun127GGGy(t, GGGportGGG10, h);
+		b = pfun127GGGb(t, GGGportGGG10, h);
+
+	}
+}
+class HBox20 : HBox2 {
+	attributes {}
+	children {VBox21: VBox2; VBox22: VBox2}
+	actions {
+		VBox22.t = GGGportGGG15;
+		VBox21.t = GGGportGGG15;
+		VBox21.l = GGGportGGG14;
+		VBox22.GGGportGGG10 = y;
+		VBox21.GGGportGGG10 = y;
+		VBox22.h = GGGportGGG11;
+		VBox21.h = GGGportGGG11;
+		VBox22.GGGportGGG9 = x;
+		VBox21.GGGportGGG9 = x;
+		VBox22.l = GGGportGGG13;
+		VBox22.w = GGGportGGG12;
+		VBox21.w = GGGportGGG12;
+		GGGportGGG15 = pfun148GGGGGGportGGG15();
+		GGGportGGG14 = pfun149GGGGGGportGGG14();
+		GGGportGGG11 = pfun205GGGGGGportGGG11(GGGportGGG17, t, h);
+		b = pfun205GGGb(GGGportGGG17, t, h);
+		y = pfun205GGGy(GGGportGGG17, t, h);
+		GGGportGGG12 = pfun179GGGGGGportGGG12(GGGportGGG16, l, w);
+		r = pfun179GGGr(GGGportGGG16, l, w);
+		x = pfun179GGGx(GGGportGGG16, l, w);
+		GGGportGGG13 = pfun179GGGGGGportGGG13(GGGportGGG16, l, w);
+
+	}
+}
+class VBox21 : VBox2{
+	attributes {}
+	children {Leaf2: Leaf; Leaf3: Leaf}
+	actions {
+		Leaf2.t = GGGportGGG8;
+		Leaf3.l = GGGportGGG6;
+		Leaf2.l = GGGportGGG6;
+		Leaf3.GGGportGGG18 = x;
+		Leaf2.GGGportGGG18 = x;
+		Leaf3.w = GGGportGGG5;
+		Leaf2.w = GGGportGGG5;
+		Leaf3.GGGportGGG19 = y;
+		Leaf2.GGGportGGG19 = y;
+		Leaf3.t = GGGportGGG7;
+		Leaf3.h = GGGportGGG4;
+		Leaf2.h = GGGportGGG4;
+		GGGportGGG8 = pfun115GGGGGGportGGG8();
+		GGGportGGG6 = pfun116GGGGGGportGGG6();
+		x = pfun145GGGx(w, l, GGGportGGG9);
+		r = pfun145GGGr(w, l, GGGportGGG9);
+		GGGportGGG5 = pfun145GGGGGGportGGG5(w, l, GGGportGGG9);
+		GGGportGGG4 = pfun127GGGGGGportGGG4(t, GGGportGGG10, h);
+		GGGportGGG7 = pfun127GGGGGGportGGG7(t, GGGportGGG10, h);
+		y = pfun127GGGy(t, GGGportGGG10, h);
+		b = pfun127GGGb(t, GGGportGGG10, h);
+
+	}
+}
+class Leaf2 : Leaf {
+	attributes {}
+	children {}
+	actions {
+		x = pfun217GGGx(w, l, GGGportGGG18);
+		r = pfun217GGGr(w, l, GGGportGGG18);
+		b = pfun224GGGb(GGGportGGG19, h, t);
+		y = pfun224GGGy(GGGportGGG19, h, t);
+
+	}
+}
+class Leaf3 : Leaf {
+	attributes {}
+	children {}
+	actions {
+		x = pfun217GGGx(w, l, GGGportGGG18);
+		r = pfun217GGGr(w, l, GGGportGGG18);
+		b = pfun224GGGb(GGGportGGG19, h, t);
+		y = pfun224GGGy(GGGportGGG19, h, t);
+
+	}
+}
+class VBox22 : VBox2 {
+	attributes {}
+	children {Leaf4: Leaf; Leaf5: Leaf}
+	actions {
+		Leaf4.t = GGGportGGG8;
+		Leaf5.l = GGGportGGG6;
+		Leaf4.l = GGGportGGG6;
+		Leaf5.GGGportGGG18 = x;
+		Leaf4.GGGportGGG18 = x;
+		Leaf5.w = GGGportGGG5;
+		Leaf4.w = GGGportGGG5;
+		Leaf5.GGGportGGG19 = y;
+		Leaf4.GGGportGGG19 = y;
+		Leaf5.t = GGGportGGG7;
+		Leaf5.h = GGGportGGG4;
+		Leaf4.h = GGGportGGG4;
+		GGGportGGG8 = pfun115GGGGGGportGGG8();
+		GGGportGGG6 = pfun116GGGGGGportGGG6();
+		x = pfun145GGGx(w, l, GGGportGGG9);
+		r = pfun145GGGr(w, l, GGGportGGG9);
+		GGGportGGG5 = pfun145GGGGGGportGGG5(w, l, GGGportGGG9);
+		GGGportGGG4 = pfun127GGGGGGportGGG4(t, GGGportGGG10, h);
+		GGGportGGG7 = pfun127GGGGGGportGGG7(t, GGGportGGG10, h);
+		y = pfun127GGGy(t, GGGportGGG10, h);
+		b = pfun127GGGb(t, GGGportGGG10, h);
+
+	}
+}
+class Leaf4 : Leaf {
+	attributes {}
+	children {}
+	actions {
+		x = pfun217GGGx(w, l, GGGportGGG18);
+		r = pfun217GGGr(w, l, GGGportGGG18);
+		b = pfun224GGGb(GGGportGGG19, h, t);
+		y = pfun224GGGy(GGGportGGG19, h, t);
+
+	}
+}
+class Leaf5 : Leaf {
+	attributes {}
+	children {}
+	actions {
+		x = pfun217GGGx(w, l, GGGportGGG18);
+		r = pfun217GGGr(w, l, GGGportGGG18);
+		b = pfun224GGGb(GGGportGGG19, h, t);
+		y = pfun224GGGy(GGGportGGG19, h, t);
+
+	}
+}
+class HBox21 :HBox2 {
+	attributes {}
+	children {Leaf6: Leaf; VBox23: VBox2}
+	actions {
+		VBox23.t = GGGportGGG15;
+		Leaf6.t = GGGportGGG15;
+		Leaf6.l = GGGportGGG14;
+		VBox23.GGGportGGG10 = y;
+		Leaf6.GGGportGGG19 = y;
+		VBox23.h = GGGportGGG11;
+		Leaf6.h = GGGportGGG11;
+		VBox23.GGGportGGG9 = x;
+		Leaf6.GGGportGGG18 = x;
+		VBox23.l = GGGportGGG13;
+		VBox23.w = GGGportGGG12;
+		Leaf6.w = GGGportGGG12;
+		GGGportGGG15 = pfun148GGGGGGportGGG15();
+		GGGportGGG14 = pfun149GGGGGGportGGG14();
+		GGGportGGG11 = pfun205GGGGGGportGGG11(GGGportGGG17, t, h);
+		b = pfun205GGGb(GGGportGGG17, t, h);
+		y = pfun205GGGy(GGGportGGG17, t, h);
+		GGGportGGG12 = pfun179GGGGGGportGGG12(GGGportGGG16, l, w);
+		r = pfun179GGGr(GGGportGGG16, l, w);
+		x = pfun179GGGx(GGGportGGG16, l, w);
+		GGGportGGG13 = pfun179GGGGGGportGGG13(GGGportGGG16, l, w);
+
+	}
+}
+class Leaf6 : Leaf{
+	attributes {}
+	children {}
+	actions {
+		b = pfun224GGGb(GGGportGGG19, h, t);
+		y = pfun224GGGy(GGGportGGG19, h, t);
+		x = pfun217GGGx(w, l, GGGportGGG18);
+		r = pfun217GGGr(w, l, GGGportGGG18);
+
+	}
+}
+class VBox23 : VBox2 {
+	attributes {}
+	children {Leaf7: Leaf; Leaf8: Leaf}
+	actions {
+		Leaf7.t = GGGportGGG8;
+		Leaf8.l = GGGportGGG6;
+		Leaf7.l = GGGportGGG6;
+		Leaf8.GGGportGGG18 = x;
+		Leaf7.GGGportGGG18 = x;
+		Leaf8.w = GGGportGGG5;
+		Leaf7.w = GGGportGGG5;
+		Leaf8.GGGportGGG19 = y;
+		Leaf7.GGGportGGG19 = y;
+		Leaf8.t = GGGportGGG7;
+		Leaf8.h = GGGportGGG4;
+		Leaf7.h = GGGportGGG4;
+		GGGportGGG8 = pfun115GGGGGGportGGG8();
+		GGGportGGG6 = pfun116GGGGGGportGGG6();
+		x = pfun145GGGx(w, l, GGGportGGG9);
+		r = pfun145GGGr(w, l, GGGportGGG9);
+		GGGportGGG5 = pfun145GGGGGGportGGG5(w, l, GGGportGGG9);
+		GGGportGGG4 = pfun127GGGGGGportGGG4(t, GGGportGGG10, h);
+		GGGportGGG7 = pfun127GGGGGGportGGG7(t, GGGportGGG10, h);
+		y = pfun127GGGy(t, GGGportGGG10, h);
+		b = pfun127GGGb(t, GGGportGGG10, h);
+
+	}
+}
+class Leaf7 : Leaf {
+	attributes {}
+	children {}
+	actions {
+		x = pfun217GGGx(w, l, GGGportGGG18);
+		r = pfun217GGGr(w, l, GGGportGGG18);
+		b = pfun224GGGb(GGGportGGG19, h, t);
+		y = pfun224GGGy(GGGportGGG19, h, t);
+
+	}
+}
+class Leaf8 :Leaf {
+	attributes {}
+	children {}
+	actions {
+		x = pfun217GGGx(w, l, GGGportGGG18);
+		r = pfun217GGGr(w, l, GGGportGGG18);
+		b = pfun224GGGb(GGGportGGG19, h, t);
+		y = pfun224GGGy(GGGportGGG19, h, t);
+
+	}
+}

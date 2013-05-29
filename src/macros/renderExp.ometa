@@ -1,0 +1,215 @@
+ometa RenderExpr <: FTLExpr{
+    primExpr = spaces '@' ^id:e '(' spaces listOf('expr', ','):args spaces ')' spaces     ->['render-call', e, args]
+             | ^primExpr
+
+}
+ometa RenderParser <: FTL{
+    assignment = spaces "@render" foreign(RenderExpr, "expr"):expr ';' spaces        -> ['render-expr', expr, expr]
+               | ^assignment
+}
+
+ometa DesugarSize <: TransBase{
+    node    = ['render-call' :name :args]   -> ['call', name + '_size', args]
+            | ^node 
+}
+
+ometa RenderDesugar <: TransBase{
+
+    draw :callNum  = [foreign(ExprGen, "binOp"):op draw(callNum):a draw(callNum):b]  -> [op, a, b]
+                | [prePost:op draw(callNum):n]                           -> [op, n]
+                | ['call' draw(callNum):fun [draw(callNum)*]:args]                -> ['call', fun, args] 
+                | ['render-call' draw(callNum):fun [draw(callNum)*:args]]       -> ['call', fun + '_draw', self.fixDrawFunctionArgs(args, callNum)]
+                | ['cond' draw(callNum):c draw(callNum):t draw(callNum):f]                 -> ['cond', c, t, f]
+                | ['fold' draw(callNum):i draw(callNum):b]                        -> ['fold', i, b]
+                | string
+                | number
+                | [],
+    
+    action  = ['asgn' anything anything]: asgn                -> [asgn]
+            | ['render-expr' draw(self.get()):d foreign(DesugarSize, "node"):s] -> 
+                    [
+                        ['asgn', '__draw__' + self.get(), self.get() == 0 ? ['+', d, '__doRenderingLast__'] : ['+', d, '__draw__' + (self.get() - 1)]], 
+                        ['asgn', '__selfRenderSize__' + self.get(), (function () { self.inc(); return s; }()) ]
+                    ],
+    
+    actions = action:first actions:rest                       -> (first.concat(rest))
+            | ['loop' :child [actions:first]] actions:rest    -> ([['loop', child, first]].concat(rest))
+            | empty                                          -> [],
+
+    node = ['actions' [actions:a]]               -> ['actions', a.concat(self.addRenderActions()) ]
+         | ['attributes' :attr] -> ['attributes', attr.concat(self.declareDrawClassAttr())]
+         | ['interface' :name :attr] -> ['interface', name, attr.concat(self.declareDrawInterfaceAttr())]
+         | ['class' 'Root' :iface [node*:nodes]] -> {self.reset(); nodes.push(['actions', [['asgn', '__doRenderingLast__', '__renderSize__'], ['asgn', '__renderRightOffset__', '__renderSize__']]]); ['class', 'Root', iface, nodes]}
+         | ['class' :name :iface [node*:nodes]]    -> {self.reset(); ['class', name, iface, nodes]}
+         | ['child' :n ['array' :t]] -> {self.children.push({'name': n, 'type': t, 'singleton': 0}); ['child', n, ['array', t]]}
+         | ['child' :n :t] -> {self.children.push({'name': n, 'type': t, 'singleton': 1}); ['child', n, t]}
+         | ^node
+}
+
+RenderDesugar.initialize = function(){
+    var self = this;
+
+    this.count = 0;
+    //{'name': n, 'type': t, 'singleton': 0}
+    this.children = [];
+    
+    this.inc = function(){
+        self.count++;
+        return self.count - 1;
+    };
+    
+    this.get = function(){
+        return self.count;
+    };
+    
+    this.reset = function(){
+        self.count = 0;
+        self.children = [];
+    };
+    
+    this.declareDrawClassAttr = function() {
+        var newAttr = [];
+        
+        newAttr.push(['var', '__draw__', 'int']);
+        newAttr.push(['var', '__selfRenderSize__', 'int']);
+        
+        // Create temp attributes for each render command
+        for(var i = 0; i < self.count; i++) {
+            newAttr.push(['var', '__draw__' + i, 'int']);
+            newAttr.push(['var', '__selfRenderSize__' + i, 'int']);
+        }
+        
+        // TODO: Rename this with leading/trailing underscores (requires change in compiler, too)
+        newAttr.push(['input', 'glBufferMacro', 'vbo']);
+        
+        // Attributes to sum our children's render size
+        for(var j = 0; j < self.children.length; j++) {
+            newAttr.push(['var', '__' + self.children[j].name + 'RenderSize__', 'int']);
+        }
+        
+        return newAttr;
+    };
+    
+    this.declareDrawInterfaceAttr = function() {
+        var newAttr = [];
+        
+        newAttr.push(['var', '__renderRightOffset__', 'int']);
+        newAttr.push(['var', '__renderOffset__', 'int']);
+        newAttr.push(['var', '__renderSize__', 'int']);
+        newAttr.push(['var', '__doRenderingLast__', 'int']);
+        
+        return newAttr;
+    };
+    
+    this.addRenderActions = function() {
+        var newActions = [];
+        
+		//FIXME is this valid if assignments are in a loop?
+		var sumPrev = function (i, lbl) {
+			if (i == -1) return 0;
+			else if (i == 0) return lbl + 0;
+			else return ['+', sumPrev(i - 1, lbl), lbl + i];
+		};
+		var drawDep = sumPrev(self.get() - 1, '__draw__');
+		newActions.push(['asgn', '__draw__', self.get() == 0 ? 0 : ('__draw__' + (self.get() - 1))  ]);
+		var sizeDep = sumPrev(self.get() - 1, '__selfRenderSize__');		
+		newActions.push(['asgn', '__selfRenderSize__', sizeDep]);
+        
+        var renderSize = ['asgn', '__renderSize__', '__selfRenderSize__'];
+        
+        for(var i = 0; i < self.children.length; i++) {
+            var child = self.children[i];
+            
+            // Child is a collection
+            if(child.singleton === 0) {
+                var loopActions = [];
+                
+                loopActions.push(['asgn', 
+                                    '__' + child.name + 'RenderSize__', 
+                                    ['fold', '0', 
+                                        ['+', 
+                                         '$-.__' + child.name + 'RenderSize__', 
+                                         child.name + '$i.__renderSize__'
+                                        ]
+                                    ]
+                                ]);
+                loopActions.push(['asgn', child.name + '.__doRenderingLast__', '__draw__']);
+                
+                // If this is the first child
+                if(i == 0) {
+                    loopActions.push(['asgn', child.name + '.__renderRightOffset__', 
+                                        ['fold', ['+', '__renderOffset__', '__selfRenderSize__'],
+                                            ['+', child.name + '$-.__renderRightOffset__', child.name + '$i.__renderSize__']]]);
+                } else {
+                    // If previous child is a singleton, access its right offset directly
+                    if(self.children[i-1].singleton === 1) {
+                        loopActions.push(['asgn', child.name + '.__renderRightOffset__', 
+                                            ['fold', self.children[i-1].name + '.__renderRightOffset__',
+                                                ['+', child.name + '$-.__renderRightOffset__', child.name + '$i.__renderSize__']]]);
+                    } else { // If previous child is a collection, access the last element's right offset
+                        loopActions.push(['asgn', child.name + '.__renderRightOffset__', 
+                                            ['fold', self.children[i-1].name + '$$.__renderRightOffset__',
+                                                ['+', child.name + '$-.__renderRightOffset__', child.name + '$i.__renderSize__']]]);
+                    }
+                }
+                
+                newActions.push(['loop', child.name, loopActions]);
+            
+            } else {    // child is a singleton
+                if(i == 0) {
+                    newActions.push(['asgn', child.name + '.__renderRightOffset__', 
+                                        ['+', 
+                                        	['+', '__renderOffset__', '__selfRenderSize__'],
+                                        	child.name + '.__renderSize__']]);
+                } else {
+                    // We take the previous child's right offset and add on from there
+                    // If previous child is a singleton, access its right offset directly
+                    if(self.children[i-1].singleton === 1) {
+                        newActions.push(['asgn', child.name + '.__renderRightOffset__', 
+                                            ['+', self.children[i-1] + '.__renderRightOffset__', child.name + '.__renderSize__']]);
+                    } else { // If previous child is a collection, access the last element's right offset
+                        newActions.push(['asgn', child.name + '.__renderRightOffset__', 
+                                            ['+', self.children[i-1] + '$$.__renderRightOffset__', child.name + '.__renderSize__']]);
+                    }
+                }
+                newActions.push(['asgn', '__' + child.name + 'RenderSize__', child.name + '.__renderSize__']);
+                newActions.push(['asgn', child.name + '.__doRenderingLast__', '__draw__']);
+            }
+            
+            // For each child, add its render size to the expression we use to calculate our
+            // render size.
+            renderSize[2] = ['+', '__' + child.name + 'RenderSize__', renderSize[2]];
+        }
+        
+        newActions.push(renderSize);
+        
+        newActions.push(['asgn', '__renderOffset__', ['-', '__renderRightOffset__', '__renderSize__']]);
+        
+        return newActions;
+    };
+    
+    
+    this.fixDrawFunctionArgs = function(args, callNum) {
+        // Each successive draw function needs to have its own distinct offset so as not to
+        // overwrite the data written by the last one.
+        var specificOffset = '__renderOffset__';
+        // The first draw command can start at the beginning of our buffer, no modification needed
+        if(callNum > 0) {
+            for(var i = 0; i < callNum; i++) {
+                specificOffset = ['+', '__selfRenderSize__' + i, specificOffset];
+            }
+        }
+        
+        args.unshift('glBufferMacro', specificOffset, '__selfRenderSize__' + callNum);
+        return args;
+    };
+}
+
+function translate(input){
+    var tree = RenderParser.matchAll(input, "topLevel");
+    //console.log("PARSED TREE");
+    //console.log(util.inspect(tree, false, null));
+    var dTree = RenderDesugar.match(tree, "topLevel");
+    //console.log("DESUGARED TREE");
+    return FTLGen.match(dTree, "topLevel");
+}

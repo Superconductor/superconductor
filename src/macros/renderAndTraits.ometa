@@ -1,0 +1,24 @@
+ometa RenderAndTraitParser <: TraitParser{
+    assignment = foreign(RenderParser, 'assignment')
+}
+
+ometa ExtTraitDesugar <: TraitDesugar {
+    node = ['render-expr' :a :b]
+         | ^node
+}
+
+
+function translateRenderAndTraits(input){
+    var tree = RenderAndTraitParser.matchAll(input, "topLevel");
+    //console.log("Parsed");
+    //console.log(util.inspect(tree, false, null));
+    var tree1 = ExtTraitDesugar.match(tree, "topLevel");
+    //console.log("Traits");
+    var tree2 = ClassComb.match(tree1, "topLevel");
+    //console.log("Comb");
+    var tree3 = RenderDesugar.match(tree2, "topLevel");
+    //console.log("Render");
+    var output = TraitGen.match(tree3, "topLevel");
+    //console.log(output);
+    return output
+}

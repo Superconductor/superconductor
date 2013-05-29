@@ -1,0 +1,15 @@
+//requires a post-assume to be truly solved with a td
+
+interface node { var x : int; }
+class a : node {
+  children { next : node; }
+  actions {
+    x := 1;
+  }
+}
+class leaf : node {
+
+  actions {
+    x := 2;
+  }
+}

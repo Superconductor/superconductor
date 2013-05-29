@@ -1,0 +1,19 @@
+interface TopI { 
+  
+}
+interface LeafI { 
+  var  x : int;
+}
+
+class Root : TopI {
+  children { leaves : [LeafI] }
+  actions {  
+    loop leaves* {
+      leaves.x := fold  .. leaves$-.x + 10;
+    }  
+  }
+} 
+
+class Leaf : LeafI {
+
+}

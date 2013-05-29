@@ -1,0 +1,48 @@
+        // Tricky Passes Grammar
+
+        // define TopLevel interface
+        IFace topLevel = new IFace("topLevel");
+        topLevel.addAttribute("a"); topLevel.addAttribute("b"); topLevel.addAttribute("d");
+        
+        // define MiddleLevel interface
+        IFace midLevel = new IFace("midLevel");
+        midLevel.addAttribute("e"); midLevel.addAttribute("f"); midLevel.addAttribute("g"); midLevel.addAttribute("h"); midLevel.addAttribute("i");
+        
+        // define Bottomlevel interface
+        IFace botLevel = new IFace("botLevel");
+        botLevel.addAttribute("j"); botLevel.addAttribute("k"); botLevel.addAttribute("l"); botLevel.addAttribute("m"); botLevel.addAttribute("n");
+        
+        // define Top Class
+        Class top = new Class("top", topLevel);
+        top.addField("zero"); top.addAttribute("c");
+        top.set("child@e", "a");
+        top.set("child@f", "b");
+        top.set("child@i", "d");
+        top.set("a", "zero");
+        top.set("d", "c");
+        top.set("b", "child@e");
+        top.apply("sum", "c", "child@g", "child@h");        
+        
+        // define Mid Class
+        Class mid = new Class("mid", midLevel);
+        mid.addAttribute("o");
+        mid.set("child@j", "f");
+        mid.set("child@l", "g");
+        mid.set("child@n", "o");
+        mid.set("g", "child@k");
+        mid.set("h", "child@m");
+        mid.apply("sum", "o", "h", "i");
+        
+        // define Bot Class
+        Class bot = new Class("bot", botLevel);
+        bot.set("k", "j");
+        bot.set("m", "l");
+        
+        // define children relationships
+        top.addChild("child", midLevel);
+        mid.addChild("child", botLevel);
+        
+        ArrayList<IFace> inter = new ArrayList<IFace>();
+        ArrayList<Class> classes = new ArrayList<Class>();
+        inter.add(topLevel); inter.add(midLevel); inter.add(botLevel);
+        classes.add(top); classes.add(mid); classes.add(bot);

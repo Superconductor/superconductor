@@ -1,0 +1,89 @@
+%
+% TODO remove the squeeze and reinstate what is appropriate
+%
+\newcommand{\REINSTATE}[1]{}
+\newcommand{\SQUEEZE}[1]{#1}
+%\newcommand{\SQUEEZE}[1]{}
+
+%\REINSTATE{\usepackage{usenix}}
+%\SQUEEZE{\usepackage{squeezedusenix}}
+
+\newcommand{\nnum}[1]{\sepnum{.}{,}{}{#1}}
+\newcommand{\ttime}[1]{\sepnum{.}{,}{}{#1}}
+\renewcommand{\comment}[1]{}
+\newcommand{\hide}[1]{}
+\newcommand{\ifgame}[1]{}
+\newcommand{\callbackExample}[2]{{#1 (#2):}}
+%\newcommand{\code}[1]{{\ifmmode{\mathtt{#1}}\else$\mathtt{#1}$\fi}}
+\newcommand{\htmltag}[1]{\code{<\!\!#1\!\!>}}
+\newcommand{\smallcode}[1]{{\footnotesize\ifmmode{\mathtt{#1}}\else$\mathtt{#1}$\fi}}
+\newcommand{\verysmallcode}[1]{{\scriptsize\ifmmode{\mathtt{#1}}\else$\mathtt{#1}$\fi}}
+\newcommand{\verysmallcodebf}[1]{{\scriptsize\ifmmode{\bm{\mathtt{#1}}}\else$\bm{\mathtt{#1}}$\fi}}
+
+\setcounter{totalnumber}{1}
+\setcounter{topnumber}{1}
+
+\makeatletter
+\renewcommand{\verbatim@font}{\footnotesize\fontfamily{cmtt}\selectfont}
+
+%\newtheoremstyle{note}{3pt}{3pt}{\rmshape}{}{\itshape}{:}{.5em}
+
+\newtheorem{definition}{Definition}[section]
+
+\newcounter{example}[section]
+\renewcommand{\theexample}{\arabic{example}.}
+\newenvironment{ex}{
+\refstepcounter{example}{
+% need blank line for new paragraph
+\vskip -7pt \noindent {\bf \\ Example \theexample \ }}}{ \ $\Box$
+% need blank line for new paragraph
+}
+
+\newenvironment{verbacode}[2]{%
+    \newcommand*{\mycaptiontext}{#1}%
+    \newcommand*{\mylabeltext}{#2}%
+%
+    \begin{figure*}[tb]%
+    \begin{centering}%
+    \rule[2pt]{\linewidth}{0.6pt}
+    \begin{minipage}{12cm}%
+    \scriptsize%
+    \begin{alltt}}{%
+    \end{alltt}%
+    \end{minipage}%
+    \par%
+    \end{centering}%
+    \vspace*{2pt}%
+    \rule[10pt]{\linewidth}{0.6pt}
+        \vspace*{-6ex}%
+    \caption{\mycaptiontext}%
+    \label{\mylabeltext}%
+    \end{figure*}}
+
+\newenvironment{columnfig}[3]{%
+    \newcommand*{\mycaptiontext}{#2}%
+    \newcommand*{\mylabeltext}{#3}%
+%
+    \begin{figure}[#1]%
+    \begin{centering}%
+    \rule[2pt]{\linewidth}{0.6pt}
+    \begin{minipage}{\columnwidth}}{%
+    \end{minipage}%
+    \par%
+    \end{centering}%
+    \vspace*{2pt}%
+    \rule[10pt]{\linewidth}{0.6pt}
+        \vspace*{-6ex}%
+    \caption{\mycaptiontext}%
+    \label{\mylabeltext}%
+    \end{figure}}
+
+\newcommand{\squish}{
+      \setlength{\topsep}{0pt}
+      \setlength{\itemsep}{0ex}
+      \vspace{-1ex}
+      \setlength{\parskip}{0pt}}
+ \BeforeBegin{verbatim}{\vskip -2pt} \AfterEnd{verbatim}{\vskip 
+-2pt}
+
+\makeatletter

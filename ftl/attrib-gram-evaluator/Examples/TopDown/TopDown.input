@@ -1,0 +1,39 @@
+		// Single TopDown Pass
+
+		// define Frame interface
+		IFace frame = new IFace("frame");
+		frame.addAttribute("c");
+		
+		// define Node interface
+		IFace node = new IFace("node");
+		node.addAttribute("d"); node.addAttribute("e"); node.addAttribute("f"); node.addAttribute("g"); node.addAttribute("h");
+		
+		// define Top Class
+		Class top = new Class("top", frame);
+		top.addField("a"); top.addField("b");
+		top.set("root@d", "a");
+		top.set("root@e", "a");
+		top.set("root@f", "b");
+		top.set("root@g", "b");
+		top.set("c", "b");
+		top.set("root@h", "c");
+		
+		// define InnerNode Class
+		Class mid = new Class("mid", node);
+		mid.set("child@d", "d");
+		mid.set("child@e", "f");
+		mid.set("child@f", "e");
+		mid.set("child@g", "g");
+		mid.set("child@h", "h");
+		
+		// define LeafNode Class
+		Class bot = new Class("bot", node);
+		
+		// define children relationships
+		top.addChild("root", node);
+		mid.addChild("child", node);
+		
+		ArrayList<IFace> inter = new ArrayList<IFace>();
+		ArrayList<Class> classes = new ArrayList<Class>();
+		inter.add(frame); inter.add(node);
+		classes.add(top); classes.add(mid); classes.add(bot);

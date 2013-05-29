@@ -1,0 +1,264 @@
+type shapeType =  None | Rect | RoundedRect | Ellipse | Edge;
+type FloatType = Left | Right | None;
+type textAlignType = Inherit | Center | Left | Right;
+type verticalAlignType = Inherit | Top | Bottom | Middle;
+
+interface Top { }
+
+interface Node { 
+  var canvas : int;
+  var composite : int; 
+  input float : FloatType = none; //ignore for now
+  var availableW : int;
+
+  var textRequests : int;
+  var metrics : int;
+
+  input backgroundColor : color = #00000000; //transparent
+  input color : ?color;
+  var inhColor : color;
+
+  input fontSize : ?px;
+  input fontFamily : ?string;
+  var inhFontFamily : string;
+  var inhFontSize : px;
+
+  input padding : px = 0;
+  input margin : px = 0;
+  input minWidth : px = 0;
+  input width : ?px;
+    
+  var cumulativeW : int; //enables computing $-.computedW  
+  var cumulativeH : int; //enables computing $-.computedH
+  var maxLineH : int; 
+  
+  //bounding box (includes margin, padding, content box)
+  var intrinsicWPref : int;
+  var intrinsicWMin : int;
+  var computedRelY : int;
+  var computedRelX : int;
+  var computedAbsX : int;
+  var computedAbsY : int;
+  var computedW : int;
+  var computedH : int;
+  
+}
+interface TableRowI { } 
+interface TableCellI { }
+
+class Root : Top { 
+  children { child : Node; }
+  attributes {
+    var composite : int;   
+    input backgroundColor : color = #FFF;
+    input color : color = #000;   
+    input fontFamily : string = "Verdana";      
+    input fontSize : px = 20;
+//    input padding : px = 0;
+//    input margin : px = 0;
+
+    input availableW : int = 400;
+    input minWidth : px = 0;
+    input width : ?px;
+  }
+  actions {
+    child.metrics := runRequests(child.textRequests);  
+    child.canvas := paint(
+      Rect, 0, 0, 
+      /*2 * margin + 2 * padding*/ + child.computedW, /*2 * margin + 2 * padding*/ + child.computedH, 
+      backgroundColor, paintStart(child.computedW, child.computedH, 0));
+    composite := paintDone(child.composite);
+    child.availableW := 
+      !isEmptyInt(width) ? valueInt(width)
+      : availableW < minWidth ? minWidth : availableW;
+
+    child.inhColor := color;    
+    child.inhFontFamily := fontFamily;
+    child.inhFontSize := fontSize;
+
+    child.computedRelX := 0; //margin + padding;
+    child.computedRelY := 0; //margin + padding;
+    child.computedAbsX := 0;
+    child.computedAbsY := 0;
+    child.cumulativeW := 0;
+    child.cumulativeH := 0;
+    child.maxLineH := 0;
+     
+  }
+}
+
+//FIXME word wrap on what and paint on what?
+class Block : Node {  //treat as HBox for now
+  children { child : [Node]; }  
+  attributes {
+    var background : int;
+    var contentW : int; //content + padding
+    var contentH : int; //content + padding
+    var intrinsicWPrefChildren : int;
+    var intrinsicWMinChildren : int;
+    
+    var isVertical : bool;
+  }
+  actions {
+    background := paint(Rect, computedAbsX + margin, computedAbsY + margin, contentW, contentH, backgroundColor, canvas);
+    
+    loop child {
+      isVertical := fold true .. self$-.isVertical && (child$i.display == Block || child$i.display == Table);
+    }
+    
+        
+    intrinsicWPref := 2 * padding + 2 * margin +
+      (!isEmptyInt(width) ? valueInt(width)
+       : intrinsicWPrefChildren < minWidth ? minWidth : intrinsicWPrefChildren);       
+    intrinsicWMin := 2 * padding + 2 * margin +
+      (!isEmptyInt(width) ? valueInt(width)
+       : intrinsicWMinChildren < minWidth ? minWidth : intrinsicWMinChildren);       
+    
+    computedW :=  
+      !isEmptyInt(width) ? (2 * padding + 2 * margin + valueInt(width))
+      : intrinsicWPref < availableW ? intrinsicWPref
+      : availableW > intrinsicWMin ? availableW : intrinsicWMin;  
+    contentW := computedW - 2 * margin; //may be negative..
+    computedH := 2 * margin + contentH;      
+        
+    loop child {   
+      textRequests := fold 0 .. self$-.textRequests + child$i.textRequests;
+      child.metrics := metrics;  
+      child.canvas := background;           
+      child.availableW := (contentW - 2 * padding) < 0 ? 0 : (contentW - 2 * padding);
+
+      child.inhColor := isEmptyColor(color) ? inhColor : valueColor(color);    
+      child.inhFontFamily := isEmptyString(fontFamily)? inhFontFamily : valueString(fontFamily);
+      child.inhFontSize := isEmptyInt(fontSize) ? inhFontSize : valueInt(fontSize);
+
+      child.cumulativeW := fold 0 .. child$-.cumulativeW + child$i.computedW;     
+      child.cumulativeH := fold 0 .. child$-.cumulativeH < child$i.computedH ? child$i.computedH : child$-.cumulativeH;
+      
+      child.computedAbsX := computedAbsX + margin + padding + child$i.computedRelX; 
+      child.computedAbsY := computedAbsY + margin + padding + child$i.computedRelY; 
+       
+    }
+    
+    loop child {
+      intrinsicWMinChildren := fold 0 .. self$-.intrinsicWMinChildren <  child$i.intrinsicWMin ? child$i.intrinsicWMin : self$-.intrinsicWMinChildren;    
+    }
+    
+    if (isVertical) {
+      loop child {
+        intrinsicWPrefChildren := fold 0 .. self$-.intrinsicWPrefChildren < child$i.intrinsicWPref ? child$i.intrinsicWPref : self$-.intrinsicWPrefChildren;
+        child.computedRelX := fold 0 .. 0;
+        child.maxLineH := fold 0 .. child$i.computedH;
+        child.computedRelY := fold 0 .. child$-.computedRelY + child$-.maxLineH; 
+        contentH := padding + child$$.cumulativeH + padding;
+      }
+    } else {
+      loop child {
+        intrinsicWPrefChildren := fold 0 .. self$-.intrinsicWPrefChildren + child$i.intrinsicWPref;      
+        child.computedRelX := //word wrap on contentW (may be 0)
+          fold 0 .. 
+           ( (child$-.computedRelX > 0) && 
+             ((child$-.computedRelX + child$i.cumulativeW - child$i.computedW) > contentW) ) ? 
+             0 : (child$-.computedRelX + child$i.cumulativeW - child$i.computedW);
+        child.maxLineH := //word wrap on same condition as for X
+          fold 0 .. 
+           ( (child$-.computedRelX > 0) && 
+             ((child$-.computedRelX + child$i.cumulativeW - child$i.computedW) > contentW) ) ? 
+             child$i.computedH : (child$i.computedH < child$-.maxLineH ? child$-.maxLineH : child$i.computedH);
+
+        child.computedRelY := //word wrap on same condition as for X
+          fold 0 ..
+           ( (child$-.computedRelX > 0) && 
+             ((child$-.computedRelX + child$i.cumulativeW - child$i.computedW) > contentW) ) ? 
+             (child$-.computedRelY + child$-.maxLineH) : child$-.computedRelY;
+        contentH := padding + child$$.computedRelY + child$$.maxLineH + padding;
+      }
+    }    
+  }
+}
+class InlineBlock : Node {
+  actions {
+    textRequests := 0;
+    composite := canvas;//paint(Rect, computedAbsX, computedAbsY, computedW, computedH, 98923, canvas);
+    computedW := 10;
+    computedH := 10;
+    intrinsicWPref := 10;
+    intrinsicWMin := 10;       
+  }  
+}
+class Inline : Node {
+  actions {
+    textRequests := 0;
+    composite := canvas;//paint(Rect, computedAbsX, computedAbsY, computedW, computedH, 98923, canvas);
+    computedW := 10;
+    computedH := 10;
+    intrinsicWPref := 10;
+    intrinsicWMin := 10;       
+  }
+}
+class InlineTable : Node {
+  actions {
+    textRequests := 0;
+    composite := canvas;//paint(Rect, computedAbsX, computedAbsY, computedW, computedH, 98923, canvas);
+    computedW := 10;
+    computedH := 10;
+    intrinsicWPref := 10;
+    intrinsicWMin := 10;       
+  }
+}
+class Table : Node {
+  actions {
+    textRequests := 0;
+    composite := canvas;//paint(Rect, computedAbsX, computedAbsY, computedW, computedH, 98972, canvas);
+    computedW := 10;
+    computedH := 10;    
+    intrinsicWPref := 10;
+    intrinsicWMin := 10;       
+  }
+}
+class None : Node {
+  actions {
+    textRequests := 0;
+    composite := canvas;//paint(Rect, computedAbsX, computedAbsY, computedW, computedH, 982987, canvas);
+    computedW := 0;
+    computedH := 0;    
+    intrinsicWPref := 10;
+    intrinsicWMin := 10;       
+  }
+}
+class TextBox : Node { 
+  attributes { 
+    input text : string; 
+    var lineHeight : int;
+    var computedFontFamily : string;
+    var computedFontSize : int;
+  }
+  actions {
+  
+    computedFontFamily := isEmptyString(fontFamily)? inhFontFamily : valueString(fontFamily);  
+    computedFontSize := isEmptyInt(fontSize) ? inhFontSize : valueInt(fontSize);
+  
+    textRequests := requestGlyphs(text, computedFontFamily, computedFontSize, 0);    
+    composite := paintParagraph(
+        text, computedFontFamily, computedFontSize, 
+        computedAbsX, computedAbsY, computedW, false /*overflow*/, lineHeight, 
+        !isEmptyColor(color) ? valueColor(color) : inhColor, lineHeight /*spacing*/, 
+        canvas);   
+    lineHeight := getLineHeight(text, computedFontFamily, computedFontSize, metrics);
+
+    intrinsicWPref := getSumWordW(text, computedFontFamily, computedFontSize, metrics);
+    intrinsicWMin := getMaxWordW(text, computedFontFamily, computedFontSize, metrics);
+       
+    computedW :=
+      intrinsicWPref < availableW ? intrinsicWPref
+        : (availableW > intrinsicWMin ? availableW : intrinsicWMin);    
+    computedH := 
+      getNumberLines(text, computedFontFamily, computedFontSize, computedW, false /*overflow*/, metrics) 
+      * (lineHeight + lineHeight /*lineSpacing*/);
+  }
+}
+
+
+//DTUNKNOWN?
+class TableRow : TableRowI { }
+class TableCell : TableCellI { }
+

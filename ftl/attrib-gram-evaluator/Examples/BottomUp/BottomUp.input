@@ -1,0 +1,43 @@
+		// Single Bottom-Up Test
+		
+		// define Frame interface
+		IFace frame = new IFace("frame");
+		frame.addAttribute("a"); frame.addAttribute("b"); frame.addAttribute("c");
+		
+		// define Node interface
+		IFace node = new IFace("node");
+		node.addAttribute("d"); node.addAttribute("e"); node.addAttribute("f"); node.addAttribute("g");
+		
+		// define Node2 interface
+		IFace node2 = new IFace("node2");
+		node2.addAttribute("j"); node2.addAttribute("k"); node2.addAttribute("l"); node2.addAttribute("m");
+		
+		// define Top Class
+		Class top = new Class("top", frame);
+		top.apply("sum", "a", "root@d", "root@e");
+		top.set("b", "root@f");
+		top.set("c", "root@g");
+		
+		// define InnerNode Class
+		Class mid = new Class("mid", node);
+		mid.set("d", "child@k");
+		mid.set("e", "child@k");
+		mid.set("f", "child@k");
+		mid.apply("sum", "g", "child@l", "child@m");
+		
+		// define LeafNode Class
+		Class bot = new Class("bot", node2);
+		bot.addField("h"); bot.addField("i");
+		bot.set("k", "j");
+		bot.set("j", "h");
+		bot.set("l", "i");
+		bot.set("m", "i");
+		
+		// define children relationships
+		top.addChild("root", node);
+		mid.addChild("child", node2);
+		
+		ArrayList<IFace> inter = new ArrayList<IFace>();
+		ArrayList<Class> classes = new ArrayList<Class>();
+		inter.add(frame); inter.add(node); inter.add(node2);
+		classes.add(top); classes.add(mid); classes.add(bot);

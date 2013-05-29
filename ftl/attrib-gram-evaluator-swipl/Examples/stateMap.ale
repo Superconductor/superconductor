@@ -1,0 +1,219 @@
+type shapeType =  Rect | RoundedRect | Ellipse | Edge;
+interface Renderable {
+  input align : string @ 0;
+  input bgColor : color @ 1;
+  input bold : bool = false @ 2;
+  input borderWidth : int = 0 @ 3;
+  input borderColor : color @ 4;
+  input clipsSelf : bool = false @ 5;
+  input clipsChildren : bool = false @ 6;
+  input cornerxRadius : int = 0 @ 7;
+  input corneryRadius : int = 0 @ 8;
+  input font : string = "Verdana" @ 9;
+  input fontSize : int = 12 @ 10;
+  input image : string = "" @ 11;
+  input italic : bool = false @ 12;
+  input lgradPCs : string = "" @ 13;
+  input lgradStart : string = "" @ 14;
+  input lgradStop : string = "" @ 15;
+  input opacity : float = 0.5 @ 16;
+  input rgradCenter : string = "" @ 17;
+  input rgradFP : string = "" @ 18;
+  input rgradPCs : string = "" @ 19;
+  input rgradRadius : string = "" @ 20;
+  input shape : shapeType = rect @ 21;
+  input textColor : color @ 22;
+  input textWeight : int = 1 @ 23;
+  input underline : bool = false @ 24;
+  input visible : bool = true @ 25;
+  input z : int = 1 @ 26;
+}
+
+interface Top {
+  var x : int @ 0; //positioned for renderer
+  var y : int @ 1;
+  var w : int @ 2;
+  var h : int @ 3;
+  
+  input align : string @ 0;
+  input bgColor : color @ 1;
+  input bold : bool = false @ 2;
+  input borderWidth : int = 0 @ 3;
+  input borderColor : color @ 4;
+  input clipsSelf : bool = false @ 5;
+  input clipsChildren : bool = false @ 6;
+  input cornerxRadius : int = 0 @ 7;
+  input corneryRadius : int = 0 @ 8;
+  input font : string = "Verdana" @ 9;
+  input fontSize : int = 12 @ 10;
+  input image : string = "" @ 11;
+  input italic : bool = false @ 12;
+  input lgradPCs : string = "" @ 13;
+  input lgradStart : string = "" @ 14;
+  input lgradStop : string = "" @ 15;
+  input opacity : float = 0.5 @ 16;
+  input rgradCenter : string = "" @ 17;
+  input rgradFP : string = "" @ 18;
+  input rgradPCs : string = "" @ 19;
+  input rgradRadius : string = "" @ 20;
+  input shape : shapeType = rect @ 21;
+  input textColor : color @ 22;
+  input textWeight : int = 1 @ 23;
+  
+  input underline : bool = false @ 24;
+  input visible : bool = true @ 25;
+  input z : int = 1 @ 26;
+  
+//  input text : string; //custom XML integration 
+//  input id : int; //to simplify debugging
+}
+
+interface State {
+  var x : int @ 0; //positioned for renderer
+  var y : int @ 1;
+  var w : int @ 2;
+  var h : int @ 3;
+  
+  input align : string @ 0;
+  input bgColor : color @ 1;
+  input bold : bool = false @ 2;
+  input borderWidth : int = 0 @ 3;
+  input borderColor : color @ 4;
+  input clipsSelf : bool = false @ 5;
+  input clipsChildren : bool = false @ 6;
+  input cornerxRadius : int = 0 @ 7;
+  input corneryRadius : int = 0 @ 8;
+  input font : string = "Verdana" @ 9;
+  input fontSize : int = 12 @ 10;
+  input image : string = "" @ 11;
+  input italic : bool = false @ 12;
+  input lgradPCs : string = "" @ 13;
+  input lgradStart : string = "" @ 14;
+  input lgradStop : string = "" @ 15;
+  input opacity : float = 0.5 @ 16;
+  input rgradCenter : string = "" @ 17;
+  input rgradFP : string = "" @ 18;
+  input rgradPCs : string = "" @ 19;
+  input rgradRadius : string = "" @ 20;
+  input shape : shapeType = rect @ 21;
+  input textColor : color @ 22;
+  input textWeight : int = 1 @ 23;
+  
+  input underline : bool = false @ 24;
+  input visible : bool = true @ 25;
+  input z : int = 1 @ 26;
+  
+//  input text : string; //custom XML integration 
+//  input id : int; //to simplify debugging
+}
+
+interface Node {
+  var x : int @ 0; //positioned for renderer
+  var y : int @ 1;
+  var w : int @ 2;
+  var h : int @ 3;
+  
+  input align : string @ 0;
+  input bgColor : color @ 1;
+  input bold : bool = false @ 2;
+  input borderWidth : int = 0 @ 3;
+  input borderColor : color @ 4;
+  input clipsSelf : bool = false @ 5;
+  input clipsChildren : bool = false @ 6;
+  input cornerxRadius : int = 0 @ 7;
+  input corneryRadius : int = 0 @ 8;
+  input font : string = "Verdana" @ 9;
+  input fontSize : int = 12 @ 10;
+  input image : string = "" @ 11;
+  input italic : bool = false @ 12;
+  input lgradPCs : string = "" @ 13;
+  input lgradStart : string = "" @ 14;
+  input lgradStop : string = "" @ 15;
+  input opacity : float = 0.5 @ 16;
+  input rgradCenter : string = "" @ 17;
+  input rgradFP : string = "" @ 18;
+  input rgradPCs : string = "" @ 19;
+  input rgradRadius : string = "" @ 20;
+  input shape : shapeType = rect @ 21;
+  input textColor : color @ 22;
+  input textWeight : int = 1 @ 23;
+  
+  input underline : bool = false @ 24;
+  input visible : bool = true @ 25;
+  input z : int = 1 @ 26;
+  
+//  input text : string; //custom XML integration 
+//  input id : int; //to simplify debugging
+}
+
+class TopBox : Top {
+  children { root : State; }
+  attributes { 
+    input fx : int;
+    input fy : int; 
+  }
+  actions {
+    x := fx;
+    y := fy;
+    root.x := x;
+    root.y := y;
+    h := root.h;
+    w := root.w;
+  }
+}
+
+class StateBox : State {
+  children {
+    name : Node;
+    reps : Node;
+  }
+  actions {
+    name.x := x;
+    name.y := y;
+    reps.x := x;
+    reps.y := y + name.h;
+    h :=  name.h + reps.h;
+    w :=  (name.w > reps.w ? name.w : reps.w);
+  }
+}
+
+class VBox : Node {
+  children {
+    child1 : Node;
+    child2 : Node;
+  }
+  actions {
+    child1.x := x;
+    child2.x := x;
+    child1.y := y;
+    child2.y := y + child1.h;
+    h := child1.h + child2.h;
+    w := (child1.w > child2.w ? child1.w : child2.w);
+  }
+}
+
+class HBox : Node {
+  children {
+    child1 : Node;
+    child2 : Node;
+  }
+  actions {
+    child1.x := x;
+    child1.y := y;
+    child2.y := y;
+    child2.x := x + child1.w;
+    w := child1.w + child2.w;
+    h := (child1.h > child2.h ? child1.h : child2.h);
+  }
+}
+
+class LeafBox : Node {
+  attributes { 
+    input fh : int;
+    input fw : int; 
+  }
+  actions {
+    h := fh;
+    w := fw;
+  }
+}

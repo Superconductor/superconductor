@@ -1,0 +1,83 @@
+digraph G{
+	subgraph cluster0{
+		color=black;
+		label="TopBox-graph";
+		subgraph cluster1{
+			label="TopBox";
+			node[style=filled];
+			TopBox_w[label="w"];
+			TopBox_y[label="y"];
+			TopBox_h[label="h"];
+			TopBox_x[label="x"];
+			TopBox_fx[label="$fx", shape=box];
+			TopBox_fy[label="$fy", shape=box];
+		}
+		subgraph cluster2{
+			label="Node";
+			node[style=filled];
+			TopBox_Node_w[label="w"];
+			TopBox_Node_h[label="h"];
+			TopBox_Node_y[label="y"];
+			TopBox_Node_x[label="x"];
+		}
+		TopBox_fx -> TopBox_x[color=blue];
+		TopBox_x -> TopBox_Node_x[color=blue];
+		TopBox_fy -> TopBox_y[color=blue];
+		TopBox_Node_w -> TopBox_w[color=darkgreen];
+		TopBox_y -> TopBox_Node_y[color=darkgreen];
+		TopBox_Node_h -> TopBox_h[color=darkgreen];
+	}
+	subgraph cluster3{
+		color=black;
+		label="VBox-graph";
+		subgraph cluster4{
+			label="VBox";
+			node[style=filled];
+			VBox_w[label="w"];
+			VBox_y[label="y"];
+			VBox_h[label="h"];
+			VBox_x[label="x"];
+			VBox_temph[label="$temph"];
+		}
+		subgraph cluster5{
+			label="Node";
+			node[style=filled];
+			VBox_Node_w[label="w"];
+			VBox_Node_h[label="h"];
+			VBox_Node_y[label="y"];
+			VBox_Node_x[label="x"];
+		}
+		parent0[label="Parent",style=dotted];
+		VBox_x -> VBox_Node_x[color=blue];
+		VBox_x -> VBox_Node_x[color=blue];
+		VBox_Node_h -> VBox_h[color=darkgreen];
+		VBox_Node_h -> VBox_h[color=darkgreen];
+		VBox_Node_w -> VBox_w[color=darkgreen];
+		VBox_Node_w -> VBox_w[color=darkgreen];
+		VBox_y -> VBox_temph[color=darkgreen];
+		VBox_Node_h -> VBox_temph[color=darkgreen];
+		VBox_temph -> VBox_Node_y[color=darkgreen];
+		VBox_y -> VBox_Node_y[color=darkgreen];
+		VBox_w -> parent0[color=darkgreen,label="1",fontcolor=darkgreen];
+		VBox_h -> parent0[color=darkgreen,label="1",fontcolor=darkgreen];
+	}
+	subgraph cluster6{
+		color=black;
+		label="LeafBox-graph";
+		subgraph cluster7{
+			label="LeafBox";
+			node[style=filled];
+			LeafBox_w[label="w"];
+			LeafBox_y[label="y"];
+			LeafBox_h[label="h"];
+			LeafBox_x[label="x"];
+			LeafBox_fw[label="$fw", shape=box];
+			LeafBox_fh[label="$fh", shape=box];
+		}
+		parent1[label="Parent",style=dotted];
+		LeafBox_fw -> LeafBox_w[color=blue];
+		LeafBox_fh -> LeafBox_h[color=blue];
+		LeafBox_w -> parent1[color=blue,label="1",fontcolor=darkgreen];
+		LeafBox_h -> parent1[color=blue,label="1",fontcolor=darkgreen];
+	}
+}

@@ -1,0 +1,68 @@
+digraph G{
+	subgraph cluster0{
+		color=black;
+		label="mid-graph";
+		subgraph cluster1{
+			label="mid";
+			node[style=filled];
+			mid_d[label="d"];
+			mid_e[label="e"];
+			mid_f[label="f"];
+			mid_g[label="g"];
+			mid_h[label="h"];
+		}
+		subgraph cluster2{
+			label="node";
+			node[style=filled];
+			mid_node_d[label="d"];
+			mid_node_e[label="e"];
+			mid_node_f[label="f"];
+			mid_node_g[label="g"];
+			mid_node_h[label="h"];
+		}
+		mid_e -> mid_node_f[color=blue];
+		mid_g -> mid_node_g[color=blue];
+		mid_h -> mid_node_h[color=blue];
+		mid_f -> mid_node_e[color=blue];
+		mid_d -> mid_node_d[color=blue];
+	}
+	subgraph cluster3{
+		color=black;
+		label="top-graph";
+		subgraph cluster4{
+			label="top";
+			node[style=filled];
+			top_c[label="c"];
+			top_a[label="$a", shape=box];
+			top_b[label="$b", shape=box];
+		}
+		subgraph cluster5{
+			label="node";
+			node[style=filled];
+			top_node_d[label="d"];
+			top_node_e[label="e"];
+			top_node_f[label="f"];
+			top_node_g[label="g"];
+			top_node_h[label="h"];
+		}
+		top_c -> top_node_h[color=blue];
+		top_a -> top_node_e[color=blue];
+		top_a -> top_node_d[color=blue];
+		top_b -> top_c[color=blue];
+		top_b -> top_node_f[color=blue];
+		top_b -> top_node_g[color=blue];
+	}
+	subgraph cluster6{
+		color=black;
+		label="bot-graph";
+		subgraph cluster7{
+			label="bot";
+			node[style=filled];
+			bot_d[label="d"];
+			bot_e[label="e"];
+			bot_f[label="f"];
+			bot_g[label="g"];
+			bot_h[label="h"];
+		}
+	}
+}

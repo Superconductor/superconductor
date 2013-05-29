@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+text {
+  font: 10px sans-serif;
+}
+
+line {
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+circle {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+</style>
+<body>
+<script src="jquery.js"></script>
+<script src="d3.v2.js"></script>
+<script src="fisheye.js"></script>
+<script>
+
+var width = 960,
+    height = 800;
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+var loading = svg.append("text")
+    .attr("x", width / 2)
+    .attr("y", height / 2)
+    .attr("dy", ".35em")
+    .attr("text-anchor", "middle")
+    .text("simulating. one moment please…");
+
+
+function parseGraph () {
+  var statements = $("#prolog").text().split("\n");
+  var interfaces = [];
+  var interfaceByName = {};
+  var classes = [];
+  var classByName = {};
+  var assignments = [];
+  for (var i = 0; i < statements.length; i++) {
+    var s = statements[i];
+    if (s.match(":- dynamic")) continue;    
+    if (s.match(":- false.")) continue;
+    if (s.match("display")) continue;
+    if (s.match("refname")) continue;
+    if (s.match("gensym")) continue;
+    if (s.match("unroll2")) continue;
+    if (s.match("unrolln")) continue;
+    if (s.match("step2")) continue;
+    if (s.match("stepn")) continue;    
+    //if (s.match("gensym")) continue;
+    if (s.match(/interface\(/)) {
+      var name = s.split("(")[1].split(")")[0];
+      var iface = {name: name.toUpperCase(), attributes: [], inputs: [], type: 'iface'};
+      interfaceByName[name] = iface;
+      interfaces.push(iface);
+    } else if (s.match("interfaceAttribute")) {
+      var iface = interfaceByName[s.split("(")[1].split(",")[0]];
+      var attr = s.split("(")[1].split(" ")[1].split(")")[0];
+      iface.attributes.push({name: attr, type: 'var'});
+    } else if (s.match(/class\(/)) {
+      var name = s.split("(")[1].split(",")[0];      
+      var iface = s.split(" ")[1].split(")")[0];            
+      var cls = {name: name.toUpperCase(), iface: interfaceByName[iface], attributes: [], children: [], childByName: {}, inputs: [], type: 'class'};
+      classByName[name] = cls;
+      classes.push(cls);
+    } else if (s.match(/classChild/)) {
+      var name = s.split("(")[1].split(",")[0];      
+      var cls = classByName[name];
+      var childName = s.split(", ")[1];
+      var childInterface = s.split(", ")[2].split(").")[0];
+      var child = {name: childName.toUpperCase(), iface: interfaceByName[childInterface], attributes: [], inputs: [], type: 'child'};
+      cls.children.push(child);
+      cls.childByName[childName] = child;
+    } else if (s.match("classField")) {
+      var name = s.split("(")[1].split(",")[0];
+      var attr = s.split(", ")[1].split(")")[0];
+      var cls = classByName[name];
+      cls.inputs.push({name: attr, type: 'input'});
+    } else if (s.match("interfaceField")) {
+      var name = s.split("(")[1].split(",")[0];
+      var attr = s.split(", ")[1].split(")")[0];
+      var iface = interfaceByName[name];
+      iface.inputs.push({name: attr, type: 'input'});
+    } else if (s.match(/assignment\(/)) {
+      var args = s.split("(")[1].split(")")[0].split(", ");
+      assignments.push({cls: classByName[args[0]], lhs: args[1], lhsAttr: args[2], rhs: args[3], rhsAttr: args[4]});
+    } else if (s.match("classAttribute")) {
+      var name = s.split("(")[1].split(", ")[0];
+      var attr = s.split(", ")[1].split(")")[0];
+      if ($.grep(classByName[name], function (o) { return o.name == attr; }).length == 0);
+        classByName[name].attributes.push({name: attr, type: 'attr'});
+    }
+  }
+  return {interfaces: interfaces, interfaceByName: interfaceByName, classes: classes, classByName: classByName, assignments: assignments};
+
+}
+
+
+function fillClassGraph(g, nodes, links) {
+ for (var c = 0; c < g.classes.length; c++) { 
+    //class
+    var clsPos = nodes.length;
+    var cls = g.classes[c];
+    cls.nodeId = clsPos;
+    nodes.push(cls);
+    for (var a = 0; a < cls.attributes.length; a++) {
+      var attrPos = nodes.length;
+      var attr = cls.attributes[a];
+      attr.nodeId = attrPos;
+      nodes.push(attr);
+      links.push({source: clsPos, target: attrPos});
+    }
+    for (var a = 0; a < cls.inputs.length; a++) {
+      var attrPos = nodes.length;
+      var attr = cls.inputs[a];
+      attr.nodeId = attrPos;
+      nodes.push(attr);
+      links.push({source: clsPos, target: attrPos});
+    }
+    //class : interface
+    var ifacePos = nodes.length;
+    var iface = cls.iface;
+    iface.nodeId = ifacePos;
+    nodes.push(iface);
+    links.push({source: clsPos, target: ifacePos, type: 'iface'});
+    for (var a = 0; a < iface.attributes.length; a++) {
+      var attrPos = nodes.length;
+      var attr = iface.attributes[a];
+      attr.nodeId = attrPos;
+      nodes.push(attr);
+      links.push({source: ifacePos, target: attrPos});
+    }
+    for (var a = 0; a < iface.inputs.length; a++) {
+      var attrPos = nodes.length;
+      var attr = iface.inputs[a];
+      attr.nodeId = attrPos;
+      nodes.push(attr);
+      links.push({source: ifacePos, target: attrPos});
+    }
+    
+    for (var ch = 0; ch < cls.children.length; ch++) {
+      //child interface
+      var child = cls.children[ch];
+      var iface = child.iface;
+      var childPos = nodes.length;    
+      nodes.push(child);
+      child.nodeId = childPos;
+      links.push({source: clsPos, target: childPos, name: child.name, type: 'child'});
+      //child interface attribute
+      for (var a = 0; a < iface.attributes.length; a++) {
+        var attrPos = nodes.length;
+        var attr = {name: iface.attributes[a].name, nodeId: attrPos, type: 'var', isChild: true};
+        nodes.push(attr);
+        links.push({source: childPos, target: attrPos, isChild: true});
+        child.attributes.push(attr);
+      }
+      //child interface input
+      for (var a = 0; a < iface.inputs.length; a++) {
+        var attrPos = nodes.length;
+        var attr = {name: iface.inputs[a].name, nodeId: attrPos, type: 'input', isChild: true};
+        nodes.push(attr);
+        links.push({source: childPos, target: attrPos, isChild: true});
+        child.inputs.push(attr);
+      }                  
+    }
+  }
+}
+
+
+function getAssignmentSourcePos(a, base, attr) {
+  if (base == "self") {
+    //class
+    for (var i = 0; i < a.cls.attributes.length; i++)
+      if (a.cls.attributes[i].name == attr)
+        return  a.cls.attributes[i].nodeId;
+    for (var i = 0; i < a.cls.inputs.length; i++)
+      if (a.cls.inputs[i].name == attr)
+        return a.cls.inputs[i].nodeId;
+    //interface
+    for (var i = 0; i < a.cls.iface.attributes.length; i++)
+      if (a.cls.iface.attributes[i].name == attr)
+        return a.cls.iface.attributes[i].nodeId;
+    for (var i = 0; i < a.cls.iface.inputs.length; i++)
+      if (a.cls.iface.inputs[i].name == attr)
+        return a.cls.iface.inputs[i].nodeId;
+  } else {    
+    var child = a.cls.childByName[base];
+    for (var i = 0; i < child.attributes.length; i++)
+      if (child.attributes[i].name == attr)
+        return child.attributes[i].nodeId;
+    for (var i = 0; i < child.inputs.length; i++)
+      if (child.inputs[i].name == attr)
+        return child.inputs[i].nodeId;
+  }
+  throw ("cannot find attr " + base + "::" + attr + " in class " + a.cls.name);
+}
+
+function fillAssignment(a, nodes, links) {
+
+    //      assignments.push({cls: classByName[args[0]], lhs: args[1], lhsAttr: args[2], rhs: args[3], rhsAttr: args[4]});
+
+  var des = getAssignmentSourcePos(a, a.lhs, a.lhsAttr);
+
+  var src = getAssignmentSourcePos(a, a.rhs, a.rhsAttr);
+  if (src == undefined) throw ("Missing src: " + a);
+  if (des == undefined) throw("Missing des: " + a.cls.name + " :: " + a.lhsAttr);
+  links.push({source: src, target: des, isAssignment: true});
+}
+
+$(function () {
+
+  var g = parseGraph();
+  var nodes = [];
+  var links = [];
+  fillClassGraph(g, nodes, links);
+  for (var ai = 0; ai < g.assignments.length; ai++)
+  fillAssignment(g.assignments[ai], nodes, links);
+
+  var n = 100;
+
+/*
+var n = 100,
+    nodes = d3.range(n).map(function(i) { return {}; }),  
+    links = d3.range(n).map(function(d) { return {source: d, target: (d + 3) % n}; });
+*/
+
+var force = d3.layout.force()
+    .charge(-400)
+    .linkDistance(30)
+    .nodes(nodes)
+    .links(links)
+    .size([width, height])
+    .start();
+
+  var linesD = svg.selectAll("line")
+      .data(links)
+    .enter().append("line")
+      .attr("opacity", ".5")
+      .attr("source", function (d) { return d.source.nodeId; })
+      .attr("target", function (d) { return d.target.nodeId; })
+      .style("stroke", function (d) { 
+        if (d.type == 'iface') return "red";
+        else if (d.type == 'child') return "magenta";
+        else if (d.isChild) return "green";
+        else if (d.isAssignment) return "black";
+        else return "blue";
+      })
+      .style("stroke-width", function (d) {
+        if (d.isChild) return 1;
+        else return 1;
+      })
+      .style("stroke-dasharray", function (d) {
+        if (d.isAssignment) return  "1, 8, 2, 8, 4, 8, 8, 8, 16, 8, 32, 8, 64, 8, 128, 8, 256, 8, 512, 8";
+        else return "4, 0";
+      });
+
+  var nodeD = svg.selectAll("circle")
+      .data(nodes)
+      .enter()
+        .append("circle")
+        .attr("nodeId", function (d) { return d.nodeId; })
+        .style("fill", function (d) { 
+          if (d.type == 'class' || d.type == 'iface') return "red";
+          else if (d.type == 'child') return "magenta";
+          else if (d.isChild) return "green";
+          else return "blue"; })
+        .attr("r", 3)
+        .call(force.drag);
+
+
+      $("circle").click(function(){ 
+        $("line[source=" + this.getAttribute("nodeId") + "]").slideToggle(500); 
+      });      
+
+  var textD = svg.selectAll("text").data(nodes).enter()
+      .append("svg:text")   
+      .attr("text-anchor", "middle")
+      .attr("text-anchor", "middle")
+      .style("fill", function (d) { 
+          if (d.type == 'class' || d.type == 'iface') return "red";
+          else if (d.type == 'child') return "magenta";
+          else if (d.isChild) return "green";
+          else return "blue"; })
+      .text(function(d) { return d.hasOwnProperty("name") ? d.name : ""; })
+      .style("font-size","8px")    
+      .call(force.drag);
+
+   force.on("tick", function() {
+    linesD.attr("x1", function(d) { return d.source.x; })
+      .attr("y1", function(d) { return d.source.y; })
+      .attr("x2", function(d) { return d.target.x; })
+      .attr("y2", function(d) { return d.target.y; });
+      
+      nodeD.attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+        
+      textD.attr("x", function(d) { return d.x; })
+      .attr("y", function(d) { return d.y; })
+      .attr("dx", ".35em")
+      .attr("dy", "-1em")
+   
+   });
+
+
+
+  var fisheye = d3.fisheye()
+    .radius(400);
+    
+  svg.on("mousemove", function() {
+    fisheye.center(d3.mouse(this));
+
+    nodeD
+        .each(function(d) { d.display = fisheye(d); })
+        .attr("cx", function(d) { return d.display.x; })
+        .attr("cy", function(d) { return d.display.y; })
+        .attr("r", function(d) { return d.display.z * 4.5; });
+
+    linesD
+        .attr("x1", function(d) { return d.source.display.x; })
+        .attr("y1", function(d) { return d.source.display.y; })
+        .attr("x2", function(d) { return d.target.display.x; })
+        .attr("y2", function(d) { return d.target.display.y; });
+        
+    textD
+        .attr("x", function(d) { return d.display.x; })
+        .attr("y", function(d) { return d.display.y; })
+        .style('font-size', function (d) { return "" + (7 *d.display.z) + "px"; });
+
+        
+        
+  });
+
+  loading.remove();
+});
+
+
+</script>
+<h1>Crunch</h1>
+<div id="out"></div>
+<h1>Source</h1>
+<div id="prolog">
+interface(node).
+interface(celli).
+interface(colsi).
+interfaceAttribute(node, relx).
+interfaceAttribute(node, relrightx).
+interfaceAttribute(node, relrighty).
+interfaceAttribute(node, intrinsheight).
+interfaceAttribute(celli, intrinsheight).
+class(cols, colsi).
+class(tablebox, node).
+class(cell, celli).
+classChild(tablebox, columns, colsi).
+classChild(tablebox, rowsunroll0, celli).
+classChild(tablebox, rowsunroll1, celli).
+classChild(tablebox, rowsunroll2, celli).
+classChild(tablebox, rowsunrolln, celli).
+classChild(cell, childsunroll0, node).
+classChild(cell, childsunroll1, node).
+classChild(cell, childsunroll2, node).
+classChild(cell, childsunrolln, node).
+classField(gensymattrib, gensymattrib) :- false.
+classField(cols, gensymattrib).
+classField(tablebox, gensymattrib).
+classField(cell, gensymattrib).
+interfaceField(node, display).
+interfaceField(node, refname).
+interfaceField(celli, display).
+interfaceField(celli, refname).
+interfaceField(colsi, display).
+interfaceField(colsi, refname).
+assignment(tablebox, self, relrightx, self, relx). %a42
+assignment(tablebox, self, relrighty, self, gensymattrib). %a40
+assignment(tablebox, self, intrinsheight_step0, self, rows_intrinsheight_step0). %a8
+assignment(tablebox, self, intrinsheight_step1, self, rows_intrinsheight_step1). %a9
+assignment(tablebox, self, intrinsheight_step2, self, rows_intrinsheight_step2). %a10
+assignment(tablebox, self, intrinsheight_stepn, self, rows_intrinsheight_stepn). %a11
+assignment(tablebox, self, intrinsheight_step0, self, gensymattrib). %a27 intrinsHeight
+assignment(tablebox, self, intrinsheight_step1, self, intrinsheight_step0). %a28
+assignment(tablebox, self, intrinsheight_step2, self, intrinsheight_step1). %a29
+assignment(tablebox, self, intrinsheight_stepn, self, intrinsheight_step2). %a30
+assignment(tablebox, self, intrinsheight, self, intrinsheight_stepn). %a35
+assignment(tablebox, self, rows_intrinsheight_step0, self, gensymattrib). %a27 rows@intrinsHeight
+assignment(tablebox, self, rows_intrinsheight_step1, self, rows_intrinsheight_step0). %a28
+assignment(tablebox, self, rows_intrinsheight_step2, self, rows_intrinsheight_step1). %a29
+assignment(tablebox, self, rows_intrinsheight_stepn, self, rows_intrinsheight_step2). %a30
+assignment(tablebox, self, rows_intrinsheight_step0, rowsunroll0, intrinsheight). %a45
+assignment(tablebox, self, rows_intrinsheight_step1, rowsunroll1, intrinsheight). %a46
+assignment(tablebox, self, rows_intrinsheight_step2, rowsunroll2, intrinsheight). %a47
+assignment(tablebox, self, rows_intrinsheight_stepn, rowsunrolln, intrinsheight). %a48
+assignment(cell, self, childs_relx_step1, self, childs_relrightx_step0). %a12
+assignment(cell, self, childs_relx_step2, self, childs_relrightx_step1). %a13
+assignment(cell, self, childs_relx_stepn, self, childs_relrightx_step2). %a14
+assignment(cell, self, childs_relx_step0, self, gensymattrib). %a27 childs@relX
+assignment(cell, self, childs_relx_step1, self, childs_relx_step0). %a28
+assignment(cell, self, childs_relx_step2, self, childs_relx_step1). %a29
+assignment(cell, self, childs_relx_stepn, self, childs_relx_step2). %a30
+assignment(cell, childsunroll0, relx, self, childs_relx_step0). %a31b
+assignment(cell, childsunroll1, relx, self, childs_relx_step1). %a32
+assignment(cell, childsunroll2, relx, self, childs_relx_step2). %a33
+assignment(cell, childsunrolln, relx, self, childs_relx_stepn). %a34
+assignment(cell, self, intrinsheight_step0, self, childs_relx_step0). %a8
+assignment(cell, self, intrinsheight_step1, self, childs_relx_step1). %a9
+assignment(cell, self, intrinsheight_step2, self, childs_relx_step2). %a10
+assignment(cell, self, intrinsheight_stepn, self, childs_relx_stepn). %a11
+assignment(cell, self, intrinsheight_step0, self, gensymattrib). %a27 intrinsHeight
+assignment(cell, self, intrinsheight_step1, self, intrinsheight_step0). %a28
+assignment(cell, self, intrinsheight_step2, self, intrinsheight_step1). %a29
+assignment(cell, self, intrinsheight_stepn, self, intrinsheight_step2). %a30
+assignment(cell, self, intrinsheight, self, intrinsheight_stepn). %a35
+assignment(cell, self, childs_relrightx_step0, self, gensymattrib). %a27 childs@relRightX
+assignment(cell, self, childs_relrightx_step1, self, childs_relrightx_step0). %a28
+assignment(cell, self, childs_relrightx_step2, self, childs_relrightx_step1). %a29
+assignment(cell, self, childs_relrightx_stepn, self, childs_relrightx_step2). %a30
+assignment(cell, self, childs_relrightx_step0, childsunroll0, relrightx). %a45
+assignment(cell, self, childs_relrightx_step1, childsunroll1, relrightx). %a46
+assignment(cell, self, childs_relrightx_step2, childsunroll2, relrightx). %a47
+assignment(cell, self, childs_relrightx_stepn, childsunrolln, relrightx). %a48
+assignment(gensymattrib, gensymattrib, gensymattrib, gensymattrib, gensymattrib) :- false.
+classAttribute(tablebox, rows_intrinsheight_step0). %s2 rows@intrinsheight
+classAttribute(tablebox, rows_intrinsheight_step1). %s3
+classAttribute(tablebox, rows_intrinsheight_step2). %s4
+classAttribute(tablebox, rows_intrinsheight_stepn). %s5
+classAttribute(tablebox, intrinsheight_step0). %s2 self@intrinsheight
+classAttribute(tablebox, intrinsheight_step1). %s3
+classAttribute(tablebox, intrinsheight_step2). %s4
+classAttribute(tablebox, intrinsheight_stepn). %s5
+classAttribute(cell, childs_relx_step0). %s2 childs@relx
+classAttribute(cell, childs_relx_step1). %s3
+classAttribute(cell, childs_relx_step2). %s4
+classAttribute(cell, childs_relx_stepn). %s5
+classAttribute(cell, childs_relrightx_step0). %s2 childs@relrightx
+classAttribute(cell, childs_relrightx_step1). %s3
+classAttribute(cell, childs_relrightx_step2). %s4
+classAttribute(cell, childs_relrightx_stepn). %s5
+classAttribute(cell, intrinsheight_step0). %s2 self@intrinsheight
+classAttribute(cell, intrinsheight_step1). %s3
+classAttribute(cell, intrinsheight_step2). %s4
+classAttribute(cell, intrinsheight_stepn). %s5
+</div>
+</html>

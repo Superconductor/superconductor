@@ -1,0 +1,322 @@
+interface Root {
+	var x: float;
+	var y: float;
+	var h: float;
+	var w: float;
+	var port1: float;
+	var port0: float;
+	var port2: float;
+	var port3: float;
+}
+interface VBox2 {
+	var h: float;
+	var w: float;
+	var x: float;
+	var y: float;
+	var t: float;
+	var l: float;
+	var b: float;
+	var r: float;
+	var port5: float;
+	var port9: float;
+	var port6: float;
+	var port8: float;
+	var port7: float;
+	var port4: float;
+	var port10: float;
+}
+interface HBox2 {
+	var h: float;
+	var w: float;
+	var x: float;
+	var y: float;
+	var t: float;
+	var l: float;
+	var b: float;
+	var r: float;
+	var port13: float;
+	var port17: float;
+	var port16: float;
+	var port11: float;
+	var port15: float;
+	var port12: float;
+	var port14: float;
+}
+interface Leaf {
+	var x: float;
+	var y: float;
+	var t: float;
+	var l: float;
+	var b: float;
+	var r: float;
+	var w: float;
+	var h: float;
+	var port19: float;
+	var port18: float;
+}
+class Root1 : Root {
+	attributes {}
+	children {VBox24: VBox2; }
+	actions {
+		VBox24.port10 := y;
+		VBox24.port9 := x;
+		VBox24.l := port3;
+		VBox24.t := port2;
+		VBox24.w := port1;
+		VBox24.h := port0;
+		h := pfun107h();
+		y := pfun108y();
+		x := pfun109x();
+		w := pfun110w();
+		port2 := pfun111port2();
+		port0 := pfun112port0();
+		port1 := pfun113port1();
+		port3 := pfun114port3();
+
+	}
+}
+class VBox24 : VBox2 {
+	attributes {}
+	children {HBox20: HBox2; HBox21: HBox2; }
+	actions {
+		HBox20.t := port8;
+		HBox21.l := port6;
+		HBox20.l := port6;
+		HBox21.port16 := x;
+		HBox20.port16 := x;
+		HBox21.w := port5;
+		HBox20.w := port5;
+		HBox21.port17 := y;
+		HBox20.port17 := y;
+		HBox21.t := port7;
+		HBox21.h := port4;
+		HBox20.h := port4;
+		port8 := pfun115port8();
+		port6 := pfun116port6();
+		x := pfun145x(w, l, port9);
+		r := pfun145r(w, l, port9);
+		port5 := pfun145port5(w, l, port9);
+		port4 := pfun127port4(t, port10, h);
+		port7 := pfun127port7(t, port10, h);
+		y := pfun127y(t, port10, h);
+		b := pfun127b(t, port10, h);
+
+	}
+}
+class HBox20 : HBox2 {
+	attributes {}
+	children {VBox21: VBox2; VBox22: VBox2;}
+	actions {
+		VBox22.t := port15;
+		VBox21.t := port15;
+		VBox21.l := port14;
+		VBox22.port10 := y;
+		VBox21.port10 := y;
+		VBox22.h := port11;
+		VBox21.h := port11;
+		VBox22.port9 := x;
+		VBox21.port9 := x;
+		VBox22.l := port13;
+		VBox22.w := port12;
+		VBox21.w := port12;
+		port15 := pfun148port15();
+		port14 := pfun149port14();
+		port11 := pfun205port11(port17, t, h);
+		b := pfun205b(port17, t, h);
+		y := pfun205y(port17, t, h);
+		port12 := pfun179port12(port16, l, w);
+		r := pfun179r(port16, l, w);
+		x := pfun179x(port16, l, w);
+		port13 := pfun179port13(port16, l, w);
+
+	}
+}
+class VBox21 : VBox2{
+	attributes {}
+	children {Leaf2: Leaf; Leaf3: Leaf;}
+	actions {
+		Leaf2.t := port8;
+		Leaf3.l := port6;
+		Leaf2.l := port6;
+		Leaf3.port18 := x;
+		Leaf2.port18 := x;
+		Leaf3.w := port5;
+		Leaf2.w := port5;
+		Leaf3.port19 := y;
+		Leaf2.port19 := y;
+		Leaf3.t := port7;
+		Leaf3.h := port4;
+		Leaf2.h := port4;
+		port8 := pfun115port8();
+		port6 := pfun116port6();
+		x := pfun145x(w, l, port9);
+		r := pfun145r(w, l, port9);
+		port5 := pfun145port5(w, l, port9);
+		port4 := pfun127port4(t, port10, h);
+		port7 := pfun127port7(t, port10, h);
+		y := pfun127y(t, port10, h);
+		b := pfun127b(t, port10, h);
+
+	}
+}
+class Leaf2 : Leaf {
+	attributes {}
+	children {}
+	actions {
+		x := pfun217x(w, l, port18);
+		r := pfun217r(w, l, port18);
+		b := pfun224b(port19, h, t);
+		y := pfun224y(port19, h, t);
+
+	}
+}
+class Leaf3 : Leaf {
+	attributes {}
+	children {}
+	actions {
+		x := pfun217x(w, l, port18);
+		r := pfun217r(w, l, port18);
+		b := pfun224b(port19, h, t);
+		y := pfun224y(port19, h, t);
+
+	}
+}
+class VBox22 : VBox2 {
+	attributes {}
+	children {Leaf4: Leaf; Leaf5: Leaf;}
+	actions {
+		Leaf4.t := port8;
+		Leaf5.l := port6;
+		Leaf4.l := port6;
+		Leaf5.port18 := x;
+		Leaf4.port18 := x;
+		Leaf5.w := port5;
+		Leaf4.w := port5;
+		Leaf5.port19 := y;
+		Leaf4.port19 := y;
+		Leaf5.t := port7;
+		Leaf5.h := port4;
+		Leaf4.h := port4;
+		port8 := pfun115port8();
+		port6 := pfun116port6();
+		x := pfun145x(w, l, port9);
+		r := pfun145r(w, l, port9);
+		port5 := pfun145port5(w, l, port9);
+		port4 := pfun127port4(t, port10, h);
+		port7 := pfun127port7(t, port10, h);
+		y := pfun127y(t, port10, h);
+		b := pfun127b(t, port10, h);
+
+	}
+}
+class Leaf4 : Leaf {
+	attributes {}
+	children {}
+	actions {
+		x := pfun217x(w, l, port18);
+		r := pfun217r(w, l, port18);
+		b := pfun224b(port19, h, t);
+		y := pfun224y(port19, h, t);
+
+	}
+}
+class Leaf5 : Leaf {
+	attributes {}
+	children {}
+	actions {
+		x := pfun217x(w, l, port18);
+		r := pfun217r(w, l, port18);
+		b := pfun224b(port19, h, t);
+		y := pfun224y(port19, h, t);
+
+	}
+}
+class HBox21 :HBox2 {
+	attributes {}
+	children {Leaf6: Leaf; VBox23: VBox2;}
+	actions {
+		VBox23.t := port15;
+		Leaf6.t := port15;
+		Leaf6.l := port14;
+		VBox23.port10 := y;
+		Leaf6.port19 := y;
+		VBox23.h := port11;
+		Leaf6.h := port11;
+		VBox23.port9 := x;
+		Leaf6.port18 := x;
+		VBox23.l := port13;
+		VBox23.w := port12;
+		Leaf6.w := port12;
+		port15 := pfun148port15();
+		port14 := pfun149port14();
+		port11 := pfun205port11(port17, t, h);
+		b := pfun205b(port17, t, h);
+		y := pfun205y(port17, t, h);
+		port12 := pfun179port12(port16, l, w);
+		r := pfun179r(port16, l, w);
+		x := pfun179x(port16, l, w);
+		port13 := pfun179port13(port16, l, w);
+
+	}
+}
+class Leaf6 : Leaf{
+	attributes {}
+	children {}
+	actions {
+		b := pfun224b(port19, h, t);
+		y := pfun224y(port19, h, t);
+		x := pfun217x(w, l, port18);
+		r := pfun217r(w, l, port18);
+
+	}
+}
+class VBox23 : VBox2 {
+	attributes {}
+	children {Leaf7: Leaf; Leaf8: Leaf; }
+	actions {
+		Leaf7.t := port8;
+		Leaf8.l := port6;
+		Leaf7.l := port6;
+		Leaf8.port18 := x;
+		Leaf7.port18 := x;
+		Leaf8.w := port5;
+		Leaf7.w := port5;
+		Leaf8.port19 := y;
+		Leaf7.port19 := y;
+		Leaf8.t := port7;
+		Leaf8.h := port4;
+		Leaf7.h := port4;
+		port8 := pfun115port8();
+		port6 := pfun116port6();
+		x := pfun145x(w, l, port9);
+		r := pfun145r(w, l, port9);
+		port5 := pfun145port5(w, l, port9);
+		port4 := pfun127port4(t, port10, h);
+		port7 := pfun127port7(t, port10, h);
+		y := pfun127y(t, port10, h);
+		b := pfun127b(t, port10, h);
+
+	}
+}
+class Leaf7 : Leaf {
+	attributes {}
+	children {}
+	actions {
+		x := pfun217x(w, l, port18);
+		r := pfun217r(w, l, port18);
+		b := pfun224b(port19, h, t);
+		y := pfun224y(port19, h, t);
+
+	}
+}
+class Leaf8 : Leaf {
+	attributes {}
+	children {}
+	actions {
+		x := pfun217x(w, l, port18);
+		r := pfun217r(w, l, port18);
+		b := pfun224b(port19, h, t);
+		y := pfun224y(port19, h, t);
+
+	}
+}

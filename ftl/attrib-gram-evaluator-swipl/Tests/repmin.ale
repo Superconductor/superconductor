@@ -1,0 +1,31 @@
+interface repmin { 
+  var subtreeMin : int;
+  var treeMin : int; 
+}
+interface start { 
+  var treeMin : int;
+}
+
+class leaf : repmin {
+  attributes { input val : int; }
+  actions {
+    subtreeMin := val;
+  }
+}
+
+class intermediate : repmin {
+  children { left : repmin; right : repmin; }
+  actions {
+    subtreeMin := left.subtreeMin < right.subtreeMin ? left.subtreeMin : right.subtreeMin;
+    left.treeMin := treeMin;
+    right.treeMin := treeMin;
+  }
+}
+
+class root : start {
+  children { tree : repmin; }
+  actions {
+    treeMin := tree.subtreeMin;
+    tree.treeMin := treeMin;
+  }
+}

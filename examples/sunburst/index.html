@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+		<title>Superconductor Demo: Sunburst Graph</title>
+		
+		<link rel="stylesheet" href="page.css" />
+		
+		<script type="text/javascript" src="../../superconductor.js"></script>
+		<script src="sunburst-demo.js"></script>
+	</head>
+
+<body>
+	<div id="main_content">	
+		<div class="intro">
+			<h1>Superconductor</h1>
+			<h2>Sunburst Graph Demo<!--: 1,258,902 nodes--></h2>
+			
+			<div class="hrule">&nbsp;</div>
+			<!-- <a href="#" id="begin-animation">Begin Animation</a> -->
+		</div>
+
+		<div id="vis-container">
+			<canvas id="visualization">
+			</canvas>
+			
+			<script type="text/javascript">
+			/* Data generation:
+			  1.   webcl/examples/sunburst$ node data-gen.js --depth 8 --minchildren 2 --maxchildren 7 1000000 > mydata.json
+			  2.   webcl/src$ node flattener.js ../examples/sunburst/mydata.json ../examples/sunburst/kbindings.js sparseMT "{}" ../examples/sunburst/mydataSparse.json
+			*/
+			
+				sunburst = new Superconductor("sunburst.visualization", document.getElementById("visualization"));
+				sunburst.loadDataFlatMt('http://localhost:8888/examples/sunburst/mydataSparse.json', function() {
+				// sunburst.loadData('http://localhost:8888/examples/sunburst/mydata.json', function() {
+					sunburst.glr.setPosition(-3.65, -4, -7.5);
+					sunburst.glr.setW(50.0);
+					sunburst.startVisualization();
+
+					window.superconductor = sunburst;					
+					var angle = 0.5;
+					
+					var last = new Date().getTime();
+					function tick (t) {
+						angle += 0.1;
+						var val = Math.abs(Math.cos(angle));
+//						sunburst.clr.setAndRunSelectors("Radial { fld_node_open: " + val + "; } Top { fld_top_radius: " + Math.round(10 * angle) + ";}");
+						for (var i = 11; i < 500; i++ ) {
+							if (i % 5 == 0) sunburst.data.fld_node_open.set(i, val);
+						}												
+						sunburst.layoutAndRender();
+						var next = 150 - (new Date().getTime() - last);
+						// console.log('delay',next);
+						last = new Date().getTime();						
+//						setTimeout(tick, next, t);
+						setTimeout(tick, 0, t);
+					}
+					
+					// document.getElementById("begin-animation").onclick = function() {
+					// 	tick(100);
+					// }
+					tick(100);
+				});
+				
+				
+			</script>
+		</div>
+	</div>
+</body>
+</html>

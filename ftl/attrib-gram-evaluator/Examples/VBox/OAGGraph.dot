@@ -1,0 +1,72 @@
+digraph G{
+	subgraph cluster0{
+		color=blue;
+		node[style=filled];
+		label="Top";
+		Top_w[label="w"];
+		Top_h[label="h"];
+		Top_y[label="y"];
+		Top_x[label="x"];
+	}
+	subgraph cluster1{
+		color=blue;
+		node[style=filled];
+		label="Node";
+		Node_w[label="w"];
+		Node_h[label="h"];
+		Node_y[label="y"];
+		Node_x[label="x"];
+	}
+	subgraph cluster2{
+		color=black;
+		node[style=filled];
+		label="TopBox";
+		TopBox_w[label="w"];
+		TopBox_y[label="y"];
+		TopBox_h[label="h"];
+		TopBox_x[label="x"];
+		TopBox_fx[label="$fx", shape=box];
+		TopBox_fy[label="$fy", shape=box];
+	}
+	subgraph cluster3{
+		color=black;
+		node[style=filled];
+		label="VBox";
+		VBox_w[label="w"];
+		VBox_y[label="y"];
+		VBox_h[label="h"];
+		VBox_x[label="x"];
+		VBox_temph[label="$temph"];
+	}
+	subgraph cluster4{
+		color=black;
+		node[style=filled];
+		label="LeafBox";
+		LeafBox_w[label="w"];
+		LeafBox_y[label="y"];
+		LeafBox_h[label="h"];
+		LeafBox_x[label="x"];
+		LeafBox_fw[label="$fw", shape=box];
+		LeafBox_fh[label="$fh", shape=box];
+	}
+	VBox_temph -> Node_y;
+	VBox_x -> Node_x;
+	TopBox_fy -> TopBox_y;
+	VBox_h -> VBox_temph[style=dotted];
+	VBox_h -> VBox_y[style=dotted];
+	LeafBox_fw -> LeafBox_w;
+	LeafBox_h -> LeafBox_y[style=dotted];
+	Node_h -> VBox_temph;
+	Node_h -> TopBox_h;
+	Node_h -> Node_y[style=dotted];
+	Node_h -> VBox_h;
+	LeafBox_fh -> LeafBox_y[style=dotted];
+	LeafBox_fh -> LeafBox_h;
+	TopBox_y -> Node_y;
+	Node_w -> TopBox_w;
+	Node_w -> VBox_w;
+	VBox_y -> VBox_temph;
+	VBox_y -> Node_y;
+	TopBox_x -> Node_x;
+	TopBox_fx -> TopBox_x;
+}

@@ -1,0 +1,30 @@
+interface Root { 
+  input tdx : int;
+  var bux : int; 
+}
+interface List { 
+  var tdy : int;
+  var bux : int; 
+}
+class Start : Root { 
+  children { next : List; }
+  actions { 
+    next.tdy := tdx;
+    bux := next.bux; 
+  }  
+}
+
+class Cons : List {
+  children { next : List; }
+  actions { 
+    next.tdy := tdy;
+    bux :=  next.bux; 
+  }
+}
+cons Mt : List { 
+  attributes { input buy : int; }
+  actions { bux := buy; }
+}   
+
+
+

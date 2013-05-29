@@ -1,0 +1,44 @@
+
+\begin{figure*}
+
+\begin{center}
+
+\textbf{Constraint rewriter}
+
+\begin{align*}
+\llbracket \cdot, \cdot \rrbracket : \text{Typing} \times GAG_{nested} & ~~\rightarrow~~ \text{AG}\\
+\end{align*}
+
+\textbf{Schema rewrite rules}
+
+\begin{align*}
+\llbracket \Gamma, ~\tau~ \rightarrow ~ id^{*} ~ \{ inputs^{*} ~ vars^{*} \}\rrbracket & ~~ \Rightarrow ~ \tau ~ \rightarrow id^{*} ~  \{  ~inputs^{*} ~ ~\llbracket \Gamma, ~ vars \rrbracket^{*}\} \\
+%$$\llbracket \Gamma, ~ \text{child} ~ N : \tau; \rrbracket 
+%~~ \Rightarrow ~~
+%\text{child} ~N : ~\tau; ~\text{input} ~ N\_ptr : \text{ref}~\tau; $$
+\llbracket \Gamma, ~ \text{var} ~ a : \text{ref} ~ \tau;\rrbracket & ~~ \Rightarrow ~~
+\text{var} ~ a : \text{ref} ~ \tau;  ~\ldots \text{phantom var} ~ \tau\_b : \tau_b; ~ \ldots \text{phantom var}~ \tau'\_c : \tau'_c \\
+& ~~~~~~~ ~~\text{where} \\
+& ~~~~~~~ ~~~~ (b,\tau_b) \in live_\Gamma(\tau) \\
+& ~~~~~~~ ~~~~ live_{\Gamma}(\tau) = \{ (a, \tau_a) ~~|~~ \exists e' . ~~ e' = e \rightarrow a ~~ \wedge ~~ \Gamma \vdash e : \text{ref}~\tau ~~\wedge~~ \Gamma \vdash e' : \tau_a \}\\
+& ~~~~~~~ ~~~~ \exists e' . e' = b \rightarrow c ~ \wedge ~ \Gamma \vdash b : \tau ~ \wedge ~ \Gamma \vdash c : \tau' \\
+\end{align*}
+
+\textbf{Constraint rewrite rules}
+
+\begin{align*}
+\llbracket \Gamma, ~ a \rightarrow b \rrbracket  & ~~ \Rightarrow ~~ \rightarrow(\llbracket \Gamma, ~ a \rrbracket, \tau\_b) ~~ \text{where} ~~ \Gamma \vdash a : \text{ref} ~ \tau \\
+%\llbracket \Gamma, ~ lhs := a \rightarrow b \rrbracket  & ~~ \Rightarrow ~~ lhs := ~\rightarrow(a, \tau\_b) ~~ \text{where} ~~ \Gamma \vdash a : \text{ref} ~ \tau \\
+\llbracket \Gamma, lhs := a \rrbracket ~ \text{where}~ \Gamma \vdash a : \text{ref} ~ \tau & ~~ \Rightarrow ~~ lhs := a; ~ \ldots \llbracket \Gamma, ~ \tau\_b := a \rightarrow b \rrbracket ~ \text{where} ~~ (b, \_) \in live_\Gamma(\tau)  \\
+\llbracket \Gamma, ~ a := e; \rrbracket & ~~ \Rightarrow ~~  a := \llbracket \Gamma, ~ e \rrbracket; \\
+\llbracket \Gamma, ~ f (e^{*}) \rrbracket & ~~ \Rightarrow ~~ f(\llbracket \Gamma, ~ e\rrbracket^{*}) \\
+\llbracket \Gamma, ~ @n.child \rrbracket & ~~ \Rightarrow ~~ @(``\&n .child") \\
+\llbracket \Gamma, ~ scalar \rrbracket & ~~ \Rightarrow ~~ scalar \\
+\llbracket \Gamma, ~ ident \rrbracket & ~~ \Rightarrow ~~ ident \\
+\llbracket \Gamma, ~ ident.ident \rrbracket & ~~ \Rightarrow ~~ ident.ident \\
+\end{align*}
+
+\end{center}
+\caption{Rewrite rules for $GAG_{nested}$ grammars with phantom attributes.}
+\label{fig:nestedrewrites}
+\end{figure*}

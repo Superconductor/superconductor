@@ -1,0 +1,28 @@
+configure {
+  
+}
+
+
+interface Root { }
+interface Intermediate {
+  input blah : bool;
+  input x : int;
+  input y : int;
+}
+interface Leaf { }
+
+
+class RootBox : Root { }
+
+class HBox : Intermediate {
+  attributes {
+    input wraps : bool;
+    input z : int;
+  }
+  
+  actions {
+  
+  }
+  
+}
+

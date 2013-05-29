@@ -1,0 +1,110 @@
+interface Root {
+	var x: float;
+	var y: float;
+	var h: float;
+	var w: float;
+	var _port_1: float;
+	var _port_0: float;
+	var _port_2: float;
+	var _port_3: float;
+}
+interface HBox2 {
+	var h: float;
+	var w: float;
+	var x: float;
+	var y: float;
+	var t: float;
+	var l: float;
+	var b: float;
+	var r: float;
+	var _port_13: float;
+	var _port_17: float;
+	var _port_16: float;
+	var _port_15: float;
+	var _port_20: float;
+	var _port_14: float;
+	var _port_19: float;
+	var _port_18: float;
+	var _port_21: float;
+}
+interface Leaf {
+	var x: float;
+	var y: float;
+	var t: float;
+	var l: float;
+	var b: float;
+	var r: float;
+	var w: float;
+	var h: float;
+	var _port_23: float;
+	var _port_22: float;
+}
+class Root0 {
+	attributes {}
+	children {HBox20: HBox2}
+	actions {
+		y = HBox20._port_21;
+		x = HBox20._port_20;
+		_port_3 = HBox20.l;
+		_port_2 = HBox20.t;
+		HBox20.w = _port_1;
+		HBox20.h = _port_0;
+		_port_3 = pfun0__port_3();
+		_port_2 = pfun1__port_2();
+		y = pfun2_y();
+		x = pfun3_x();
+		w = pfun6_w(_port_1);
+		h = pfun4_h(_port_0);
+	}
+}
+class HBox20 {
+	attributes {}
+	children {Leaf0: Leaf; Leaf1: Leaf}
+	actions {
+		_port_19 = Leaf1.t;
+		_port_19 = Leaf0.t;
+		_port_18 = Leaf0.l;
+		_port_17 = Leaf1.l;
+		x = Leaf1._port_22;
+		x = Leaf0._port_22;
+		y = Leaf1._port_23;
+		y = Leaf0._port_23;
+		Leaf1.w = _port_16;
+		Leaf0.w = _port_15;
+		Leaf1.h = _port_14;
+		Leaf0.h = _port_13;
+		_port_19 = pfun8__port_19();
+		_port_18 = pfun9__port_18();
+		_port_17 = pfun10__port_17(_port_15);
+		x = pfun12_x(l, _port_20);
+		w = pfun21_w(_port_16, _port_15);
+		r = pfun55_r(w, l);
+		h = pfun165_h(_port_13, _port_14);
+		y = pfun162_y(_port_13, _port_14, t, _port_21);
+		b = pfun171_b(_port_13, _port_14, h, t);
+	}
+}
+class Leaf0 {
+	attributes {}
+	children {}
+	actions {
+		h = pfun187_h();
+		w = pfun188_w();
+		r = pfun193_r(l);
+		b = pfun203_b(t);
+		x = pfun189_x(l, _port_22);
+		y = pfun199_y(t, _port_23);
+	}
+}
+class Leaf1 {
+	attributes {}
+	children {}
+	actions {
+		h = pfun187_h();
+		w = pfun188_w();
+		r = pfun193_r(l);
+		b = pfun203_b(t);
+		x = pfun189_x(l, _port_22);
+		y = pfun199_y(t, _port_23);
+	}
+}

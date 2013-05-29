@@ -1,0 +1,68 @@
+ometa ExprGen{
+    binOp = '||' | '&&' | '==' | '!=' | ">" | "<" | '>=' | '<=' | 
+            "+" | "-" | "*" | "/" | "%" ,
+    preOp = '++pre' -> '++'
+          | '--pre' -> '--'
+          | '!'
+          | '-',
+    postOp = '++post' -> '++'
+           | '--post' -> '--',
+    expr = [binOp:op expr:e1 expr:e2]       -> ('(' + e1 + ' ' +  op + ' ' + e2 + ')')
+         | [preOp:op expr:e1]               -> ('(' + op + e1 + ')')
+         | [postOp:op expr:e1]              -> ('(' + e1 + op + ')')
+         | ['call' expr:fun [expr*:args]]   -> (fun + '(' + args.join(', ') + ')')
+         | ['cond' expr:c expr:t expr:f]    -> ('(' + c + ' ? ' + t + ' : ' + f + ')')
+         | string
+         | number
+}
+
+
+ometa TransBase{
+    prePost     = (foreign(ExprGen, "preOp") | foreign(ExprGen, "postOp")),
+
+    node    = ['class' :n :i [node*:r]]                     -> ['class', n, i,  r]
+            | ['interface' :n [node*:r]]                    -> ['interface', n, r]
+            | ['children' [node*:r]]                        -> ['children', r]
+            | ['attributes' [node*:r]]                      -> ['attributes', r]
+            | ['actions' [node*:r]]                         -> ['actions', r]
+            | ['loop' :c [node*:r]]                         -> ['loop', c, r]
+            | ['asgn' node:lhs node:rhs]                    -> ['asgn', lhs, rhs]
+            | ['input' node:r :t]                           -> ['input', r, t]
+            | ['var' node:r :t]                             -> ['var', r, t]
+            | ['child' :n :t]                               -> ['child', n, t]
+            | [foreign(ExprGen, "binOp"):op node:a node:b]  -> [op, a, b]
+            | [prePost:op node:n]                           -> [op, n]
+            | ['call' node:fun [node*]:args]                -> ['call', fun, args] 
+            | ['cond' node:c node:t node:f]                 -> ['cond', c, t, f]
+            | ['fold' node:i node:b]                        -> ['fold', i, b]
+            | string
+            | number
+            | [],
+
+
+    topLevel = [node*:ns]                                   -> ns
+
+}
+
+ometa FTLGen{
+    attrDef =   [:s :n :t]                          -> ('\t\t' + s + ' ' + n + ' : ' + t + ';\n'),
+    childDef = ['child' :name ['array' :t]]                 -> ('\t\t' + name + ' : ' + '[' + t + ']' + ';\n')
+             | ['child' :name :t]                           -> ('\t\t' + name + ' : ' + t + ';\n'),
+
+    expr = foreign(ExprGen, "expr")
+         | ['fold' expr:init expr:body]                       -> ('fold ' + init + ' .. ' + body ),
+    
+    assignment = ['asgn' :lhs expr:rhs]                             -> ('\t\t' + lhs + ' := ' + rhs + ';\n'),
+    
+    action =   assignment
+             | ['loop' :child [assignment*:asgns]]                  -> ('\tloop ' + child + '{\n' + asgns.join('') + '\t}\n\n'),
+    
+    innerClass =   ['children' [childDef*:child]]                   -> ('\tchildren {\n' + child.join('') + '\t}\n\n')
+                 | ['attributes' [attrDef*:attrs]]                  -> ('\tattributes {\n' + attrs.join('') + '\t}\n\n')
+                 | ['actions' [action*:actions]]                    -> ('\tactions {\n' + actions.join('') + '\t}\n\n'),
+    
+    block   =   ['interface' :name [attrDef*:defs]]                 -> ('interface ' + name + ' {\n' + defs.join('') + '}\n\n')
+              | ['class' :name :inter [innerClass*:contents]]       -> ('class ' + name + ' : ' + inter + ' {\n' + contents.join('') + '}\n\n'),
+    
+    topLevel = [block*:b] -> (b.join(''))
+}

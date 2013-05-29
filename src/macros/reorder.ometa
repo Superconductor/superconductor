@@ -1,0 +1,39 @@
+ometa FtlReorder <: FTL {
+
+    topLevel = (tlBlock*):blocks -> {self.sortBlocks(blocks)}
+
+
+}
+
+FtlReorder.initialize = function () {
+	this.sortBlocks = function (blocks) {
+	
+		var classes = [];
+		var interfaces = [];
+		
+		function failBlock (block) {
+			throw new Error("INTERNAL ERROR: reordering saw unexpected block type: " + block);
+		}
+		
+		for (var i = 0; i < blocks.length; i++) {
+			var block = blocks[i];
+			if (!block || !block.length) failBlock(block);				
+			switch (block[0]) {
+				case 'interface':
+					interfaces.push(block);
+					break;
+				case 'class':
+					classes.push(block);
+					break;
+				default:
+					failBlock(block);
+			}
+		}
+		return interfaces.concat(classes);
+	}
+}
+
+function translate(input){
+	var reordered = FtlReorder.matchAll(input, "topLevel");
+	return TraitGen.match(reordered, "topLevel");
+}

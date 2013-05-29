@@ -1,0 +1,306 @@
+/*
+schedule { 
+  //do GPU paint calls sequentially at end  
+  
+  "P=[(_, td, _, _, _),
+      (_, bu, _, _, _),
+      (_, td, _, _, _),
+      (_, bu, _, _, _),
+      (_, tdLtrU, _, _, _)]" 
+   
+//   visited(RenderPass, node, composite), 
+//   visited(RenderPass, node, canvas)   
+}
+*/
+               
+type shapeType =  None | Rect | RoundedRect | Ellipse | Edge;
+type textAlignType = Inherit | Center | Left | Right;
+type verticalAlignType = Inherit | Top | Bottom | Middle;
+
+interface Top {
+  var x : int;
+  var y : int;
+  var w : int;
+  var h : int;
+  input shape : shapeType = Rect;
+  input backgroundColor : color = #FFF;
+  input color : color = #000;   
+  input padding : px = 10;
+  input fontSize : px = 20;
+  input textAlign : textAlignType = Left; 
+  input verticalAlign : verticalAlignType = Top;
+}
+
+interface Node { 
+  var x : int;
+  var y : int;
+  var w : int;
+  var h : int;
+  var z : int;
+  input shape : shapeType = Rect;
+  input backgroundColor : color = #00000000; //transparent
+  input color : ?color;
+  input margin : px = 0;
+  input padding : px = 0;
+  input fontSize : ?px;
+  input textAlign : textAlignType = Inherit;
+  input verticalAlign : verticalAlignType = Inherit;
+  var inhColor : color;
+  var inhFontSize : px;
+  var inhTextAlign : textAlignType;
+  var inhVerticalAlign : verticalAlignType;
+  
+  var ch : int;
+  var cw : int;
+
+  var textRequests : int;
+  var metrics : int;
+  
+  var canvas : int;
+  var composite : int; 
+}
+
+
+class TextBox : Node { 
+  attributes {
+    input text : string;
+    input fontFamily : string = "Arial";
+    var lineHeight : int;
+    var lineSpacing : int;
+    var numberLines : int;  
+    var overflow : bool;
+    var maxW : int;
+    var renderFontSize : int;
+    var renderColor : color; 
+  }
+  actions {   
+    renderFontSize := isEmptyInt(fontSize) ? inhFontSize : valueInt(fontSize);
+    renderColor := !isEmptyColor(color) ? valueColor(color) : inhColor; 
+  
+    overflow := false;
+    lineSpacing := lineHeight;
+    textRequests := requestGlyphs(text, fontFamily, renderFontSize, 0);    
+    composite := paintParagraph(text, fontFamily, renderFontSize, x, y, w, overflow, lineHeight, renderColor, lineSpacing, canvas);
+    
+    lineHeight := getLineHeight(text, fontFamily, renderFontSize, metrics);
+    maxW := getSumWordW(text, fontFamily, renderFontSize, metrics);
+    w := maxW > 200 ? 200 : maxW;    
+    numberLines := getNumberLines(text, fontFamily, renderFontSize, w, overflow, metrics);
+    h := numberLines * (lineHeight + lineSpacing);
+  }
+}
+
+
+class Root : Top {
+  children { child : Node;  }
+  attributes {
+    var composite : int;
+  }
+  actions {  
+
+    child.metrics := runRequests(child.textRequests);
+    child.inhFontSize := fontSize;
+    child.inhTextAlign := textAlign;
+    child.inhVerticalAlign := verticalAlign;
+    child.inhColor := color;    
+
+    child.z := 1;
+    
+    x := 0;
+    y := 0;
+    w := child.w > 2000 ? 2000 : child.w;
+    h := child.h > 2000 ? 2000 : child.h;
+    child.x := 0;
+    child.y := 0;
+    
+    child.ch := 0; 
+    child.cw := 0;
+    
+    child.canvas := paintZ(shape, 0, 0, w, h, backgroundColor, 0, paintStart(w, h, 0));
+    composite := paintDone(child.composite);         
+  }
+}
+
+
+class VBox : Node {
+  children { 
+    child : [Node];
+  }
+  attributes {
+    var background : int;
+    var contentW : int; //content + padding + border    
+    var contentH : int; //content + padding + border
+  }
+  actions {  
+    background := 
+      paintZ(shape, x + margin, y + margin, contentW, contentH, backgroundColor, z, canvas) +      
+      paintQuad(
+        x + margin + contentW, y + margin, z, 
+        x + margin + contentW, y + margin + contentH, z,
+        x + margin + contentW, y + margin + contentH, z - 1,
+        x + margin + contentW, y + margin, z - 1, 
+        backgroundColor, canvas) +
+      paintQuad(
+        x + margin, y + margin, z, 
+        x + margin + contentW, y + margin, z,
+        x + margin + contentW, y + margin, z - 1,
+        x + margin, y + margin, z - 1, 
+        backgroundColor, canvas) +
+     paintQuad(
+        x + margin, y + margin, z, 
+        x + margin, y + margin + contentH, z,
+        x + margin, y + margin  + contentH, z - 1,
+        x + margin, y + margin, z - 1, 
+        backgroundColor, canvas) +
+     paintQuad(
+        x + margin, y + margin + contentH, z, 
+        x + margin + contentW, y + margin + contentH, z,
+        x + margin + contentW, y + margin  + contentH, z - 1,
+        x + margin, y + margin + contentH, z - 1, 
+        backgroundColor, canvas);
+      
+    loop child {   
+      child.z := z + 1;
+        
+      textRequests := fold 0 .. self$-.textRequests + child$i.textRequests;
+      child.metrics := metrics;
+      child.inhFontSize := isEmptyInt(fontSize) ? inhFontSize : valueInt(fontSize);
+      child.inhTextAlign := textAlign == Inherit ? inhTextAlign : textAlign;
+      child.inhVerticalAlign := verticalAlign == Inherit ? inhVerticalAlign : verticalAlign;
+      child.inhColor := isEmptyColor(color) ? inhColor : valueColor(color);    
+    
+      contentW := fold 2 * padding .. self$-.contentW < (child$i.w + 2 * padding) ? (child$i.w + 2 * padding) : self$-.contentW;
+      contentH := fold 2 * padding .. self$-.contentH + child$i.h;
+      child.x := 
+        (child.inhTextAlign == Left) ?
+          (margin + padding + x)
+        : (child.inhTextAlign == Center) ?
+          (x + w/2 - child.w/2)
+        : (x + w - child.w - padding - margin); //right
+      child.y := margin + padding + y + child$i.ch - child$i.h;
+     
+      child.ch := fold 0 .. child$-.ch + child$i.h;
+      child.cw := 0; 
+      
+
+      child.canvas := background;
+      composite := fold background .. self$-.composite + child$i.composite;      
+    }  
+    w := self$$.contentW + 2 * margin;
+    h := self$$.contentH + 2 * margin;
+
+    
+  }    
+}
+
+
+class HBox : Node {
+  children { 
+    child : [Node]; 
+  }
+  attributes {
+    var background : int;        
+    var contentW : int; //content + padding + border    
+    var contentH : int; //content + padding + border
+  }
+  actions {
+  
+    background := paintZ(shape, x + margin, y + margin, contentW, contentH, backgroundColor, z, canvas) +      
+      paintQuad(
+        x + margin + contentW, y + margin, z, 
+        x + margin + contentW, y + margin + contentH, z,
+        x + margin + contentW, y + margin + contentH, z - 1,
+        x + margin + contentW, y + margin, z - 1, 
+        backgroundColor, canvas) +
+      paintQuad(
+        x + margin, y + margin, z, 
+        x + margin + contentW, y + margin, z,
+        x + margin + contentW, y + margin, z - 1,
+        x + margin, y + margin, z - 1, 
+        backgroundColor, canvas) +
+     paintQuad(
+        x + margin, y + margin, z, 
+        x + margin, y + margin + contentH, z,
+        x + margin, y + margin  + contentH, z - 1,
+        x + margin, y + margin, z - 1, 
+        backgroundColor, canvas) +
+     paintQuad(
+        x + margin, y + margin + contentH, z, 
+        x + margin + contentW, y + margin + contentH, z,
+        x + margin + contentW, y + margin  + contentH, z - 1,
+        x + margin, y + margin + contentH, z - 1, 
+        backgroundColor, canvas);
+    
+  
+    loop child {   
+      child.z := z + 1;
+    
+	  child.inhFontSize := isEmptyInt(fontSize) ? inhFontSize : valueInt(fontSize);
+      child.inhTextAlign := textAlign == Inherit ? inhTextAlign : textAlign;
+      child.inhVerticalAlign := verticalAlign == Inherit ? inhVerticalAlign : verticalAlign;
+      
+      textRequests := fold 0 .. self$-.textRequests + child$i.textRequests;
+      child.metrics := metrics;
+      child.inhColor := isEmptyColor(color) ? inhColor : valueColor(color);    
+      
+      contentW := fold 2 * padding .. self$-.contentW + child$i.w;
+      contentH := fold 2 * padding .. self$-.contentH < (child$i.h + 2 * padding) ? (child$i.h + 2 * padding) : self$-.contentH;
+      child.y :=
+        (child.verticalAlign == Top) ?
+            (margin + padding + y)
+        : (child.verticalAlign == Bottom)?
+            (y + h - child.h - margin - padding)
+        :   (y + margin + contentH / 2 - child.h / 2); //middle      
+      child.x := margin + padding + x + child$i.cw - child$i.w;
+      
+      child.cw := fold 0 .. child$-.cw + child$i.w;
+      child.ch := 0;
+      
+      child.canvas := background;
+      composite := fold background .. self$-.composite + child$i.composite;    
+    }
+    w := $$.contentW + 2 * margin;
+    h := $$.contentH + 2 * margin;
+  }
+}
+
+
+class Box : Node {
+  attributes { input wInput : int; var contentW : int; }
+  actions {        
+    textRequests := 1;
+    contentW := wInput + 2 * padding; 
+    w := contentW + 2 * margin;
+    h := w;    
+    
+    composite := paintZ(shape, x + margin, y + margin, contentW, contentW, backgroundColor, z, canvas) +      
+      paintQuad(
+        x + margin + contentW, y + margin, z, 
+        x + margin + contentW, y + margin + contentW, z,
+        x + margin + contentW, y + margin + contentW, z - 1,
+        x + margin + contentW, y + margin, z - 1, 
+        backgroundColor, canvas) +
+      paintQuad(
+        x + margin, y + margin, z, 
+        x + margin + contentW, y + margin, z,
+        x + margin + contentW, y + margin, z - 1,
+        x + margin, y + margin, z - 1, 
+        backgroundColor, canvas) +
+     paintQuad(
+        x + margin, y + margin, z, 
+        x + margin, y + margin + contentW, z,
+        x + margin, y + margin  + contentW, z - 1,
+        x + margin, y + margin, z - 1, 
+        backgroundColor, canvas) +
+     paintQuad(
+        x + margin, y + margin + contentW, z, 
+        x + margin + contentW, y + margin + contentW, z,
+        x + margin + contentW, y + margin  + contentW, z - 1,
+        x + margin, y + margin + contentW, z - 1, 
+        backgroundColor, canvas);
+    
+
+  }
+}
+
+

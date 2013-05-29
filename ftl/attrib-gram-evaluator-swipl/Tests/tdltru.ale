@@ -1,0 +1,26 @@
+interface Node { var incount : int; var outcount : int; }
+interface Top { var res : int;}
+
+class Root : Top {
+  children { child : Node; }
+  actions {
+    child.incount := 0;    
+    res := child.outcount;
+  }
+}
+
+class Int : Node {
+  children { child : [Node]; }
+  actions {
+    loop child {
+      child.incount := incount + 1;
+      outcount := fold 0 .. child$i.outcount;
+    }
+  }
+}
+
+class Leaf : Node {
+  actions {
+    outcount := incount;
+  }
+}

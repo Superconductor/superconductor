@@ -1,0 +1,28 @@
+interface List { var x : int; }
+
+class Cons : List {
+  children { next : List; }
+  actions { x := next.x; }
+}
+
+class Mt : List { 
+  attributes { input y : int; var z : int; var aa : int; var bb : int; }
+  actions { 
+    aa := 3;
+    if (y) {
+      bb := 7;
+      if (aa == 3 && bb == 3) {
+        x := y;
+        z := bb + 1 + self.aa;
+      } else {
+        x := 2;
+        z := 4;      
+      }
+    } else {
+      bb := 8;
+      x := 1;
+      z := 5;
+    } 
+  }
+}   
+

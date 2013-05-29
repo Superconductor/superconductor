@@ -1,0 +1,77 @@
+digraph G{
+	subgraph cluster0{
+		color=black;
+		label="top-graph";
+		subgraph cluster1{
+			label="top";
+			node[style=filled];
+			top_b[label="b"];
+			top_c[label="c"];
+			top_a[label="a"];
+		}
+		subgraph cluster2{
+			label="node";
+			node[style=filled];
+			top_node_f[label="f"];
+			top_node_g[label="g"];
+			top_node_d[label="d"];
+			top_node_e[label="e"];
+		}
+		top_node_f -> top_b[color=darkgreen];
+		top_node_g -> top_c[color=darkgreen];
+		top_node_d -> top_a[color=darkgreen];
+		top_node_e -> top_a[color=darkgreen];
+	}
+	subgraph cluster3{
+		color=black;
+		label="mid-graph";
+		subgraph cluster4{
+			label="mid";
+			node[style=filled];
+			mid_f[label="f"];
+			mid_g[label="g"];
+			mid_d[label="d"];
+			mid_e[label="e"];
+		}
+		subgraph cluster5{
+			label="node2";
+			node[style=filled];
+			mid_node2_l[label="l"];
+			mid_node2_m[label="m"];
+			mid_node2_j[label="j"];
+			mid_node2_k[label="k"];
+		}
+		parent0[label="Parent",style=dotted];
+		mid_node2_k -> mid_e[color=darkgreen];
+		mid_node2_k -> mid_d[color=darkgreen];
+		mid_node2_k -> mid_f[color=darkgreen];
+		mid_node2_l -> mid_g[color=darkgreen];
+		mid_node2_m -> mid_g[color=darkgreen];
+		mid_f -> parent0[color=darkgreen,label="1",fontcolor=darkgreen];
+		mid_g -> parent0[color=darkgreen,label="1",fontcolor=darkgreen];
+		mid_d -> parent0[color=darkgreen,label="1",fontcolor=darkgreen];
+		mid_e -> parent0[color=darkgreen,label="1",fontcolor=darkgreen];
+	}
+	subgraph cluster6{
+		color=black;
+		label="bot-graph";
+		subgraph cluster7{
+			label="bot";
+			node[style=filled];
+			bot_l[label="l"];
+			bot_m[label="m"];
+			bot_j[label="j"];
+			bot_k[label="k"];
+			bot_h[label="$h", shape=box];
+			bot_i[label="$i", shape=box];
+		}
+		parent1[label="Parent",style=dotted];
+		bot_h -> bot_j[color=blue];
+		bot_i -> bot_m[color=blue];
+		bot_i -> bot_l[color=blue];
+		bot_j -> bot_k[color=blue];
+		bot_l -> parent1[color=blue,label="1",fontcolor=darkgreen];
+		bot_m -> parent1[color=blue,label="1",fontcolor=darkgreen];
+		bot_k -> parent1[color=blue,label="1",fontcolor=darkgreen];
+	}
+}

@@ -1,0 +1,145 @@
+% relsize.sty       2.0       Mar 15, 1995
+
+% New LaTex2e version by Donald Arseneau <asnd@reg.triumf.ca> and
+% Matt Swift <swift@bu.edu>.
+% Original LaTex2.09 smaller.sty author: Bernie Cosell <cosell@WILMA.BBN.COM> 
+%
+% Setting the font size relative to the current size
+%
+% commands are:
+% \relsize{n}  where n gives the number of steps to change the size by;
+%              n = -3 changes from \large to \footnotesize.
+% \smaller == \relsize{-1}
+% \larger  == \relsize{1}
+% \textsmaller{text}, \textlarger{text} - versions that take an argument
+% \mathsmaller{A}, \mathlarger{B}       - math versions 
+%   (The math versions are quite different from the text versions.)
+
+% There are more instructions at the end of the file (after \endinput).
+
+\ProvidesPackage{relsize}[1995/03/15 ver 2.0]
+
+\DeclareRobustCommand\relsize[1]{%
+\ifmmode \@nomath\relsize\else
+ \@tempcnta % assign number representing current font size
+   \ifx\@currsize\normalsize 4\else   % funny order is to have most ...
+    \ifx\@currsize\small 3\else       % ...likely sizes checked first
+     \ifx\@currsize\footnotesize 2\else
+      \ifx\@currsize\large 5\else
+       \ifx\@currsize\Large 6\else
+        \ifx\@currsize\LARGE 7\else
+         \ifx\@currsize\scriptsize 1\else
+          \ifx\@currsize\tiny 0\else
+           \ifx\@currsize\huge 8\else
+            \ifx\@currsize\Huge 9\else
+            4\rs@unknown@warning % unknown state: \normalsize as starting point
+ \fi\fi\fi\fi\fi\fi\fi\fi\fi\fi
+%  Change the number by the given increment:
+ \advance\@tempcnta#1\relax
+%  watch out for size underflow:
+ \ifnum\@tempcnta<\z@ \rs@size@warning{small}{\string\tiny}\@tempcnta\z@ \fi
+ \ifcase\@tempcnta  % set new size based on altered number
+    \tiny \or \scriptsize \or \footnotesize \or \small \or \normalsize \or 
+    \large \or \Large \or \LARGE \or \huge \or \Huge \else 
+     \rs@size@warning{large}{\string\Huge}\Huge
+\fi\fi}
+
+\newcommand\rs@size@warning[2]{\PackageWarning{relsize}{%
+ Size requested is too #1.\MessageBreak Using #2 instead}}
+
+\newcommand\rs@unknown@warning{\PackageWarning{relsize}{Current font size 
+ is unknown! (Why?!?)\MessageBreak Assuming \string\normalsize}}
+
+\DeclareRobustCommand\larger[1][\@ne]{\relsize{+#1}}
+\DeclareRobustCommand\smaller[1][\@ne]{\relsize{-#1}}
+\DeclareRobustCommand\textlarger[2][\@ne]{{\relsize{+#1}#2}}
+\DeclareRobustCommand\textsmaller[2][\@ne]{{\relsize{-#1}#2}}
+\newcommand\mathsmaller[1]{{\mathchoice{\textstyle}%
+  {\scriptstyle}{\scriptscriptstyle}{\scriptscriptstyle}#1}}
+\DeclareRobustCommand\mathlarger[1]{\mathchoice
+  {\mbox{\larger$\displaystyle#1\m@th$}}%
+  {{\displaystyle#1}}{{\textstyle#1}}{{\scriptstyle#1}}}
+
+\endinput
+==========================================================
+
+R E L S I Z E . S T Y           ver 2.0      Mar 15, 1995
+
+by Donald Arseneau,  asnd@reg.triumf.ca,  based on smaller.sty by Bernie 
+Cosell, cosell@WILMA.BBN.COM, and combined with the version by Matt Swift, 
+swift@bu.edu.
+
+It is frequently the case that something should be typeset somewhat larger
+or smaller than the surrounding text, whatever that size happens to be.
+Specifying such sizing commands explicitly makes it difficult to modify the
+font sizes of a document at a later time, and makes it hard to write macros
+that work at arbitrary sizes.  Relsize.sty defines several commands for LaTeX
+to set font sizes relative to the current size. 
+
+To refresh your memory, the font sizing commands in LaTeX are, in order:
+\tiny, \scriptsize, \footnotesize, \small, \normalsize, \large, \Large,
+\LARGE, \huge, \Huge.  The main new command provided is \relsize, which 
+takes one (positive or negative) number as its argument; the number specifies
+how many increments by which to change the font size.  For example, if  
+{\relsize{-2} smaller}   appears in normal sized text, the word "smaller" 
+is printed in footnote sized type.  If the same command appears in a \Large
+section title, then "smaller" is printed in normal size. 
+
+There are also the commands \larger and \smaller, which normally change the
+font size by one step in the obvious direction; \larger is an abbreviation
+for \relsize{+1}, and \smaller is an abbreviation for \relsize{-1}. For
+example, {\large... \larger{WOW!}} prints "WOW" in \Large type.  You can
+also specify bigger steps as an optional argument for \larger and \smaller: 
+\larger[3] is equivalent to \relsize{3}; \smaller[2] is like \relsize{-2}.
+Both \larger and \smaller accept negative arguments, but please don't make
+things so obscure!  If you want to change size by several steps it is 
+much better to give an increment than to string several \larger commands
+together; i.e., \relsize{3} or \larger[3], but not \larger\larger\larger.
+
+If the size requested is too small or too large, a warning is given, and
+the size will only change as far as \tiny or \Huge, as appropriate.
+
+All of the \relsize, \larger, and \smaller commands are "switches" just
+like the regular sizing commands.  That is, they change the size for all
+following text until the scope is ended by a closing brace.  There are
+alternate versions called \textlarger and \textsmaller that take some text
+as an argument and apply the size change to only that text:
+\textlarger{big}. 
+
+All of the commands described above are text commands; they cannot be used
+in math mode.  There are special \mathsmaller and \mathlarger commands
+provided, but these do not use the same sizes that the text versions use.
+Instead, they step between the usual math "styles" which you can explicitly
+set using the commands \displaystyle, \textstyle, \scriptstyle, and
+\scriptscriptstyle [see Lamport, LaTeX/Manual (1st ed, p.54); GMS The LaTeX
+Comapnion, p.255].  However, the \mathlarger command will also increase the
+size beyond regular \displaystyle by selecting a larger regular font size
+(using \larger).  (Yes, this is a kludge, but it is too useful to leave
+out.)  If you want to use this to create big integral signs, then you must
+also load the package "exscale" so that math symbols can change size.   
+The sizes selected are: 
+
+Current style       \mathsmaller gives         \mathlarger gives
+---------------     ----------------------     ------------------------
+\displaystyle       \textstyle (almost same)   \displaystyle in a \larger font
+\textstyle          \scriptstyle               \displaystyle (almost same)
+\scriptstyle        \scriptscriptstyle         \textstyle
+\scriptscriptstyle  \scriptscriptstyle (same)  \scriptstyle
+
+For example, try $\frac{\mathlarger{E}}{E}$.  Note that, for most symbols,
+\displaystyle and \textstyle are the same size, so $N \mathlarger{N}$ 
+gives two identical N's, but \sum and \int do get bigger in display style: 
+$\int\mathlarger{\int}$, and fractions are treated differently too: 
+$\frac{1}{2} \mathlarger{\frac{1}{2}}$.  As you might have guessed, 
+\mathlarger and \mathsmaller should only be used in math mode. 
+
+Fine point:  The combination \relsize{n}\relsize{-n} is not guaranteed to 
+restore the current font size!  That is because the increment "n" may be
+enough to overflow the range of sizes.  Say you are in \huge text already,
+and you do \relsize{4}.  There is nothing bigger than \Huge so that is the
+size you get.  Then an ensuing \relsize{-4} will take four steps smaller
+and change the size to \large.  You should use grouping to undo relative 
+size changes because it is unsafe to counteract one change with an "equal" 
+change in the opposite direction.
+
+Donald Arseneau                         asnd@reg.triumf.ca

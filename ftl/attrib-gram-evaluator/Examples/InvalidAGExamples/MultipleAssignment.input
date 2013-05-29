@@ -1,0 +1,60 @@
+        IFace TopI = new IFace("TopI");
+        TopI.addAttribute("a");
+        TopI.addAttribute("b");
+        
+        IFace MidI = new IFace("MidI");
+        MidI.addAttribute("c");
+        MidI.addAttribute("d");
+        
+        IFace LowI = new IFace("LowI");
+        LowI.addAttribute("e");
+        LowI.addAttribute("f");
+        LowI.addAttribute("aa");
+        LowI.addAttribute("ab");
+        
+        IFace BotI = new IFace("BotI");
+        BotI.addAttribute("g");
+        BotI.addAttribute("h");
+        BotI.addAttribute("ac");
+        BotI.addAttribute("ad");
+        
+        Class Top = new Class("Top", TopI);
+        Top.addField("start");
+        Top.addChild("mid", MidI);
+        Top.set("a", "start");
+        Top.set("mid@c", "a");
+        Top.set("b", "mid@d");
+        
+        Class Mid = new Class("Mid", MidI);
+        Mid.addChild("low", LowI);
+        Mid.set("low@e", "c");
+        Mid.set("d", "low@f");
+        
+        Class Low1 = new Class("Low1", LowI);
+        Low1.addChild("bot", BotI);
+        Low1.set("bot@g", "e");
+        Low1.set("aa", "bot@ac");
+        Low1.set("ab", "aa");
+        Low1.set("bot@ad", "ab");
+        Low1.set("f", "bot@h");
+        
+        Class Low2 = new Class("Low2", LowI);
+        Low2.addChild("bot", BotI);
+        Low2.set("bot@g", "e");
+        Low2.set("aa", "bot@h");
+        Low2.set("ab", "bot@h");
+        Low2.set("f", "bot@h");
+        
+        Class Bot1 = new Class("Bot1", BotI);
+        Bot1.set("ac", "g");
+        Bot1.set("h", "ad");
+        
+        Class Bot2 = new Class("Bot2", BotI);
+        Bot2.set("ac", "g");
+        Bot2.set("ad", "ac");
+        Bot2.set("h", "ad");
+        
+        ArrayList<IFace> inter = new ArrayList<IFace>();
+        ArrayList<Class> classes = new ArrayList<Class>();
+        inter.add(TopI); inter.add(MidI); inter.add(LowI); inter.add(BotI);
+        classes.add(Top); classes.add(Mid); classes.add(Low1); classes.add(Low2); classes.add(Bot1); classes.add(Bot2);

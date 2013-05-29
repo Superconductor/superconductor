@@ -1,0 +1,34 @@
+        // Local Attribute Grammar
+        // An example containing local and public attributes and fields
+         
+        // define Frame interface
+        IFace frame = new IFace("frame");
+        frame.addAttribute("a");
+        
+        // define Node interface
+        IFace node = new IFace("node");
+        node.addAttribute("d"); node.addAttribute("e"); node.addAttribute("f"); node.addAttribute("i");
+        node.addField("g");
+        
+        // define Parent Class
+        Class parent = new Class("parent", frame);
+        parent.addField("a0"); parent.addField("b");
+        parent.addAttribute("c");
+        parent.apply("sum", "a", "a0", "ch@d", "ch@g");
+        parent.apply("sum", "c", "b", "ch@e");
+        parent.set("ch@f", "c");
+        parent.set("ch@i", "a");
+        
+        // define Child Class
+        Class child = new Class("child", node);
+        child.addField("h");
+        child.set("d", "f");
+        child.set("e", "h");
+        
+        // define children relationships
+        parent.addChild("ch", node);
+        
+        ArrayList<IFace> inter = new ArrayList<IFace>();
+        ArrayList<Class> classes = new ArrayList<Class>();
+        inter.add(frame); inter.add(node);
+        classes.add(parent); classes.add(child);

@@ -1,0 +1,76 @@
+digraph G{
+	subgraph cluster0{
+		color=black;
+		label="Parent-graph";
+		subgraph cluster1{
+			label="Parent";
+			node[style=filled];
+			Parent_d[label="d"];
+			Parent_b[label="b"];
+			Parent_c[label="c"];
+			Parent_a[label="a"];
+			Parent_z[label="z"];
+			Parent_start[label="start", shape=box];
+		}
+		subgraph cluster2{
+			label="ChldB";
+			node[style=filled];
+			Parent_ChldB_j[label="j"];
+			Parent_ChldB_k[label="k"];
+			Parent_ChldB_y[label="y"];
+			Parent_ChldB_h[label="h"];
+			Parent_ChldB_x[label="x"];
+			Parent_ChldB_i[label="i"];
+		}
+		subgraph cluster3{
+			label="ChldA";
+			node[style=filled];
+			Parent_ChldA_f[label="f"];
+			Parent_ChldA_g[label="g"];
+			Parent_ChldA_e[label="e"];
+		}
+		Parent_start -> Parent_ChldA_f[color=blue];
+		Parent_ChldA_e -> Parent_c[color=darkgreen];
+		Parent_ChldB_x -> Parent_z[color=darkgreen];
+		Parent_c -> Parent_d[color=darkgreen];
+		Parent_z -> Parent_ChldB_y[color=darkgreen];
+		Parent_d -> Parent_ChldB_i[color=darkgreen];
+		Parent_ChldA_e -> Parent_a[color=indigo];
+		Parent_ChldB_h -> Parent_a[color=indigo];
+		Parent_a -> Parent_b[color=indigo];
+		Parent_b -> Parent_ChldA_g[color=indigo];
+		Parent_b -> Parent_ChldB_j[color=indigo];
+	}
+	subgraph cluster4{
+		color=black;
+		label="ChildA-graph";
+		subgraph cluster5{
+			label="ChildA";
+			node[style=filled];
+			ChildA_f[label="f"];
+			ChildA_g[label="g"];
+			ChildA_e[label="e"];
+		}
+		parent0[label="Parent",style=dotted];
+		ChildA_e -> parent0[color=blue,label="1",fontcolor=darkgreen];
+	}
+	subgraph cluster6{
+		color=black;
+		label="ChildB-graph";
+		subgraph cluster7{
+			label="ChildB";
+			node[style=filled];
+			ChildB_j[label="j"];
+			ChildB_k[label="k"];
+			ChildB_h[label="h"];
+			ChildB_y[label="y"];
+			ChildB_i[label="i"];
+			ChildB_x[label="x"];
+		}
+		parent1[label="Parent",style=dotted];
+		ChildB_i -> ChildB_k[color=blue];
+		ChildB_y -> ChildB_h[color=blue];
+		ChildB_x -> parent1[color=blue,label="1",fontcolor=darkgreen];
+		ChildB_h -> parent1[color=blue,label="2",fontcolor=indigo];
+	}
+}

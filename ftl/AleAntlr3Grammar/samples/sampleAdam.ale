@@ -1,0 +1,66 @@
+interface Top {
+  var myx : int;
+  var myy : int;
+  var myh : int;
+  var myw : int;
+}
+
+interface Node {
+  var x : int;
+  var y : int;
+  var h : int;
+  var w : int;
+}
+
+class TopBox : Top {
+  
+  children { root : Node; }
+  
+  attributes { 
+    input fx : int;
+    input fy : int;    
+  }
+  
+  actions {   
+    myx := fx;
+    myy := fy;
+    root.x := myx;
+    root.y := myy;
+    myh := root.h;
+    myw := root.w;
+  }
+}   
+
+class VBox : Node {
+  attributes {
+    var temph : int;
+  }
+  
+  children {
+    child1 : Node;
+    child2 : Node;
+  }
+  
+  actions {
+    child1.x := x;
+    child2.x := x;
+    child1.y := y;
+    temph := y + child1.h;
+    child2.y := temph;
+    h := child1.h + child2.h;
+    w := max(child1.w, child2.w);
+  }
+
+}
+
+class LeafBox : Node {
+  attributes {
+    input fh : int;
+    input fw : int;
+  }
+  
+  actions {
+    h := fh;
+    w := fw;
+  }
+}

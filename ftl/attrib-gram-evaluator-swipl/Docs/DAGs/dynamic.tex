@@ -1,0 +1,276 @@
+We support GAGs through first-class references (a restricted variant of RAGs): our challenge is to statically schedule operations over them. The extension to AGs is that a reference to a node can be passed as an attribute value and dereferenced. The tree property of the AST is broken because non-local edges may be dynamically computed (though we show that this is not a problem). 
+
+Our insight to enable static scheduling is that, by modeling a reference as the set of attributes being passed, any manipulation of references can be analyzed in terms of traditional manipulations of attributes. To support this encoding, we provide several restricted reference operators:
+
+\begin{itemize}
+\item \textbf{Reference passing:} A node reference is a first-class value; we extend the attribute assignment operator to also support assigning values of reference types. Ignoring derefencing, scheduling attributes containing reference values is the same as scheduling attributes containing scalar values. E.g., each node can be considered as having an implicit attribute \code{this} and the value of the \code{this} attribute can be treated as a passable value. We use type-directed rewrite rules for our encoding, leading to simple implementation and imposing an expressive restriction.
+
+\item \textbf{Dereferenced reads:} An attribute of a referenced node may be dereferenced to read, even, in many cases, if the attribute contains another node reference. Reading a non-local attribute incurs a non-local dependency; we use a global transformation to propagate this dependency. Essentially, a dereferenced read depends on both the reference being resolved and that its attribute is ready. We couple these notions by augmenting passing a reference to node to also pass attributes reachable through it.
+
+We should limit the set of attributes associated with each reference pass to avoid overconstraining the scheduler. We use an analysis similar to structural type inference to determine the set of attributes reachable through references and thus that need to be propagated with each reference. Initially, for simplicity, we statically reject nested reference passing. Later, we relax this restriction, supporting nested references except when inferred types are recursive.
+
+\item \textbf{No dereferenced writes:} multiple nodes may alias the same node; to guarantee that attributes of a shared node are assigned exactly once, \emph{we do not provide a primitive to assign attributes through a reference.} Assignments must be local. Note, however, a non-local write can still be achieved through a non-local read by the intended receiver. Section~\ref{sec:syntax} presents a new binding form to automate such an encoding for one basic sharing pattern \textbf{[[TODO]]}.
+\end{itemize}
+
+%Note that the heart our encoding stems from our approach to support reading attributes of dereferenced nodes. Passing a read-only node is the same as passing its attributes, which grammars already support.
+
+%A subtle restriction we start with but later lift is that references to a node cannot be nested as in illegal type \code{ref ref} $\tau$. Likewise, we also prohibit chained dereferencing as in expression \code{a}$\rightarrow$\code{b}$\rightarrow$\code{c}. %It might be possible to extend our approach to support nested references by enriching the types to track the node type at each point of indirection. E.g., \code{ref ref ref} $\tau$ must instead be tracked as \code{ref} (${\tau''}$,  \code{ref} ($\tau'$, \code{ref} $\tau$)). 
+%Passing a nested reference, analogous to a non-nested reference, is to pass all the attributes along steps of the nesting. We defer discussion due to questions of precision, explosion, and otherwise simplify presentation.
+
+
+We proceed by showing an example of using first-class references and one desugaring that can reuse existing AG compilers. This encoding is inefficient as the output does not use pointers. To address this problem in a way that only changes the AG compiler code emission phase (but not scheduler), we present a desugaring that uses \emph{phantom} type modifiers. Next, we consider \emph{nested} references (up to cycles). Finally, we present our desugaring as a set of rewrite rules (driven by an initial sequence of type analyses).
+
+\subsection{A Singleton Sharing Example}
+
+Consider a singleton table with 1 row and 1 column: both the row and column should share the same 1 cell. As in HTML, we encode this as the row containing the cell; to share, the column must contain a non-local reference to the cell. Furthermore, a column should be wide enough to fit all of its cells: a clean specification will define a column as a function of a non-local attribute. We achieve this by passing the reference to the cell through the path between the row to the column nodes and then defining the column width in terms of an attribute of this reference.
+
+\begin{figure}
+\begin{lstlisting}[mathescape]
+//sample input tree as an edge labeled graph (JSON)
+Tree tree = 
+  {Table: {
+    Row: {Cell: {width: 200}},
+    Column: { }}};
+    
+//grammar schema
+@Start Table $\rightarrow$ Row Column { }
+Cell $\rightarrow$ { input width : int }
+Row $\rightarrow$ Cell { var myCell : ref Cell; }
+Column $\rightarrow$ { var myCell : ref Cell; width : int; }
+
+//attribute constraints
+Table { Column.myCell := Row.myCell; }
+Row { myCell := @Cell; }
+Column { width := myCell$\rightarrow$width; }
+\end{lstlisting}
+\end{figure}
+
+The example has three parts:
+
+\begin{enumerate}
+\item \textbf{Concrete tree.} We show a sample concrete tree (variable \code{tree}) using Java-like syntax with named arguments. The tree is an instance of the possible ones described by the following grammar schema. 
+
+\item \textbf{Grammar schema.} Second, the schema defines several types of nodes, including information about their attributes. Like traditional attribute grammars, we require a notion notion of allowable root node types (annotation \code{@start}). Likewise, we distinguish \code{input} attributes (scalar values provided with the concrete tree), \code{child} attributes (local tree edges also provided with the concrete tree), and \code{var} attributes (values to be computed). Furthermore, we track the values assigned to attributes: scalar types (e.g., from a host language as with \code{int}), node types (e.g., \code{Cell}), and references parameterized by node type (e.g., \code{ref Cell}).
+
+\item \textbf{Attribute constraints.} Finally, we show three declarative semantic actions. Their free variables are bound within the context of a node type (e.g., members of \code{Table} for the first).  The environment of each declaration is thus local to the node. Furthermore, we define them separately from the grammar schema to emphasize that their order must be scheduled by a compiler: the \code{width} of \code{Column} cannot be solved until after its alias \code{myCell} is resolved. Finally, note the implicit non-local attribute dereference (\code{myCell}$\rightarrow$\code{width}) and treatment of a node as a first-class value (\code{myCell := @Cell}).
+\end{enumerate}
+
+\subsection{A Full Desguaring}
+We can desguar the use of references to pass node attributes rather than node references. Consider the attributes that are non-locally dereferenced: instead of passing a reference to a node, we can propagate the used attributes. In this case, we must pass attribute \code{width} of node type \code{Cell}. We call this new attribute $myCell_{width}$; every reference variable is rewritten as a set of attribute variables.
+
+\begin{lstlisting}[mathescape]
+//grammar schema
+@Start Table $\rightarrow$ Row Column { }
+Cell $\rightarrow$ { input width : int }
+Row $\rightarrow$ Cell { var myCell$_{width}$ : int }
+Column $\rightarrow$ { 
+  var width : int; 
+  var myCell$_{width}$ : int 
+}
+
+//attribute constraints
+Table { Column.myCell$_{width}$ := Row.myCell$_{width}$; }
+Row { myCell$_{width}$ := Cell.width; }
+Column { width := myCell$_{width}$; }
+\end{lstlisting}
+
+Note that our desugaring does not preclude reasoning about identity. E.g., a \code{this} field for nodes can be uniquely labeled using an inorder traversal and then the label attribute propagated along with its other attributes. Reasoning about identity is thus desuguared into operations over the labels.
+
+\subsection{Scheduled Traversal for Full Desugaring}
+
+The fully desugared attribute grammar yields the following sequence of parallel tree visitors. The first pass is bottom-up, propagating widths from cells to their enclosing table. The second pass is top-down, propagating the previously aggregated widths from tables to their enclosed columns:
+
+\begin{lstlisting}[mathescape]
+class Pass0 : BottomUp {
+  public static void visit (Table n) {
+    n.Column1.myCell_w = n.Row0.myCell_w;
+  }
+  public static void visit (Row n) {
+    n.myCell_width = n.Cell0.width;
+  }
+}
+class Pass1 : TopDown {
+  public static void visit (Column n) { 
+    n.width = n.myCell_width; 
+  }
+}
+$\ldots$
+(new Pass0()).visit(tree);
+(new Pass1()).visit(tree);
+\end{lstlisting}
+
+Attribute grammar scheduling performs a \emph{circularity} check -- there must be no cyclic dependecies -- yet a tree may now contain a cycle. E.g., just as a column now references the cell, so may we extend the cell to reference the table. Just as we define a column to be the maximum width of its children, consider further defining a cell to match the width of a column: we call the latter with the cell's \code{finalWidth}\footnote{the non-final width, in browser construction, is referred to as an \emph{intrinsic} width that is primarily constrained by its subtree.}. If the cell references the column the column the cell, the tree is now a cyclic graph: crucially, the original grammar \emph{the original tree is now a minimum spanning tree that we can still use to schedule non-cyclic dependencies.} 
+
+Consider the following rule extensions for example:
+
+\begin{lstlisting}[mathescape]
+//grammar schema
+Cell $\rightarrow$ { 
+  $\ldots$ 
+  var myCol : ref Column; 
+  var finalWidth : int;
+}
+Row $\rightarrow$ Cell {  $\ldots$ var myCol :  ref Column; }
+
+//attribute constraints
+Table { $\ldots$ Row.myCol := @Column; }
+Row { $\ldots$ Cell.finalWidth := myCol$\rightarrow$width; }
+\end{lstlisting}
+
+The grammar now desugars as follows:
+
+
+\begin{lstlisting}[mathescape]
+//grammar schema
+@Start Table $\rightarrow$ Row Column { }
+Cell $\rightarrow$ { 
+  input width : int;
+  var myCol$_{width}$ : int; //new
+  var finalWidth : int; //new 
+}
+Row $\rightarrow$ Cell { 
+  var myCell$_{width}$ : int;
+  var myCol$_{width}$ : int; //new
+}
+Column $\rightarrow$ { 
+  var width : int; 
+  var myCell$_{width}$ : int;  
+}
+
+//attribute constraints
+Column { 
+  width := myCell$_{width}$; 
+}
+Table { 
+  Column.myCell$_{width}$ := Row.myCell$_{width}$;
+  Row.myCol$_{width}$ := Column.width; //new
+}
+Row { 
+  myCell$_{width}$ := Cell.width;
+  Cell.finalWidth := myCol$_{width}$; //new
+}
+\end{lstlisting}
+
+To schedule the extended grammar, after the second tree traversal (top down) to compute \code{width} for \code{Column}, we can schedule another top-down traversal to pass \code{col_w} to \code{Row} and then to \code{Cell} \footnote{in theory, these traversals can be fused by moving the original column width calculation into table, but we are not aware of AG compilers that optimizes for this case}:
+
+\begin{lstlisting}[mathescape]
+class Pass3 : TopDown {
+  public static void visit (Table n) { 
+    n.Row0.myCol_width = n.Column0.width;
+  }
+  public static void visit (Row n) { 
+    n.Cell0.finalWidth = n.myCol_width;
+  }
+}
+$\ldots$
+(new Pass3()).visit(tree);
+\end{lstlisting}
+
+Despite the tree now being a graph, if we examine the dependencies, we see that we are still reasoning in terms of the original tree. The original tree is now a minimum spanning tree (MST) of the graph, still enabling a value to flow from one node to any other using traditional reasoning. Attributes seemingly flowing along cyclic paths (from cell to column and back) are staged across a \emph{sequence} of acyclic paths of attributes across the MST: e.g., cell width to column and column width to cell final width. They do not intersect because the first flow is along \code{c_w} attributes (generated attributes encoding the acylic path to send the cell reference) and the second is along \code{col_w} attributes (generated attributes encoding the acyclic path to send the column reference). In terms of an AG dependency analysis, the cell's width indirectly flows to its final width; there is no reciprical flow between these two attributes that would suggest a cycle.
+
+
+\subsection{Phantom values and random access}
+The previous encoding is inefficient on machines with random access memory. Every attribute of a node is propagated, rather than just a single reference. With randomly accessible memory, the attributes of a referenced node are more cheaply accessed by using a pointer. Our approach is to achieve the same schedule as in the desugaring by propagating a pointer and randomly access the attributes using it. However, we must be careful to maintain the read dependencies on dereferenced attributes when scheduling, so we introduce phantom values seen by the scheduler but not emitted during code generation. This enables us to reuse a traditional AG scheduler and extend the code generator for  the new primitives (and in a minor way).
+
+We rewrite the first example to use several new primitives. They are designed to impact both scheduler behavior and code emission. The primitives are reference creation operator \code{@} and dereference operator $\rightarrow$. To change scheduler behavior without excessively modifying code emission, we also introduce \code{phantom} attribute modifiers. Phantom attributes are not allocated at runtime and assignments to them are not emitted. For example, function $\O(\ldots)$ is a function to define a phantom attribute as dependent upon its attribute arguments; there is no actual runtime function $\O$. A code generator must specially handle \code{@} and $\rightarrow$.
+
+Our basic approach is to propagate attributes of referenced nodes as phantom attributes. Reading an attribute requires both the reference and the phantom attribute to be ready. The actual reference is passed along as a concrete value, i.e., as in capture \code{@(}``\&\code{myRow.Cell}''\code{)}, and reference manipulations have the expected code generation behavior.
+
+\begin{lstlisting}[mathescape]
+//grammar schema
+@Start Table $\rightarrow$ Row Column { }
+Cell $\rightarrow$ { input width : int }
+Row $\rightarrow$ Cell { 
+  var myCell : ref Cell;
+  phantom var myCell$_{width}$ : int; 
+}
+Column $\rightarrow$ { 
+  var myCell : ref Cell; 
+  phantom var myCell$_{width}$ : int; 
+  var width : int;
+}
+
+//attribute constraints
+Table { 
+  Column.myCell := Row.myCell;
+  Column.myCell$_{width}$ := $\O$(Row.myCell$_{width}$); 
+}
+Row { 
+  myCell := @($``\&Cell"$);
+  myCell$_{width}$ := $\O$(Cell.width); 
+}
+Column { width := $\rightarrow$(myCell, myCell$_{width}$); }
+\end{lstlisting}
+
+Note that, at code generation, the \code{phantom} attributes need not be allocated. Likewise, the assignments to them can be dropped. Finally, the assignment to \code{width} is of just the dereferenced field.
+
+\subsection{Scheduled Traversal for Phantom}
+
+Using the phantom attribute rewrites and pointers, we achieve the following schedule: 
+
+
+\begin{lstlisting}[mathescape]
+class Pass0 : BottomUp {
+  public static void visit (Table n) { 
+    n.Column1.myCell = n.Row0.myCell;
+  }
+  public static void visit (Row n) { 
+    n.myCell = n.Cell0;
+  }
+}
+class Pass1 : TopDown {
+  public static void visit (Column n) { 
+    n.width = n.myCell.width; 
+  }
+}
+$\ldots$
+(new Pass0()).visit(tree);
+(new Pass1()).visit(tree);
+\end{lstlisting}
+
+The visitors are fairly similar to the original. The same basic traversal sequence is used: two traversals, albeit with different instructions when handling references. Note, however, only one reference is passed in the generated code. We do not need to propagate individual fields. 
+
+\subsection{Nested References Intuition}
+\label{sec:nested}
+\input{nested}
+
+\subsection{Code generation and rewrite rules}
+
+We show how to rewrite a grammar schema and semantic actions to use our phantom and pointer primitives. To simplify presentation, we write ``$a\_b$'' to denote a unique identifier based on identifiers $a$ and $b$. We assume a static analysis $live_\Gamma(T)$ to gather the set of attributes for each node of type $T$ that are non-locally read by other nodes.
+
+
+We provide rewrite rules for the grammar schema and constraints in Figure~\ref{fig:dynrewrites}.
+
+\input{rewritesdynamic}
+
+%\input{rewritesnested}
+\begin{figure*}
+\caption{Rewrite rules for $GAG_{nested}$ grammars with phantom attributes.\textbf{[[TODO redo]]} Similar ideas as $GAG_{nested}$ except type analysis supports nested references (they no longer need be of hostType) and the usage analysis rejects cyclic constraints. }
+\label{fig:nestedrewrites}
+\end{figure*}
+
+\textbf{[[TODO explain interesting things about rewrites]]}
+
+After analysis, rewriting, and scheduling, we perform code generation. Assignments to phantom attributes are ignored, as are the expressions to be assigned into them. We must also emit code for reference creation (@) and dereferencing ($\rightarrow$):
+
+\begin{itemize}
+\item \textbf{@}: 
+
+A reference creation such as \code{myCell := @(``&Cell");} can be directly code generated as our target language generally has references or pointers. E.g., it would emit \code{myCell := this.children[0] } in JavaScript.
+
+\item \textbf{$\rightarrow$}:
+
+Our rewrite rules for AG scheduling converted references into functions over attributes; for efficiency, the code generator should again use references. E.g., the code generator will take some scheduled statement
+
+\begin{lstlisting}[mathescape]
+v := a = 1 ? $\rightarrow$(b, b$_{d_e}$) : $\rightarrow$(c, c$_{d_e}$)
+\end{lstlisting}
+
+and emit low-level code that manipulates references:
+
+\begin{lstlisting}[mathescape]
+v = a == 1 ? b.d.e : c.d.e
+\end{lstlisting}
+\end{itemize}
+
+

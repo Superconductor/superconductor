@@ -1,0 +1,37 @@
+interface Node { 
+  var label : int;
+  var biggestLabel : int;
+  var nextLabel : int;
+  var nextBiggestLabel : int;
+}
+class Root : Node { 
+  children { child : Node }
+  actions {  
+    child.label := 0;    
+    biggestLabel := child.biggestLabel;
+    
+    child.nextLabel := biggestLabel;
+    nextBiggestLabel := child.nextBiggestLabel;
+  }  
+}
+
+class Intermediate : Node {
+  children { left : Node; right : Node }
+  actions {
+    left.label := label + 1;
+    right.label := left.biggestLabel + 1;
+    biggestLabel := right.biggestLabel;
+    
+    left.nextLabel := nextLabel + 1;
+    right.nextLabel := left.nextBiggestLabel + 1;
+    nextBiggestLabel := right.nextBiggestLabel;
+  }
+}
+
+class Leaf : Node {
+  actions {
+    biggestLabel := label;
+    
+    nextBiggestLabel := nextLabel;
+  }
+}

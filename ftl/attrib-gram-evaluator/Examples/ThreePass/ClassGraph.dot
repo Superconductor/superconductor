@@ -1,0 +1,59 @@
+digraph G{
+	subgraph cluster0{
+		color=black;
+		label="innerNode-graph";
+		subgraph cluster1{
+			label="innerNode";
+			node[style=filled];
+			innerNode_a[label="a"];
+			innerNode_b[label="b"];
+			innerNode_c[label="c"];
+		}
+		subgraph cluster2{
+			label="node";
+			node[style=filled];
+			innerNode_node_a[label="a"];
+			innerNode_node_b[label="b"];
+			innerNode_node_c[label="c"];
+		}
+		parent0[label="Parent",style=dotted];
+		innerNode_node_b -> innerNode_b[color=darkgreen];
+		innerNode_c -> innerNode_node_c[color=darkgreen];
+		innerNode_a -> innerNode_node_a[color=blue];
+		innerNode_b -> parent0[color=darkgreen,label="1",fontcolor=darkgreen];
+	}
+	subgraph cluster3{
+		color=black;
+		label="leafNode-graph";
+		subgraph cluster4{
+			label="leafNode";
+			node[style=filled];
+			leafNode_a[label="a"];
+			leafNode_b[label="b"];
+			leafNode_c[label="c"];
+		}
+		parent1[label="Parent",style=dotted];
+		leafNode_a -> leafNode_b[color=blue];
+		leafNode_b -> parent1[color=blue,label="1",fontcolor=darkgreen];
+	}
+	subgraph cluster5{
+		color=black;
+		label="window-graph";
+		subgraph cluster6{
+			label="window";
+			node[style=filled];
+			window_h[label="h"];
+			window_fa[label="$fa", shape=box];
+		}
+		subgraph cluster7{
+			label="node";
+			node[style=filled];
+			window_node_a[label="a"];
+			window_node_b[label="b"];
+			window_node_c[label="c"];
+		}
+		window_node_b -> window_h[color=darkgreen];
+		window_h -> window_node_c[color=darkgreen];
+		window_fa -> window_node_a[color=blue];
+	}
+}

@@ -1,0 +1,60 @@
+interface Start {  input mt : int; }
+
+interface TreeNode { 
+  input shape : shapeType;
+  var fringeSize : int;
+  var numChildLevels : int;
+  var x : int; 
+  var y : int; 
+  var w : int; 
+  var hStep : int;   
+}
+
+class Top : Start { 
+  attributes {
+    input w : int;
+    input h : int;
+    input padding : int;
+    var fringeSize : int;
+    var numChildLevels : int;
+  }
+  children { root : TreeNode; }
+  actions {
+    
+    root.x := fringeSize / 2;
+    root.y := 0;
+    root.w := w;
+    root.hStep := (h - padding * 2) / numChildLevels;
+
+    //FIXME: desugar child->child assignments!
+    fringeSize := root.fringeSize;
+    numChildLevels := root.numChildLevels;    
+  }
+}
+
+class Binary : TreeNode {
+  attributes { var split : int; }
+  children { left : TreeNode; right : TreeNode; }
+  actions {
+    fringeSize := left.fringeSize + right.fringeSize;
+    numChildLevels := 1 + 
+      (left.numChildLevels > right.numChildLevels ? left.numChildLevels : right.numChildLevels);
+    left.hStep := hStep;
+    right.hStep := hStep;
+    left.y := y + hStep;
+    right.y := y + hStep;
+    split := w * left.fringeSize / fringeSize;
+    left.x := (x - w/2) + split / 2;
+    right.x := (x + w/2) - (w - split) / 2;
+    left.w := split;
+    right.w := w - split;
+  }    
+}
+
+class Leaf : TreeNode { 
+  attributes { input weight : int; }
+  actions {
+    fringeSize := 1;
+    numChildLevels := 0;
+  }
+}

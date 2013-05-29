@@ -1,0 +1,23 @@
+Frontend for grammar synthesizer and parser. Generate CSS parser extensions and code generate visitors; put into pbrowser and compile.
+
+
+1. Dependencies: Antlr3 (e.g., AntlrWorks.jar)
+
+2. Build:
+
+   make all
+
+   or load project in eclipse and import ANTLR jar
+
+3. Run (Driver.java):
+
+   -- param 1: ALE grammar file location
+   -- param 2: output folder for generated C++ parser files
+   -- param 3..: parameters proxied to ALEG
+
+   E.g., from the Makefile:
+
+    runAnim: base 
+	cd $(OUTPUT); java -cp .:$(AGEval):./aleGrammar:$(ANTLR) aleGrammar/Driver ../samples/anim.ale `pwd` -ale
+
+   Generated CPP/H/PROPERTIES files would be copied into ~/layout/match from `pwd`.

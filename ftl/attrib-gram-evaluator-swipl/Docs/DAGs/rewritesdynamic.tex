@@ -1,0 +1,103 @@
+\begin{figure*}
+
+\begin{center}
+
+ \begin{tabular}{ll}
+\textbf{Input BNF} & \textbf{Output BNF} \\
+%INPUT BNF
+$\begin{array}{r l}
+Start &  \rightarrow  \text{@Start}~ N^{+} ~ R^{*} \\
+N &  \rightarrow  id \rightarrow id_{a}^{*} ~ \{ ~ ((\text{var} ~ | ~ \text{input})~ id_d : T_d )^{*} ~ \} \\
+T &  \rightarrow  \text{hostType} ~|~ \text{ref}~id \\
+R &  \rightarrow  id ~ \{ ((id_a := E_a) | (id_{name}.id_{attrib} := E_b))^{*} \} \\
+E &  \rightarrow {_{\rightarrow}E} ~|~ _{Z}E ~|~ _{+}E ~|~ _{id}E  ~|~ {_@}E\\
+_{\rightarrow}E &  \rightarrow (id_a ~|~ id_{name}.id_{attrib}) \rightarrow id_b \\
+_{Z}E &  \rightarrow hostValue \\
+_{+}E &  \rightarrow hostFunction(E^{*}) \\
+_{id}E &  \rightarrow id ~|~ id.id \\
+_{@}E & \rightarrow @id \\
+\end{array}$ 
+& %OUTPUT BNF
+$\begin{array}{r l}
+Start &  \rightarrow  \text{@Start}~ N^{+} ~ R^{*} \\
+N &  \rightarrow  id \rightarrow id^{*} ~ \{ ( \text{phantom}?~ (\text{var} ~ | ~ \text{input})~ id_d : T_d )^{*} ~ \} \\
+T &  \rightarrow  \text{hostType} \\
+R &  \rightarrow  id ~ \{ ((id_a := E_a) | (id_{name}.id_{attrib} := E_b))^{*} \} \\
+E &  \rightarrow {_{\rightarrow}E} ~|~ _{Z}E ~|~ _{+}E ~|~ _{id}E ~|~ _{@}E \\
+_{\rightarrow}E &  \rightarrow {\rightarrow}(id, id) \\
+_{Z}E &  \rightarrow hostValue \\
+_{+}E &  \rightarrow hostFunction(E^{*}) \\
+_{id}E &  \rightarrow id ~|~ id.id \\
+_{@}E & \rightarrow @(string)\\
+\end{array}$
+\end{tabular}
+
+\textbf{Type Inference}
+%$$\inference{\Gamma |- f :  a \\ \Gamma |- a_i :  b & c & d }{\Gamma |-  e}[]$$
+$$\inference{\Gamma[\ldots N_i.id \leftarrow \tau_i ] |- N_i : \tau_i & \Gamma[\ldots N_i.id \leftarrow \tau_i] |- R_j : \tau_j}{\Gamma |- Start : \tau_1 }[Start]$$
+
+$$\inference{\Gamma |- id : \tau & \ldots \Gamma |- id_a : \tau_a & \ldots \Gamma |- id_d : \tau_d & \tau = \{ \ldots id_a : \tau_a, ~ \ldots id_d : \tau_d \}}{\Gamma |- N : \tau }[N]$$
+
+$$\inference{\Gamma |- id : \tau & \ldots id_a : \tau_a \in \tau & \ldots id_{name} : \tau_{name} \in \tau & id_{attrib} : \tau_{attrib} \in \tau_{name} \\
+\Gamma |- E_a : \tau_a & \Gamma |- E_b : \tau_{attrib}
+}{\Gamma |- R : \tau}[R]$$
+\vspace{0.4em}
+\begin{tabular}{ccc}
+$$\inference{\Gamma |- {_{*}E} : \tau}{\Gamma |- E : \tau}[E]$$
+&
+$$\inference{}{\Gamma |- {_{Z}E} : \text{hostType}}[$_{Z}$E]$$
+&
+$$\inference{ \Gamma |- E_i : \text{hostType}}{\Gamma |- {_{+}E} : \text{hostType}}[$_{+}$E]$$
+\end{tabular}
+\vspace{0.4em}
+\begin{tabular}{cc}
+$$\inference{\Gamma |- id_a : @ \tau_a & id_{b} : \text{hostType} \in \tau_a }{\Gamma |- {_{\rightarrow}E} : \text{hostType}}[$_{\rightarrow}$E]$$
+$$\inference{\Gamma |- id_{name} : \tau_{name} & id_{attrib} : @ \tau_{attrib} \in \tau_{name} & id_b : \text{hostType} \in \tau_{name} }{\Gamma |- {_{\rightarrow}E} : \text{hostType}}[$_{\rightarrow}$E]$$
+\end{tabular}
+\vspace{0.4em}
+\begin{tabular}{cc}
+$$\inference{id : \tau \in \Gamma}{\Gamma |- id : \tau }[$_{id}$E$_a$]$$
+&
+$$\inference{\Gamma |- id_a : \tau_a & id_b : \tau \in \tau_a }{\Gamma |- id_a.id_b : \tau }[$_{id}$E$_b$]$$
+\end{tabular}
+
+\textbf{Usage Analysis}
+\begin{align*}
+Start &  \rightarrow  \text{@Start}~ N^{+} ~ R^{*} & \Rightarrow & \\
+N &  \rightarrow  id \rightarrow id_{a}^{*} ~ \{ ~ ((\text{var} ~ | ~ \text{input})~ id_d : T_d )^{*} ~ \} & \Rightarrow & \\
+T &  \rightarrow  \text{hostType} ~|~ \text{ref}~id & \Rightarrow & \\
+R &  \rightarrow  id ~ \{ ((id_a := E_a) | (id_{name}.id_{attrib} := E_b))^{*} \} & \Rightarrow & (id)_{(id_a)} = E_a ~~~ ({id_{name}})_{(id_{attrib})} = E_b\\
+E &  \rightarrow {_{\rightarrow}E} ~|~ _{Z}E ~|~ _{+}E ~|~ _{id}E  ~|~ {_@}E & \Rightarrow & E = {_{*}}E\\
+_{\rightarrow}E &  \rightarrow (id_a ~|~ id_{name}.id_{attrib}) \rightarrow id_b & \Rightarrow & (id_R)_{id_a} \supseteq \{id_b : {_{*}}E \} \\
+_{Z}E &  \rightarrow hostValue & \Rightarrow & _{Z}E = \text{hostType} \\
+_{+}E &  \rightarrow hostFunction(E^{*}) & \Rightarrow & _{+}E = \text{hostType}\\
+_{id}E &  \rightarrow id_a ~|~ id_b.id_c & \Rightarrow & _{id}E = id_a ~~~~~~ _{id}E = (id_b)_{id_c} \\
+_{@}E & \rightarrow @id & \Rightarrow & {_@}E = id
+\end{align*}
+$$uses(e) = \{ x ~|~ x : \text{hostType} \in e \vee (x = y_z ~ \wedge ~ z \in uses(e.y) \}$$
+
+\textbf{Reference rewriting}
+\begin{align*}
+\llbracket \cdot, \cdot \rrbracket : \text{Typing} \times GAG & ~~\rightarrow~~ \text{AG}\\
+\llbracket \Gamma, ~\tau~ \rightarrow id^{*} \{ inputs^{*} ~~vars^{*} \}\rrbracket & ~~ \Rightarrow ~~ \tau~ \rightarrow  ~ id^{*} ~ \{  ~inputs^{*} ~ \llbracket \Gamma, ~ vars \rrbracket^{*}\} \\
+%$$\llbracket \Gamma, ~ \text{child} ~ N : \tau; \rrbracket 
+%~~ \Rightarrow ~~
+%\text{child} ~N : ~\tau; ~\text{input} ~ N\_ptr : \text{ref}~\tau; $$
+\llbracket \Gamma, ~ \text{var} ~ a : \text{ref} ~ \tau;\rrbracket & ~~ \Rightarrow ~~
+\text{var} ~ a : \text{ref} ~ \tau;  ~\ldots \text{phantom var} ~ p_a : \text{hostType} ~~~~ \text{where} ~ p_a \in uses(id_N.a)\\
+%\llbracket \Gamma, ~ a \rightarrow b \rrbracket  & ~~ \Rightarrow ~~ \rightarrow(\llbracket \Gamma, ~ a \rrbracket, \tau\_b) ~~ \text{where} ~~ \Gamma \vdash a : \text{ref} ~ \tau \\
+\llbracket \Gamma, ~ lhs := a \rightarrow b \rrbracket  & ~~ \Rightarrow ~~ lhs := ~\rightarrow(a, a_b) \\
+\llbracket \Gamma, lhs := a \rrbracket ~ \text{where}~ (\Gamma \vdash lhs : \text{ref} ~ \tau) & ~~ \Rightarrow ~~ lhs := a; ~ \ldots \llbracket \Gamma, ~ lhs_x := \O(\ldots y)  \rrbracket ~ \\
+& ~~~~~~~~~~~~~~ \text{where} ~~ (c_{d_y}) \in a ~~ \wedge ~~ \Gamma \vdash c : \upsilon ~~ \wedge ~~ \upsilon.d = @ \tau ~~ \wedge ~~ y \in uses(c_d)  \\
+\llbracket \Gamma, ~ a := e; \rrbracket & ~~ \Rightarrow ~~  a := \llbracket \Gamma, ~ e \rrbracket; \\
+\llbracket \Gamma, ~ f (e^{*}) \rrbracket & ~~ \Rightarrow ~~ f(\llbracket \Gamma, ~ e\rrbracket^{*}) \\
+\llbracket \Gamma, ~ @n.child \rrbracket & ~~ \Rightarrow ~~ @(``\&n .child") \\
+\llbracket \Gamma, ~ scalar \rrbracket & ~~ \Rightarrow ~~ scalar \\
+\llbracket \Gamma, ~ ident \rrbracket & ~~ \Rightarrow ~~ ident \\
+\llbracket \Gamma, ~ ident.ident \rrbracket & ~~ \Rightarrow ~~ ident.ident \\
+\end{align*}
+
+\end{center}
+\caption{$GAG_{dynamic}$: handling of non-nested first-class references.}
+\label{fig:dynrewrites}
+\end{figure*}

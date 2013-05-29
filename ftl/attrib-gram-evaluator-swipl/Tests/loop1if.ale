@@ -1,0 +1,23 @@
+interface TopI { 
+  
+}
+interface LeafI { 
+  var  x : int;
+}
+
+class Root : TopI {
+  children { leaves : [LeafI] }
+  actions {  
+    loop leaves* {
+      if (true) {        
+        leaves.x := 10;
+      } else {
+        leaves.x := 20;
+      }
+    }  
+  }
+} 
+
+class Leaf : LeafI {
+
+}

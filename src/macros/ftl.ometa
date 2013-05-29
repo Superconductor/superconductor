@@ -1,0 +1,47 @@
+ometa FTLExpr <: Expr{
+    modifier = "$-" | "$$" | "$i",
+    expr    = spaces "fold" expr:init ".." expr:body    -> ['fold', init, body]
+            | ^expr,
+
+    id  = (^id:lhs modifier:m '.' ^id:rhs)           -> (lhs + m + '.' + rhs)
+        | (^id:lhs '.' ^id:rhs)                      -> (lhs + '.' + rhs)
+        | (spaces modifier:m '.' ^id:rhs)                   -> (m + '.' + rhs)
+        | ^id,
+
+    space = ^space | fromTo('//', '\n') | fromTo('/*', '*/')
+}
+
+ometa FTL{
+    //TODO: phantom attributes
+    //TODO: attribs with default values
+    //TODO: proper attribute types
+
+    expr = foreign(FTLExpr, "expr"),
+    attrName = foreign(FTLExpr, "id"),
+    space = ^space | fromTo('//', '\n') | fromTo('/*', '*/'),
+
+    id = spaces (letter | '_'):b (letter | digit | '_')*:a spaces    -> [b].concat(a).join(''),
+    type = spaces letter+:ty spaces     -> ty.join(''),
+    attrStyle = spaces ("input" | "var" ):t spaces -> (t),
+
+    assignment  = attrName:lhs ":=" expr:rhs ';' spaces                              -> ['asgn', lhs, rhs],
+
+    children    = id:child ':' id:intName ';' spaces -> ['child', child, intName]
+                | id:child ':' spaces '[' id:intName']' spaces ';' spaces    -> ['child', child, ['array', intName]],
+
+    attribDef =  attrStyle:style id:attr ':' type:ty ';' spaces     -> [style, attr, ty],
+
+    action      = assignment
+                | spaces "loop" id:child '{' assignment*:asgns spaces '}' spaces     -> ['loop', child, asgns],
+
+    innerClass = spaces "children" spaces '{' children*:child spaces'}' spaces   -> ['children', child]
+               | spaces "attributes" spaces '{' attribDef*:attrs spaces '}' spaces -> ['attributes', attrs]
+               | spaces "actions" spaces '{' action*:actions spaces '}' spaces   -> ['actions', actions],
+              /* | spaces "phantom" spaces '{' spaces '}' spaces   -> ['phantom'], */
+
+    tlBlock = spaces "class" id:name ':' id:inter '{' innerClass*:block spaces '}' spaces    -> ['class', name, inter, [['attributes',[]]].concat(block)]
+            | spaces "interface" id:name '{' attribDef*:block spaces '}' spaces              -> ['interface', name, block],
+
+    topLevel = tlBlock*
+}
+

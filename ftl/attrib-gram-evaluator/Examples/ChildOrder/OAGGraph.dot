@@ -1,0 +1,137 @@
+digraph G{
+	subgraph cluster0{
+		color=blue;
+		node[style=filled];
+		label="Par";
+		Par_start[label="start", shape=box];
+		Par_d[label="d"];
+		Par_b[label="b"];
+		Par_c[label="c"];
+		Par_a[label="a"];
+		Par_z[label="z"];
+	}
+	subgraph cluster1{
+		color=blue;
+		node[style=filled];
+		label="ChldA";
+		ChldA_f[label="f"];
+		ChldA_g[label="g"];
+		ChldA_e[label="e"];
+	}
+	subgraph cluster2{
+		color=blue;
+		node[style=filled];
+		label="ChldB";
+		ChldB_j[label="j"];
+		ChldB_k[label="k"];
+		ChldB_y[label="y"];
+		ChldB_h[label="h"];
+		ChldB_x[label="x"];
+		ChldB_i[label="i"];
+	}
+	subgraph cluster3{
+		color=black;
+		node[style=filled];
+		label="Parent";
+		Parent_d[label="d"];
+		Parent_b[label="b"];
+		Parent_c[label="c"];
+		Parent_a[label="a"];
+		Parent_z[label="z"];
+		Parent_start[label="start", shape=box];
+	}
+	subgraph cluster4{
+		color=black;
+		node[style=filled];
+		label="ChildA";
+		ChildA_f[label="f"];
+		ChildA_g[label="g"];
+		ChildA_e[label="e"];
+	}
+	subgraph cluster5{
+		color=black;
+		node[style=filled];
+		label="ChildB";
+		ChildB_j[label="j"];
+		ChildB_k[label="k"];
+		ChildB_h[label="h"];
+		ChildB_y[label="y"];
+		ChildB_i[label="i"];
+		ChildB_x[label="x"];
+	}
+	ChildB_i -> ChildB_h[style=dotted];
+	ChildB_i -> ChildB_k;
+	ChildB_i -> ChildB_j[style=dotted];
+	ChldB_i -> ChldB_h[style=dotted];
+	ChldB_i -> ChldB_j[style=dotted];
+	ChldB_i -> ChldB_k[style=dotted];
+	ChldB_h -> Parent_a;
+	ChldB_h -> ChldB_j[style=dotted];
+	Parent_b -> ChldA_g;
+	Parent_b -> ChldB_j;
+	ChldB_k -> ChldB_h[style=dotted];
+	ChldB_k -> ChldB_j[style=dotted];
+	ChildA_e -> ChildA_g[style=dotted];
+	ChldB_x -> Parent_z;
+	ChldB_x -> ChldB_i[style=dotted];
+	ChldB_x -> ChldB_h[style=dotted];
+	ChldB_x -> ChldB_j[style=dotted];
+	ChldB_x -> ChldB_y[style=dotted];
+	ChldB_x -> ChldB_k[style=dotted];
+	Par_start -> Par_c[style=dotted];
+	Par_start -> Par_z[style=dotted];
+	Par_start -> Par_a[style=dotted];
+	Par_start -> Par_b[style=dotted];
+	Par_start -> Par_d[style=dotted];
+	ChldA_f -> ChldA_g[style=dotted];
+	ChldA_f -> ChldA_e[style=dotted];
+	ChldA_e -> Parent_a;
+	ChldA_e -> ChldA_g[style=dotted];
+	ChldA_e -> Parent_c;
+	ChldB_y -> ChldB_i[style=dotted];
+	ChldB_y -> ChldB_h[style=dotted];
+	ChldB_y -> ChldB_j[style=dotted];
+	ChldB_y -> ChldB_k[style=dotted];
+	ChildA_f -> ChildA_e[style=dotted];
+	ChildA_f -> ChildA_g[style=dotted];
+	Par_c -> Par_z[style=dotted];
+	Par_c -> Par_a[style=dotted];
+	Par_c -> Par_b[style=dotted];
+	Par_c -> Par_d[style=dotted];
+	Parent_z -> Parent_a[style=dotted];
+	Parent_z -> Parent_d[style=dotted];
+	Parent_z -> Parent_b[style=dotted];
+	Parent_z -> ChldB_y;
+	Parent_d -> Parent_a[style=dotted];
+	Parent_d -> ChldB_i;
+	Parent_d -> Parent_b[style=dotted];
+	Parent_c -> Parent_z[style=dotted];
+	Parent_c -> Parent_a[style=dotted];
+	Parent_c -> Parent_d;
+	Parent_c -> Parent_b[style=dotted];
+	ChildB_h -> ChildB_j[style=dotted];
+	Par_z -> Par_a[style=dotted];
+	Par_z -> Par_b[style=dotted];
+	Par_z -> Par_d[style=dotted];
+	ChildB_y -> ChildB_i[style=dotted];
+	ChildB_y -> ChildB_k[style=dotted];
+	ChildB_y -> ChildB_h;
+	ChildB_y -> ChildB_j[style=dotted];
+	Parent_start -> Parent_z[style=dotted];
+	Parent_start -> Parent_a[style=dotted];
+	Parent_start -> Parent_c[style=dotted];
+	Parent_start -> Parent_d[style=dotted];
+	Parent_start -> ChldA_f;
+	Parent_start -> Parent_b[style=dotted];
+	Parent_a -> Parent_b;
+	ChildB_k -> ChildB_h[style=dotted];
+	ChildB_k -> ChildB_j[style=dotted];
+	Par_a -> Par_b[style=dotted];
+	Par_d -> Par_a[style=dotted];
+	Par_d -> Par_b[style=dotted];
+	ChildB_x -> ChildB_y[style=dotted];
+	ChildB_x -> ChildB_i[style=dotted];
+	ChildB_x -> ChildB_k[style=dotted];
+	ChildB_x -> ChildB_h[style=dotted];
+	ChildB_x -> ChildB_j[style=dotted];
+}

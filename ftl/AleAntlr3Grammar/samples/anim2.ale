@@ -1,0 +1,75 @@
+type tween = off | ease-in | ease-out | linear;
+type position = relative | auto;
+type display = root | vbox | hbox | card | leaf | ignore;
+
+///////////
+
+interface Top {
+}
+
+interface Node {
+}
+
+class TopBox : Top {
+  
+  children { root : Node; }
+  
+  attributes { 
+
+//////////////////
+    input displayType : display;
+
+    // input fields
+    input x : int;
+    input y : int;
+    input z : int;
+    input height : int;
+    input width : int;
+    input textColor : color;
+    input bgColor : color;
+    input borderWidth : int;
+    input visible : bool;
+    input borderColor : color;
+    input clipsSelf : bool;
+    input clipsChildren : bool;
+    
+    // for Nokia Demo
+    input increasing : bool;
+
+    // for Leo animation
+    input animDuration : time;
+    input animMode : tween;
+    input positioning : position;
+    input xAfter : int;
+    input yAfter : int;
+    input bgColorAfter : color;
+    input positioningAfter : position;
+
+//    input elapsed : int;    
+////////////////////
+
+  }
+  
+  actions {
+
+  }
+}   
+
+class VBox : Node {
+  attributes {
+  }
+  
+  children {
+  }
+  
+  actions {
+  }
+
+}
+
+class LeafBox : Node {
+  attributes {
+  }  
+  actions {
+  }
+}

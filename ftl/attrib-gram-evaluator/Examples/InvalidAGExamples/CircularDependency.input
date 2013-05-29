@@ -1,0 +1,46 @@
+            IFace TopI = new IFace("TopI");
+            TopI.addAttribute("a");
+            TopI.addAttribute("b");
+            
+            IFace MidI = new IFace("MidI");
+            MidI.addAttribute("c");
+            MidI.addAttribute("d");
+            MidI.addAttribute("e");
+            
+            IFace Bot1I = new IFace("Bot1I");
+            Bot1I.addAttribute("f");
+            Bot1I.addAttribute("g");
+            
+            IFace Bot2I = new IFace("Bot2I");
+            Bot2I.addAttribute("h");
+            Bot2I.addAttribute("i");
+            
+            Class Top = new Class("Top", TopI);
+            Top.addField("start");
+            Top.addChild("mid", MidI);
+            Top.set("a", "start");
+            Top.set("mid@c", "a");
+            Top.set("b", "mid@e");
+            
+            Class Mid1 = new Class("Mid1", MidI);
+            Mid1.addChild("bot1", Bot1I);
+            Mid1.set("d", "c");
+            Mid1.set("bot1@f", "d");
+            Mid1.set("e", "bot1@g");
+            
+            Class Mid2 = new Class("Mid2", MidI);
+            Mid2.addChild("bot2", Bot2I);
+            Mid2.set("bot2@h", "c");
+            Mid2.set("e", "bot2@i");
+            Mid2.set("d", "e");
+            
+            Class Bot1 = new Class("Bot1", Bot1I);
+            Bot1.set("g", "f");
+            
+            Class Bot2 = new Class("Bot2", Bot2I);
+            Bot2.set("i", "h");
+            
+            ArrayList<IFace> inter = new ArrayList<IFace>();
+            ArrayList<Class> classes = new ArrayList<Class>();
+            inter.add(TopI); inter.add(MidI); inter.add(Bot1I); inter.add(Bot2I);
+            classes.add(Top); classes.add(Mid1); classes.add(Mid2); classes.add(Bot1); classes.add(Bot2);

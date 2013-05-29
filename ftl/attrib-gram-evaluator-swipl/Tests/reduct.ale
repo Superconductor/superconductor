@@ -1,0 +1,34 @@
+interface TopI { 
+  var w : int; 
+  input x : int; 
+  var numLeaves : int; 
+}
+interface LeafI { 
+  input w : int; 
+  var parentW : int;
+  var x : int;
+  var count : int; 
+}
+
+class Root : TopI {
+  children { leaves : [LeafI] }
+  actions {  
+    loop leaves* {
+      w := leaves$$.x - x;
+      leaves.x := fold x .. leaves$-.x + leaves$i.w;
+      leaves.count := fold 0 .. leaves$-.count + 1;
+      leaves.parentW := w;
+      numLeaves := fold 0 .. self$-.numLeaves  + 1;
+    }  
+  }
+} 
+
+/*
+   loop 
+     leaves.x
+   w
+   loop
+     leaves.parentw 
+     leaves.count
+     numleaves
+*/

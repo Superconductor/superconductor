@@ -1,0 +1,17 @@
+interface Node { 
+  var i : int;
+}
+interface Leaf {  }
+
+class N : Node {
+  children {
+    childs : [ Leaf ];
+  }
+  actions {
+    loop childs {
+      i := fold 0 .. $-.i + 1;
+    }
+  }
+}
+
+class L : Leaf {  }

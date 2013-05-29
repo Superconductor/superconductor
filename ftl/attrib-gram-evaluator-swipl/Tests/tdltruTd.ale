@@ -1,0 +1,30 @@
+interface Node { 
+  var label : int;
+  var biggestLabel : int;
+  var replicate : int;
+}
+class Root : Node { 
+  children { child : Node }
+  actions {  
+    child.label := 0;    
+    biggestLabel := child.biggestLabel;
+    child.replicate := biggestLabel;
+  }  
+}
+
+class Intermediate : Node {
+  children { left : Node; right : Node }
+  actions {
+    left.label := label + 1;
+    right.label := left.biggestLabel + 1;
+    biggestLabel := right.biggestLabel;
+    left.replicate := replicate;
+    right.replicate := replicate;
+  }
+}
+
+class Leaf : Node {
+  actions {
+    biggestLabel := label;
+  }
+}

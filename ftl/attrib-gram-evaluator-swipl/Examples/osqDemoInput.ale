@@ -1,0 +1,50 @@
+interface Root { 
+  input width : int; 
+  input height : int;  
+}
+class Country : Root { 
+  children { top : StateTree; }  
+}
+
+interface Edge {   }
+class Edge : IEdge { }
+
+interface StateTree { 
+  input state : string;  
+}
+class StateBinary : StateTree { 
+  children { 
+    rootEdge : IEdge;
+    reps : RepList;
+  }
+}
+class StateLeaf : StateTree {
+   children { 
+     rootEdge : IEdge; 
+     reps : RepList;   
+   }
+}
+
+interface RepList { input name : string; /* if easy! */ }
+class RepCons : RepList {
+  children { 
+    nextRep : RepList;
+    incEdge : IEdge; 
+    contribs : ContribList ;
+  }
+}
+class RepLast : RepList {
+  children { 
+    incEdge : IEdge; 
+    contribs : ContribList; 
+  }
+}
+
+interface ContribList { 
+  input earmark : string; /* if easy */ 
+  input amount : int;  
+}
+class ContribCons : ContribList {
+  children { nextContrib : ContribList; }
+}
+class ContribLast : ContribList { }

@@ -1,0 +1,8 @@
+interface I { 
+  input x : int;
+  input y : int;
+}
+
+class C : I {
+
+}

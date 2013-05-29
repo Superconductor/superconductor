@@ -1,0 +1,306 @@
+
+\subsection{The Problem}
+
+Consider passing a cell from its enclosing row, to its enclosing table, then down to its column. If there is only one cell sent along the path, we can statically allocate one attribute to hold the reference, e.g., \code{Table.cell}, or, under our encoding, set of attributes, e.g., \code{Table.cell_w}, \code{Table.cell_h}, etc. However, a column should receive a statically unbounded number of cells: we cannot statically name the necessary intermediate attributes for passing all of these through any intermediate node along the path.
+
+The traditional solution is to support \emph{collections} that can contain multiple references; our challenge is in scheduling them. For simplicity, we restrict  collections to \emph{only} contain references.
+
+
+\subsection{Collection primitives}
+
+A collection should be creatable and queryable. Consider defining column $n$ of a table to have the maximal width of its corresponding cells. The column should contain a collection of (references to) its cells: from each row, it should extract cell $n$. We solve this in two steps: calculating the set of cells for each column and then query these sets for their maximum.
+
+Our example introduces several special forms:
+
+\begin{itemize}
+\item \textbf{Type [ref $\tau$]}: a homogenous collection of non-local nodes
+\item \textbf{reduce a in b where c : d}: is a nestable inorder reduction expresion over nodes in \code{b}, introducing identifier \code{a} to access an item. Note that the collection is either an input set of a local production such as \code{Row*} or a computed collection such as \code{cells}. Variable \code{c} of type \code{d} is local to the loop and may be accumulated over it. Finally, reductions are inorder \emph{locally}; i.e., during a top down traversal, the operation on each node may be to compute the entire local reduction and, after completion, return control to continue the top-down traversal.
+\item \textbf{effects}: for reductions over a local production, attributes of child nodes may be (singly) assigned. 
+\item \textbf{ id' := init .. f(id) ..}: accumulation or temporary variables are defined in the form of initial value \code{init}, and, for the next element, as a function of the current one (or other current accumulator variables). Other expressions in the loop referencing \code{id} observe the intermediate value, not the final accumulation. This is true even when a loop is split over multiple traversals (e.g., a loop counter reused for calculating different attributes).
+\item \textbf{ return' := init .. return .. }: reductions are expressions and thus have a value, denoted by special accumulator variable \code{return}. 
+\item \textbf{ [ a $|$ b ], [ a $@$ b ] }: an item may be inserted at the head of a collection or two collections appended. E.g., to place \code{a} at the end of collection \code{b}, use expression \code{[b @ [a]]}.
+\end{itemize}
+
+
+This example is useful in several ways. First, we show it is useful for a loop to introduce a new variable binding (though, we note, only one such binding needs to be active in a runtime at any point in time). Second, nesting loop iterations is also useful. Finally, we can restrict our attention to collections of homogenous nodes (our technique can likely be extended for collections of different types of nodes, but, for simplicity and lack of motivation, we do not).
+
+\subsection{Transformation Overview}
+Our transformation proceeds in several steps:
+\begin{enumerate}
+\item \textbf{Collection rewriting.} The input is a grammar with collection creation, reductions, and references. The output is a grammar without collections. Instead, it uses special loop functions that are opaque to the scheduler. We also generate an auxilarlly data structure to provide the code generator so that it can reconstitute a scheduled sequence of statements into the appropriate loop nests.
+
+Our basic insight is that we can schedule homogenous collections as single nodes by hoisting the bodies of reductions to be top-level statements. Dependencies within an iteration are handled as usual, with the additional benefit of automatically \emph{fissioning} loop bodies across multiple tree traversals. Loop-carried dependencies are handled by using an inorder traversal over a collection. The only subtlety is in handling temporary intermediate values in cases of loop fission.
+\item \textbf{Reference type and usage analysis}. Rewriting collections and loops reduces the output to a RAG, complete with nested references. As with our original first-class reference encoding, we perform a basic type analysis, from which, for every node type, we statically determine the extent of references. As before, we (temporarily) reject grammars with cycles in the static reference graph. %Later, after showing how to encode grammars over input graphs, we use a similar technique for lifting the cycle restriction here.
+\item \textbf{Reference rewriting.} Using the type and reference analysis, we rewrite reference passing and dereferencing into attribute passing and accessing, again using phantom variables and new operators (masked as functions) to separatley guide downstream scheduling and code generation. The output is a traditional attribute grammar, albeit with phantom annotations and special loop and reference functions opaque to 
+\item \textbf{AG scheduling.} We reuse our basic AG scheduler.
+\item \textbf{Code generation.} Our code generator examines the computed schedule and precomputed auxillary information to generate code. Special functions for looping and collections have custom handling rather than normal function dispatch.
+\end{enumerate}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Collection Rewriting}
+
+We must rewrite AG extensions for creating collections and operating over them. Our rewrite into traditional AGs is to reduce operations over collections into operations over a single node, which informs our various transformations. We consider each special form in turn:
+
+\begin{itemize}
+\item \textbf{Kleene star productions. } We erase Kleene star repetitions so productions are over single non-terminals:
+$$Table \rightarrow Row^{*} ~ Column^{*} \Rightarrow Table \rightarrow Row~Column$$
+\item \textbf{Kleene star references.} References over repeated reductions also lose their repetition. E.g.: $@Cell* \Rightarrow @Cell$
+\item \textbf{Reduction expressions.} We recursively hoist reduction body statements to be top-level statements and introduce attributes to support the various loop variables. E.g., 
+
+\begin{lstlisting}[mathescape]
+reduce c in Column where i : int { $\ldots$ c.n := i $\ldots$ }
+\end{lstlisting}
+
+becomes 
+
+\begin{lstlisting}[mathescape]
+c := loopVar(@Column);
+$\ldots$ c.n := loopBody(c, $f_b$, i) $\ldots$
+\end{lstlisting}
+
+where $f_b$ is a pure function over $i$ lifted from the original expression. The transformation also adds fresh fields $c$ and $i$ to the enclosing node type. 
+
+We syntactically encode the nesting structure by associating each body statement ($loopBody$) with its enclosing loop ($loopVar$) through the first par. Code generation  reconstitutes loop nests using this encoding. 
+\item \textbf{Local vs. non-local reductions. } We distinguish between local vs. non-local reductions. For example, local collections support assignment to their attributes, as in the case of looping over a row to label each cell by increasing column number. Code generation for the loops is different, so we syntactically  propagate this distinction in our rewrite by including the reference creation in the loop variable creation. A full type analysis is unnecessary for this step as the mode is clear by examining the enclosing scope and node schema.
+\end{itemize}
+
+Eventual code generation must include loops, even if they are not visible to the scheduler, so we must somehow propagate the loop structure through the transformation. We already discussed reconstituting loop nests, so the only remaining issue is handling the erased Kleene stars.  For each node type $\tau$, we keep a set $\chi_{\tau}$ indicating which children are collections. E.g., $\chi_{\text{Table}} = \{Row, Column\}$.
+
+\subsection{Reference type and usage analysis.}
+Our support for references is the same as in the case of references without collections. 
+\subsection{Reference rewriting.}
+Reference rewriting proceeds the same as in the case of references without collections.
+\subsection{Scheduling.}
+Scheduling proceeds with an attribute grammar schedule with no knowledge of our extensions.
+
+\subsection{Code generation.}
+Code generation occurs much in the same way as with just the reference extension, but we use custom handling for \code{lhs := loopVar(...)} and \code{loopBody(...)} statements. The former, \code{loopVar}, is unnecessary, so we elide it. Perhaps not immediately intuitive, the generated loop nest structure is not the same as that of the input due to the declarative nature of the input. What was 1 loop in the input may be multiple under the new schedule. 
+
+Consider the following declarative loop to sum children and broadcast the sum to them:
+
+\begin{lstlisting}[mathescape]
+maxWidth := 
+  reduce cell in Column*
+    return$`$ := 0 .. max(return, cell.minimumWidth)
+    cell.width := maxWidth
+\end{lstlisting}
+
+Imperative code might be scheduled to do this in two loops, perhaps in even two different traversals of the tree:
+
+\begin{lstlisting}[mathescape]
+maxWidth := 0;
+for (cell in Column*) 
+  maxWidth := max(maxWidth, cell.minimumWidth)
+$\ldots$  
+for (cell in Column*)
+    cell.width := maxWidth
+\end{lstlisting}
+
+
+Reconstituting loop nests is a parsing problem: we must place opening and closing braces, where an opening brace represents starting a loop. Parsing can be done in one linear left-to-right pass using a stack. Given the original loop nesting, there is some partial order $<$ where loop variable $a < b$ if a loop with index variable $a$ is enclosed by a loop with index variable $b$. Note that we do not need to create this operator during initial rewriting; it can be extracted from the loop encoding. We denote string $a_0 \ldots a_j$ maximal if, for any $0 \leq i < j$, $a_i < a_{i+1}$ and $\neg \exists b . a_i < b ~\wedge~ b < a_{i+1}$. For every nesting of loops, let $path_{a}^{b}$ denote the maximal string between loops $a$ and $b$ (i.e., the nesting sequence of loops).
+
+For each statement $lhs := loopBody(a, ...)$:
+
+\begin{itemize}
+\item $a = peak(stack)$: proceed.
+\item $a < peak(stack)$: push string $path_{peak(stack)}^{a}$, emit the corresponding loop nestings ($|path_{peak(stack)}^{a}|$ of them), and then proceed.
+\item $a \not< peak(stack)$: close 1 level of nesting and pop the stack. Repeat entire process (do not proceed).
+\end{itemize}
+
+Statements not involving loops (neither \code{loopBody} nor \code{loopVar}) are top-level statements; the stack is emptied and all loops are enclosed.
+
+A final subtlety is the use of intermediate variables in the case of loop fission. For example, we repeatedly count the step of an iteration using variable $i$: it might be accessed in statements in either split loop body, so must be available to both. We can either store these computations, or simpler for our implementation, recompute them. Our code generator thus checks the accessed set of local fields within each loop body and includes the computation of any used loop variables (this can be viewed as a time vs. memory exchange).
+
+
+%First, we eliminate collective operations. Consider collections over items such as \code{Column*}. One option is rewriting the grammar to use \emph{cons} lists, e.g., $A\rightarrow B^{*}$ becomes $A\rightarrow B_{List}$ and $B_{List} \rightarrow B ~B{List}~ |~ B_{\epsilon}$, where the initial, iteration, and termination code of a loop is split between $A$, $B_{List}$, and $B_{\epsilon}$, respectively. This encoding does not support first-class collections and artificially restricts our ability to generate parallel schedules.  
+
+%We uniformly rewrite reductions over first-class and AST collections. AST collections, e.g., \code{Column*}, are eliminated by rewriting to singletons, e.g., \code{Column\_Star}, and moving loop operations to these intermediate nodes. Class fields are duplicated. For purely scheduling, we might just rewrite \code{Column*} to \code{Column}, but propagating the use of a collection simplifies code generation. 
+
+%All reductions are eliminated: reduction variables are hoisted to class variables and statements within a reduction are rewritten to use a \code{loop} function. E.g., \code{i` := 0 .. i .. } is hoisted out of the enclosing reduction and scheduled as \code{i := loop(0)}, where the arguments to loop propagate any dependencies. For code generation, we must also propagate code for the iteration step. 
+
+\begin{figure}
+\begin{lstlisting}[mathescape]
+//idealized declarative input: 
+//  AG with reference passing, collections
+@Start Table $\rightarrow$ Row* Column* { }
+Cell $\rightarrow$ { input width : int }
+Row $\rightarrow$ Cell* { var cells : [ref Cell] }
+Column $\rightarrow$ { 
+  var rows : [ref Row];
+  var n, width : int;
+  var cells : [ref Cell]; 
+}
+Table { 
+  reduce c in Column* where i : int {
+    i$'$ := 0 .. i + 1 ..;
+    c.n := i;
+    c.rows := @Row*;
+  } 
+}
+Row { cells := @Cell*}
+Column { 
+  cells := reduce r in rows {
+    nCells$'$ := reduce c in r$\rightarrow$cells where i : int {
+      i$'$ := 0 .. i + 1 ..;
+      return$'$ := 
+        [] .. i = n ? [c | return] : return ..;
+    }
+    return$'$ := [] ..  [nCells @ return] ..;
+  }
+  width := reduce child in cells
+    return$'$ := 0 .. max(return, child$\rightarrow$width) ..;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[mathescape]
+//reduce collections and lift loops
+@Start Table $\rightarrow$ Row Column { 
+  var i : int 
+  phantom var c : ref Column;
+}
+Cell $\rightarrow$ { input width : int }
+Row $\rightarrow$ Cell { var cells : ref Cell }
+Column $\rightarrow$ {   
+  var rows : ref Row;
+  var n : int;
+  var cells : ref Cell;
+  var nCells : ref Cell;
+  var width : int; 
+  var i : int;  
+  phantom var r : ref Row;
+  phantom var c : ref Cell;
+  phantom var child : ref Cell;
+}
+Table {  
+  c := loopVar(@Column);
+  i := loopBody(c, $f_{a}$, 0);
+  Column.n := loopBody(c, $f_b$, i);
+  Column.rows := loopBody(c, $f_c$, @Row);
+}
+Row { cells := @Cell }
+Column { 
+  r := loopVar(rows);
+  c := loopVar(r$\rightarrow$cells);  
+  cells := loopBody(r, $f_d$, nCells);
+  nCells := loopBody(c, $f_e$, i, n, c);
+  i := loopBody(c, $f_f$, 0);
+  child := loopVar(cells);
+  width := loopBody(child, $f_g$, 0, child$\rightarrow$width);  
+}
+$f_{a}$ = $\lambda$i.i + 1
+$f_{b}$ = $\lambda$i.i
+$f_{c}$ = $\lambda$Row.Row
+$f_{d}$ = $\lambda$cells,nCells.append(nCells, cells)
+$f_{e}$ = $\lambda$i,n,c,nCells.i = n ? concat(c,nCells) : nCells
+$f_{f}$ = $\lambda$i.i + 1
+$f_{g}$ = $\lambda$c_width,width.max(width,c_width)
+\end{lstlisting}
+\end{figure}
+
+\begin{figure}
+\begin{lstlisting}[mathescape]
+//expand references
+@Start Table $\rightarrow$ Row Column { 
+  var i : int 
+  phantom var c : ref Column;
+}
+Cell $\rightarrow$ { input width : int }
+Row $\rightarrow$ Cell { 
+  var cells : ref Cell;
+  phantom var cells$_{width}$ : int;
+}
+Column $\rightarrow$ {   
+  var rows : ref Row;
+  phantom var rows$_{cells}$, cells, nCells, r$_{cells}$, c, 
+              child : ref Cell;
+  phantom var rows$_{cells{_{width}}}$, cells$_{width}$, nCells$_{width}$, 
+              r$_{cells_{width}}$, c$_{width}$, child$_{width}$ : int;
+  var n, width, i : int;
+  phantom var r : ref Row;
+}
+Table {
+  c := loopVar(@($``\&Column"$));
+  i := loopBody(c, $f_a$, 0);
+  Column.n := loopBody(c, $f_b$, i);
+  Column.rows := loopBody(c, $f_c$, @($``\&Row"$));
+  Column.rows_cells := $\O$(Row.cells);
+  Column.rows_cells_width := $\O$(Row.cells_width);
+}
+Row { 
+  cells := @($``\&Cell"$) 
+  cells_width := $\O$(Cell.width);
+}
+Column { 
+  r := loopVar(rows);
+  r_cells := $\O$(rows_cells);
+  r_cells_width := $\O$(rows_cells_width);  
+  c := loopVar($\rightarrow$(r_cells));
+  c_width := $\O$(r_cells_width);  
+  cells := loopBody(r, $f_d$, nCells);
+  cells_width := $\O$(nCells_width);
+  nCells := loopBody(c, $f_e$, i, n, c);
+  nCells_width := $\O$(c_width);
+  i := loopBody(c, $f_f$, 0);
+  child := loopVar(cells);
+  child_width := $\O$(cells_width);
+  width := loopBody(child, $f_g$, 0, $\rightarrow$(child_width));  
+}
+\end{lstlisting}
+
+\begin{lstlisting}[mathescape]
+//generated visits
+class Pass0 : BottomUp {
+   void visit (Table n) { 
+    i = 0;
+    for (Column column : n.ColumnStar) {
+      i = i + 1;
+      column.n = i;
+      column.rows = n.RowStar;
+    } } }
+class Pass1 : TopDown {
+   void visit (Row n) { cells = n.CellStar; }
+   void visit (Column n) {
+    cells = new ArrayList<Cell>();
+    for (Row r : n.rows) {
+      nCells = new ArrayList<Cell>();
+      int i = 0;
+      for (Column c : r.cells) {
+        i = i + 1;
+        nCells = n.n == i++ ? [c | nCells] : nCells;        
+      }
+      cells = [nCells @ cells];
+    }
+    n.width = 0;
+    for (Cell child : n.cells)
+      n.width = Math.max(n.width, child.width); } }
+\end{lstlisting}
+%$\ldots$
+%(new Pass0()).visit(tree);
+%(new Pass1()).visit(tree);
+\end{figure}
+
+
+Note that syntax nodes are not directly in dependencies. E.g., we do not use \code{Column} as a parameter. Reductions over first-class collections must include the collection as a dependency. We distinguish these two forms as \code{loopBody} and \code{loopBody}, respectively.
+
+
+\subsection{Eliminating References}
+We repeat our transformation from the previous section to eliminating our use of references here.
+
+
+
+
+\subsection{Primitives vs. Foreign Functions}
+
+As a grammar is likely embedded in some generic \emph{host} language, we might pass references through foreign functions. However, we can no longer schedule their use, and the host likewise would not know when reachable attributes are available. [[iffy..]]
+
+
+\subsection{Rewrite rules}
+
+
+%\input{rewritescollections}
+\begin{figure*}
+\caption{$GAG_{dyn~collect}$: Translation of an AG with first-class references and collections to $GAG_{dynamic}$ and extended code generation rules. \textbf{[[TODO; previous version combined the two rewrites in one place, which was a mess]]} }
+\label{fig:statrewrites}
+\end{figure*}

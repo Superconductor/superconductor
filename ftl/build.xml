@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<project name="Superconductor" default="all" basedir=".">
+    <description>
+        Build the browser stack.
+    </description>
+
+    <property file="local.properties"/>
+    <property environment="env" />
+
+    <fail message="Error: swipl.home, and swiple.runtime must be defined in local.properties">
+        <condition>
+            <not><and>
+                <isset property="swipl.home"/>
+                <isset property="swipl.runtime"/>
+            </and></not>
+        </condition>
+    </fail>
+
+    <property name="base.dir" value="${basedir}" />
+    <property name="build.dir" value="${base.dir}/bin" />
+    <property name="dist.dir" value="${base.dir}/dist" />
+    <property name="lib.dir" value="${basedir}/libraries" /> 
+
+    <property name="mud.sources.dir" value="${base.dir}/tbh/src/mud" />
+    <property name="mud.version" value="0.5" />
+    <property name="ale.AGsources.dir" value="${base.dir}/attrib-gram-evaluator/AGEval" />
+    <property name="ale.FEsources.dir" value="${base.dir}/AleAntlr3Grammar/aleGrammar" />
+    <property name="ale.SPsources.dir" value="${base.dir}/attrib-gram-evaluator-swipl/AGEvalSwipl" />
+    <property name="ale.test.dir" value="${base.dir}/attrib-gram-evaluator-swipl/Tests" />
+    <property name="ale.grammar" value="${ale.FEsources.dir}/ALE.g" />
+    <property name="ale.backends.html5.dir" value="${base.dir}/backends/Html5" />
+    <property name="ftl.sources.dir" value="${base.dir}/ftl" />
+
+    <property name="sys.lib.dir" value="/usr/lib" />
+
+    <path id="build.path">
+        <pathelement location="${build.dir}"  />
+        <pathelement location="${lib.dir}/antlr-3.4-complete.jar"  />
+        <pathelement location="${lib.dir}/js.jar"  />
+        <pathelement location="${swipl.home}/lib/jpl.jar"  />
+    </path>
+
+    
+    <target name="init">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${dist.dir}"/>
+
+        <exec executable="hg">
+            <arg value="id"/>
+            <arg value="-n"/>
+            <redirector outputproperty="revision"/>
+        </exec>
+        <tstamp>
+            <format property="Now" pattern="MMMMM dd yyyy HH:mm" />
+        </tstamp>
+    </target>
+
+    <target name="clean" description="cleans up">
+        <delete dir="${build.dir}" includeemptydirs="yes" quiet="yes" failonerror="no" />
+        <delete dir="${dist.dir}" includeemptydirs="yes" quiet="yes" failonerror="no" />
+    </target>
+
+    <target name="all" description="compiles everything" depends="alegen, ale-swipl"/>
+    
+    <target name="alefe" description="compiles ale front-end" depends="init,ftlfe-beta">
+        <echo message="Running AntLR..." />
+        <java jar="${lib.dir}/antlr-3.3-complete.jar" fork="true" failonerror="true">
+            <arg path="${ale.grammar}"/>
+        </java>
+    </target>
+
+    <target name="ftlfe-beta" description="compiles ale front-end (beta)" depends="init">
+    
+<!-- skip surface in production -->    
+<!--
+        <echo message="Generating AntLR frontend: Lexer" />
+        <java jar="${lib.dir}/antlr-3.3-complete.jar" fork="true" failonerror="true">
+            <arg path="${ale.FEsources.dir}/FTLSurface.g"/>
+        </java>
+
+-->
+        <echo message="Generating AntLR frontend: Basic syntax checks" />
+        <java jar="${lib.dir}/antlr-3.3-complete.jar" fork="true" failonerror="true">
+            <arg path="${ale.FEsources.dir}/FTLSyntax.g"/>
+        </java>
+        <echo message="Generating AntLR frontend: Reordering pass (types => traits => interfaces => classes)" />
+        <java jar="${lib.dir}/antlr-3.3-complete.jar" fork="true" failonerror="true">
+            <arg path="${ale.FEsources.dir}/FTLReorderToplevels.g"/>
+        </java>
+        <echo message="Generating AntLR frontend: Expansion pass (eliminate traits)" />
+        <java jar="${lib.dir}/antlr-3.3-complete.jar" fork="true" failonerror="true">
+            <arg path="${ale.FEsources.dir}/FTLExpandTraits.g"/>
+        </java>
+        <echo message="Generating AntLR frontend: Identifier checks" />
+        <java jar="${lib.dir}/antlr-3.3-complete.jar" fork="true" failonerror="true">
+            <arg path="${ale.FEsources.dir}/FTLCheckIdentifiers.g"/>
+        </java>  
+<!--
+        <echo message="Generating AntLR frontend: Expand conditionals" />
+        <java jar="${lib.dir}/antlr-3.3-complete.jar" fork="true" failonerror="true">
+            <arg path="${ale.FEsources.dir}/FTLExpandConditionals.g"/>
+        </java>        
+-->        
+    </target>
+
+    <target name="alegen" description="compiles alegen (Adam's)" depends="init, alefe">
+        <javac destdir="${build.dir}" classpathref="build.path" includeantruntime="false">
+            <src path="${ale.AGsources.dir}" />   
+            <src path="${ale.FEsources.dir}" />   
+            <!-- <src path="${ale.SPsources.dir}"/>-->
+        </javac>
+    </target>
+
+    <target name="ale-swipl" description="compiles alegen (Leo's)" depends="init, alegen">
+        <javac srcdir="${ale.SPsources.dir}"  destdir="${build.dir}" classpathref="build.path" includeantruntime="false">
+        </javac>
+    </target>
+
+   <target name="run-alegen-ftl" depends="ale-swipl, ftl-syn" description="schedule grammar and generate ftl cpp">
+        <java classname="AGEvalSwipl.CppGenerator" fork="yes">
+            <env key="SWI_HOME_DIR" value="${swipl.home}"/>
+            <classpath>
+                <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
+                <path refid="build.path" /> 
+            </classpath>
+            <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
+            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${aleGrammar}"/>
+            <arg path="${ftl.sources.dir}"/>
+            <arg value="true"/>
+            <arg value="true"/>
+            <arg value="false"/>
+            <arg value="8"/>            
+        </java>
+    </target>
+
+   <target name="run-alegen-ftlfast" description="schedule grammar and generate ftl cpp (do not compile first)">
+        <java classname="AGEvalSwipl.CppGenerator" fork="yes">
+            <env key="SWI_HOME_DIR" value="${swipl.home}"/>
+            <classpath>
+                <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
+                <path refid="build.path" /> 
+            </classpath>
+            <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
+            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${aleGrammar}"/>
+            <arg path="${ftl.sources.dir}"/>
+            <arg value="true"/>
+            <arg value="true"/>
+            <arg value="false"/>
+            <arg value="8"/>            
+        </java>
+    </target>
+    
+    <target name="run-alegen-html5" depends="ale-swipl" description="schedule grammar and generate html5">
+        <property name="output.dir" value="./" />
+        <java classname="AGEvalSwipl.Html5Generator" fork="yes">
+            <env key="SWI_HOME_DIR" value="${swipl.home}"/>
+            <classpath>
+                <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
+                <path refid="build.path" /> 
+            </classpath>
+            <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
+            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${aleGrammar}"/>
+            <arg path="${output.dir}"/>
+            <arg value="true"/>
+            <arg value="true"/>
+            <arg value="false"/>
+            <arg value="12"/>
+        </java>
+    </target>
+
+    <target name="run-alegen-html5fast" description="schedule grammar and generate html5 (do not compile first)">
+        <property name="output.dir" value="./" />
+        <java classname="AGEvalSwipl.Html5Generator" fork="yes">
+            <env key="SWI_HOME_DIR" value="${swipl.home}"/>
+            <classpath>
+                <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
+                <path refid="build.path" /> 
+            </classpath>
+            <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
+            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${aleGrammar}"/>
+            <arg path="${output.dir}"/>
+            <arg value="true"/>
+            <arg value="true"/>
+            <arg value="false"/>
+            <arg value="12"/>
+        </java>
+    </target>
+
+
+    <target name="run-alegen-html5fastall" description="schedule grammar and generate html5 (do not compile first)">
+        <property name="output.dir" value="./" />
+        <java classname="AGEvalSwipl.Html5Generator" fork="yes">
+            <env key="SWI_HOME_DIR" value="${swipl.home}"/>
+            <classpath>
+                <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
+                <path refid="build.path" /> 
+            </classpath>
+            <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
+            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${aleGrammar}"/>
+            <arg path="${output.dir}"/>
+            <arg value="true"/>
+            <arg value="false"/>
+            <arg value="false"/>
+            <arg value="12"/>
+        </java>
+    </target>
+
+
+    <target name="run-alegen-webcl" depends="ale-swipl" description="schedule grammar and generate webcl">
+        <property name="output.dir" value="./" />
+        <java classname="AGEvalSwipl.WebCLGenerator" fork="yes">
+            <env key="SWI_HOME_DIR" value="${swipl.home}"/>
+            <classpath>
+                <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
+                <path refid="build.path" /> 
+            </classpath>
+            <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
+            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${aleGrammar}"/>
+            <arg path="${output.dir}"/>
+            <arg value="true"/>
+            <arg value="true"/>
+            <arg value="false"/>
+            <arg value="12"/>
+        </java>
+    </target>
+
+    <target name="run-alegen-webclfast" description="schedule grammar and generate webcl (do not compile first)">
+        <property name="output.dir" value="./" />
+        <java classname="AGEvalSwipl.WebCLGenerator" fork="yes">
+            <env key="SWI_HOME_DIR" value="${swipl.home}"/>
+            <classpath>
+                <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
+                <path refid="build.path" /> 
+            </classpath>
+            <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
+            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${aleGrammar}"/>
+            <arg path="${output.dir}"/>
+            <arg value="true"/>
+            <arg value="true"/>
+            <arg value="false"/>
+            <arg value="12"/>
+        </java>
+    </target>
+
+
+    
+    
+    <target name="run-alegen-flatcpp" depends="ale-swipl" description="schedule grammar and generate Flat (ClusteredTree) C++">
+        <property name="output.dir" value="./" />
+        <java classname="AGEvalSwipl.FlatCppGenerator" fork="yes">
+            <env key="SWI_HOME_DIR" value="${swipl.home}"/>
+            <classpath>
+                <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
+                <path refid="build.path" /> 
+            </classpath>
+            <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
+            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${aleGrammar}"/>
+            <arg path="${output.dir}"/>
+            <arg value="true"/>
+            <arg value="true"/>
+            <arg value="false"/>
+            <arg value="12"/>
+        </java>
+    </target>
+
+    <target name="run-alegen-flatcpp-fast" description="schedule grammar and generate Flat (ClusteredTree) C++ (do not compile first)">
+        <property name="output.dir" value="./" />
+        <java classname="AGEvalSwipl.FlatCppGenerator" fork="yes">
+            <env key="SWI_HOME_DIR" value="${swipl.home}"/>
+            <classpath>
+                <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
+                <path refid="build.path" /> 
+            </classpath>
+            <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
+            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${aleGrammar}"/>
+            <arg path="${output.dir}"/>
+            <arg value="true"/>
+            <arg value="true"/>
+            <arg value="false"/>
+            <arg value="12"/>
+        </java>
+    </target>
+
+    <target name="run-alegen-opencl" depends="run-alegen-flatcpp" description="schedule grammar and generate OpenCL and necessary Flat C++">
+        <property name="output.dir" value="./" />
+        <java classname="AGEvalSwipl.OpenCLGenerator" fork="yes">
+            <env key="SWI_HOME_DIR" value="${swipl.home}"/>
+            <classpath>
+                <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
+                <path refid="build.path" /> 
+            </classpath>
+            <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
+            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${aleGrammar}"/>
+            <arg path="${output.dir}"/>
+            <arg value="true"/>
+            <arg value="true"/>
+            <arg value="false"/>
+            <arg value="12"/>
+        </java>
+    </target>
+
+    <target name="run-alegen-opencl-fast" depends="run-alegen-flatcpp-fast" description="schedule grammar and generate OpenCL and necessary Flat C++ (do not compile first)">
+        <property name="output.dir" value="./" />
+        <java classname="AGEvalSwipl.OpenCLGenerator" fork="yes">
+            <env key="SWI_HOME_DIR" value="${swipl.home}"/>
+            <classpath>
+                <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
+                <path refid="build.path" /> 
+            </classpath>
+            <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
+            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${aleGrammar}"/>
+            <arg path="${output.dir}"/>
+            <arg value="true"/>
+            <arg value="true"/>
+            <arg value="false"/>
+            <arg value="12"/>
+        </java>
+    </target>
+
+    <target name="ftl-syn" description="toggle FTL synthesized" depends="init">
+        <copy file="${ftl.sources.dir}/constants.h.syn" tofile="${ftl.sources.dir}/constants.h" overwrite="true" />    
+    </target>
+    
+    <target name="ftl" description="compile FTL" depends="init">
+       <mkdir dir="${build.dir}/browser"/>
+       <cc name="${CC}" outtype="executable" subsystem="console" exceptions="yes" multithreaded="yes" objdir="${build.dir}" outfile="${build.dir}/browser/browser">
+            <includepath path="${lib.dir}/libxml2-2.7.7.win32/include" if="isWindows" />
+            <includepath path="${lib.dir}/iconv-1.9.2.win32/include" if="isWindows" />
+            <includepath path="${lib.dir}/freetype-2.3.5.win32/include" if="isWindows" />
+            <includepath path="${lib.dir}/tbb30.win32/include" if="isWindows" />
+            <includepath path="${lib.dir}/pthreads-2.8.win32/include" if="isWindows" />
+            <includepath path="${ftl.sources.dir}/windows" if="isWindows" />
+            <includepath path="${libxml.include}" unless="isWindows" />
+            <includepath path="${freetype.include}" unless="isWindows" />
+            <includepath path="${freetype.include2}" unless="isWindows" />
+            <includepath path="${tbb.inc.dir}" unless="isWindows" />
+            <fileset dir="${ftl.sources.dir}" includes="*.c, *.cpp"/>
+            <fileset dir="${ftl.sources.dir}/windows" includes="*.c, *.cpp" if="isWindows"/>
+            <libset dir="${tbb.lib.dir}" libs="tbb,tbbmalloc" unless="isWindows"/>
+            <libset dir="${sys.lib.dir}" libs="stdc++,xml2,freetype,tbb,tbbmalloc" unless="isWindows"/>
+            <libset dir="${lib.dir}/libxml2-2.7.7.win32/lib" libs="libxml2" if="isWindows" />
+            <libset dir="${lib.dir}/iconv-1.9.2.win32/lib" libs="iconv" if="isWindows" />
+            <libset dir="${lib.dir}/freetype-2.3.5.win32/lib" libs="freetype"  if="isWindows" />
+            <libset dir="${lib.dir}/pthreads-2.8.win32/lib" libs="pthreadVC2" if="isWindows" />
+            <libset dir="${lib.dir}/tbb30.win32/lib/ia32/vc9" libs="tbb,tbbmalloc" if="isWindows" />
+        </cc>
+        <cc name="${CC}" outtype="shared" subsystem="console" exceptions="yes" multithreaded="yes" objdir="${build.dir}" outfile="${build.dir}/browser/browser">
+            <fileset dir="${ftl.sources.dir}" includes="*.c, *.h, *.cpp" excludesfile="${ftl.sources.dir}/driver.cpp"/>
+            <libset dir="${sys.lib.dir}" libs="stdc++,xml2,freetype,tbb,tbbmalloc" unless="isWindows"/>
+        </cc>
+        <mkdir dir="${build.dir}/browser/fonts"/>
+         <copy todir="${build.dir}/browser/fonts">
+          <fileset dir="${ftl.sources.dir}/fonts"/>
+        </copy>
+        <copy file="${ftl.sources.dir}/runAll" tofile="${build.dir}/browser/runAll" />
+        <mkdir dir="${build.dir}/browser/demos"/>
+        <copy todir="${build.dir}/browser/demos">
+          <fileset dir="${ftl.sources.dir}/demos"/>
+        </copy>
+        <copy file="${ftl.sources.dir}/extradatahandler.properties" tofile="${build.dir}/browser/extradatahandler.properties" />
+    </target>
+
+    <target name="test" description="test everything" depends="ale-swipl">
+        <echo message="Testing Alegen-Swipl"/>
+        <java classname="AGEvalSwipl.Tests" fork="yes">
+            <env key="SWI_HOME_DIR" value="${swipl.home}"/>
+            <classpath>
+                <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
+                <path refid="build.path" /> 
+            </classpath>
+            <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
+            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${build.dir}"/>
+            <arg path="${ale.test.dir}"/>
+        </java>
+        <echo message="Testing Mud" />
+        <echo message="Todo" />
+    </target>
+</project>
+<!-- vim: set et ff=dos ts=8 sw=4 : -->

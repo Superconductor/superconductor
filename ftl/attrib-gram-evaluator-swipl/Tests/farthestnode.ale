@@ -1,0 +1,38 @@
+interface node {
+  var farthestBelow : int;
+  var farthestOutside : int;
+  //var farthest : int;
+}
+
+interface start { }
+
+class root : start {
+  children { tree : node; }
+  actions {
+    tree.farthestOutside := 0;
+  }
+}
+
+
+class intermediate : node {
+  children { left: node; right: node; }
+  attributes {
+    var leftFarthestB : int;
+    var rightFarthestB : int;
+  }
+  actions {
+    farthestBelow := (1 + left.farthestBelow) > (1 + right.farthestBelow) ? (1 + left.farthestBelow) : (1 + right.farthestBelow);
+    leftFarthestB := left.farthestBelow;
+    rightFarthestB := right.farthestBelow;
+    left.farthestOutside := (1 + farthestOutside) > (rightFarthestB + 1) ? (1 + farthestOutside) : (rightFarthestB + 1); 
+    right.farthestOutside := (1 + farthestOutside) > (leftFarthestB + 1) ? (1 + farthestOutside) : (leftFarthestB + 1); 
+    //farthest := farthestOutside > farthestBelow ? farthestOutside : farthestBelow;
+  }
+}
+
+class leaf : node {
+  actions {
+    farthestBelow := 0;
+    //farthest := farthestOutside;
+  }
+}

@@ -1,0 +1,35 @@
+		//3-Pass Test 
+		
+		// define Frame interface
+		IFace frame = new IFace("frame");
+		frame.addAttribute("h");
+		
+		// define Node interface
+		IFace node = new IFace("node");
+		node.addAttribute("a"); node.addAttribute("b"); node.addAttribute("c");
+		
+		// define Window Class
+		Class window = new Class("window", frame);
+		window.addField("fa");
+		window.set("root@a", "fa");
+		window.set("h", "root@b");
+		window.set("root@c", "h");
+		
+		// define InnerNode Class
+		Class innerNode = new Class("innerNode", node);
+		innerNode.set("child@a", "a");
+		innerNode.set("b", "child@b");
+		innerNode.set("child@c", "c");
+		
+		// define LeafNode Class
+		Class leafNode = new Class("leafNode", node);
+		leafNode.set("b", "a");
+		
+		// define children relationships
+		window.addChild("root", node);
+		innerNode.addChild("child", node);
+		
+		ArrayList<IFace> inter = new ArrayList<IFace>();
+		ArrayList<Class> classes = new ArrayList<Class>();
+		inter.add(frame); inter.add(node);
+		classes.add(window); classes.add(innerNode); classes.add(leafNode);

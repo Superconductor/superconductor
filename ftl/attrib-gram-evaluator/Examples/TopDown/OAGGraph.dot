@@ -1,0 +1,57 @@
+digraph G{
+	subgraph cluster0{
+		color=blue;
+		node[style=filled];
+		label="node";
+		node_d[label="d"];
+		node_e[label="e"];
+		node_f[label="f"];
+		node_g[label="g"];
+		node_h[label="h"];
+	}
+	subgraph cluster1{
+		color=blue;
+		node[style=filled];
+		label="frame";
+		frame_c[label="c"];
+	}
+	subgraph cluster2{
+		color=black;
+		node[style=filled];
+		label="mid";
+		mid_d[label="d"];
+		mid_e[label="e"];
+		mid_f[label="f"];
+		mid_g[label="g"];
+		mid_h[label="h"];
+	}
+	subgraph cluster3{
+		color=black;
+		node[style=filled];
+		label="top";
+		top_c[label="c"];
+		top_a[label="$a", shape=box];
+		top_b[label="$b", shape=box];
+	}
+	subgraph cluster4{
+		color=black;
+		node[style=filled];
+		label="bot";
+		bot_d[label="d"];
+		bot_e[label="e"];
+		bot_f[label="f"];
+		bot_g[label="g"];
+		bot_h[label="h"];
+	}
+	mid_e -> node_f;
+	top_c -> node_h;
+	top_a -> node_e;
+	top_a -> node_d;
+	mid_g -> node_g;
+	mid_h -> node_h;
+	mid_f -> node_e;
+	mid_d -> node_d;
+	top_b -> top_c;
+	top_b -> node_f;
+	top_b -> node_g;
+}

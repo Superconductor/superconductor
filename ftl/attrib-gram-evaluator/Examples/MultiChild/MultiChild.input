@@ -1,0 +1,51 @@
+        // Child Order Test
+        
+        // define top interface
+        IFace top = new IFace("top");
+        top.addAttribute("x"); top.addAttribute("y");
+        
+        // define node interface
+        IFace node = new IFace("node");
+        node.addAttribute("a"); node.addAttribute("b"); node.addAttribute("z");
+        
+        // define childA interface
+        IFace chldA = new IFace("childA");
+        chldA.addAttribute("c"); chldA.addAttribute("d"); chldA.addField("f");
+        
+        // define childB interface
+        IFace chldB = new IFace("childB");
+        chldB.addAttribute("e"); chldB.addAttribute("h"); chldB.addField("g");
+        
+        // define TopImp Class
+        Class topImp = new Class("topImp", top);
+        topImp.addField("w");
+        topImp.set("y", "root@a");
+        topImp.apply("sum", "x", "w", "y");
+        topImp.set("root@z", "x");
+        
+        // define NodeImp Class
+        Class nodeImp = new Class("nodeImp", node);
+        nodeImp.set("a", "chA@c");
+        nodeImp.set("chA@d", "b");
+        nodeImp.apply("sum", "b", "z", "chB@h");
+        nodeImp.set("chB@e", "a");
+        
+        // define childAImp Class
+        Class childAImp = new Class("childAImp", chldA);
+        //childAImp.addField("f");
+        childAImp.set("c", "f");
+        
+        // define childBImp Class
+        Class childBImp = new Class("childBImp", chldB);
+        //childBImp.addField("g");
+        childBImp.apply("sum", "h", "e", "g");
+        
+        // define children relationships
+        topImp.addChild("root", node);
+        nodeImp.addChild("chA", chldA);
+        nodeImp.addChild("chB", chldB);
+        
+        ArrayList<IFace> inter = new ArrayList<IFace>();
+        ArrayList<Class> classes = new ArrayList<Class>();
+        inter.add(top); inter.add(node); inter.add(chldA); inter.add(chldB);
+        classes.add(topImp); classes.add(nodeImp); classes.add(childAImp); classes.add(childBImp);

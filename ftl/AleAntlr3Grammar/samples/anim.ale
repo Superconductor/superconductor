@@ -1,0 +1,105 @@
+type tween = off | ease-in | ease-out | linear;
+type position = relative | auto;
+//type display = root | vbox | hbox | card | leaf | ignore;
+
+///////////
+
+interface Top {
+  var myx : int;
+  var myy : int;
+  var myh : int;
+  var myw : int;
+}
+
+interface Node {
+  var ax : int;
+  var ay : int;
+  var ah : int;
+  var aw : int;
+}
+
+class TopBox : Top {
+  
+  children { root : Node; }
+  
+  attributes { 
+    input fx : int;
+    input fy : int;
+
+//////////////////
+//    input displayType : display;
+
+    // input fields
+    input x : int;
+    input y : int;
+    input z : int;
+    input height : int;
+    input width : int;
+    input textColor : color;
+    input bgColor : color;
+    input borderWidth : int;
+    input visible : bool;
+    input borderColor : color;
+    input clipsSelf : bool;
+    input clipsChildren : bool;
+    
+    // for Nokia Demo
+    input increasing : bool;
+
+    // for Leo animation
+    input animDuration : time;
+    input animMode : tween;
+    input positioning : position;
+    input xAfter : int;
+    input yAfter : int;
+    input bgColorAfter : color;
+    input positioningAfter : position;
+
+//    input elapsed : int;    
+////////////////////
+
+  }
+  
+  actions {
+    myx := fx;
+    myy := fy;
+    root.ax := myx;
+    root.ay := myy;
+    myh := root.ah;
+    myw := root.aw;
+  }
+}   
+
+class VBox : Node {
+  attributes {
+    var temph : int;
+  }
+  
+  children {
+    child1 : Node;
+    child2 : Node;
+  }
+  
+  actions {
+    child1.ax := ax;
+    child2.ax := ax;
+    child1.ay := ay;
+    temph := ay + child1.ah;
+    child2.ay := temph;
+    ah := (child1.ah + child2.ah);
+    aw := child1.aw > child2.aw ? child1.aw : child2.aw;
+  }
+
+}
+
+class LeafBox : Node {
+  attributes {
+    input fh : int;
+    input fw : int;
+  }
+  
+  actions {
+    ah := fh;
+    aw := fw;
+  }
+}

@@ -1,0 +1,96 @@
+type shapeType =  None | Rect | RoundedRect | Ellipse | Edge;
+type textAlignType = Inherit | Center | Left | Right;
+type verticalAlignType = Inherit | Top | Bottom | Middle;
+
+interface Top {
+  var x : int;
+  var y : int;
+  var w : int;
+  var h : int;
+  input shape : shapeType = Rect;
+  input backgroundColor : color = #FFF;
+}
+
+interface Edge {
+  var x : int;
+  var y : int;
+  var w : int;
+  var h : int;
+}
+
+interface Node { 
+  var x : int;
+  var y : int;
+  var max_w : int;
+  var max_h : int;
+  input w : int;
+  input h : int;
+  input parent_len : int = 0;
+  input shape : shapeType = Rect;
+  input backgroundColor : color = #00000000; //transparent
+  
+  //var canvas : int;
+  //var composite : int; 
+}
+
+class BaseEdge : Edge{
+
+}
+
+class Root : Top {
+  children { 
+    child : Node;
+}
+
+  actions {  
+
+    x := 0;
+    y := 0;
+    w := child.max_w;
+    h := child.max_h; 
+    child.x := 0;
+    child.y := 0;
+    }
+}
+
+class Box : Node {
+  children { 
+    l_child : Node;
+    d_child : Node;
+    l_edge : Edge;
+    d_edge : Edge; 
+  }
+
+  actions {
+  
+
+ 
+    l_child.x := x + w + l_child.parent_len;
+    l_child.y := y + (h/2) - (l_child.h/2);
+    l_edge.x :=  x + w;
+    l_edge.y := y + h/2;
+    l_edge.w := l_child.parent_len;
+    l_edge.h := 0;
+    
+    d_child.x := x + (w/2) - (d_child.w/2);
+    d_child.y := y + h + d_child.parent_len;
+    d_edge.x := x + w/2;
+    d_edge.y := y+h;
+    d_edge.w := 0;
+    d_edge.h := d_child.parent_len;
+
+    max_w := (w + l_child.parent_len + l_child.max_w) > d_child.max_w + (d_child.x - x) ? (w + l_child.parent_len + l_child.max_w) : d_child.max_w + (d_child.x - x);
+    max_h := (h + d_child.parent_len + d_child.max_h) > l_child.max_h + (l_child.y - y) ? (h + d_child.parent_len + d_child.max_h) : l_child.max_h + (l_child.y - y);
+           
+    
+  }
+}
+
+class LeafBox : Node{
+  actions {        
+    max_w := w;
+    max_h := h;
+
+  }
+}
+

@@ -1,0 +1,78 @@
+digraph G{
+	subgraph cluster0{
+		color=blue;
+		node[style=filled];
+		label="node";
+		node_h[label="h", shape=box];
+		node_w[label="w"];
+		node_p[label="p"];
+		node_g[label="g"];
+		node_i[label="i"];
+	}
+	subgraph cluster1{
+		color=blue;
+		node[style=filled];
+		label="frame";
+		frame_ph[label="ph"];
+		frame_pw[label="pw"];
+		frame_f[label="f"];
+	}
+	subgraph cluster2{
+		color=black;
+		node[style=filled];
+		label="parent";
+		parent_ph[label="ph"];
+		parent_pw[label="pw"];
+		parent_f[label="f"];
+		parent_pwf[label="$pwf", shape=box];
+	}
+	subgraph cluster3{
+		color=black;
+		node[style=filled];
+		label="child2";
+		child2_w[label="w"];
+		child2_p[label="p"];
+		child2_g[label="g"];
+		child2_i[label="i"];
+		child2_h[label="h", shape=box];
+		child2_b[label="$b", shape=box];
+	}
+	subgraph cluster4{
+		color=black;
+		node[style=filled];
+		label="child1";
+		child1_w[label="w"];
+		child1_p[label="p"];
+		child1_g[label="g"];
+		child1_i[label="i"];
+		child1_h[label="h", shape=box];
+	}
+	parent_ph -> parent_f[style=dotted];
+	parent_ph -> node_p;
+	child1_p -> child1_g;
+	child1_p -> child1_i[style=dotted];
+	child2_p -> child2_g;
+	child2_p -> child2_i[style=dotted];
+	node_g -> parent_f;
+	node_g -> node_i[style=dotted];
+	parent_pwf -> parent_pw;
+	node_h -> node_p[style=dotted];
+	node_h -> parent_ph;
+	node_h -> node_g[style=dotted];
+	node_h -> node_i[style=dotted];
+	parent_f -> node_i;
+	parent_pw -> node_w;
+	node_p -> node_g[style=dotted];
+	node_p -> node_i[style=dotted];
+	frame_ph -> frame_f[style=dotted];
+	child2_b -> child2_g;
+	child2_b -> child2_i[style=dotted];
+	child1_g -> child1_i[style=dotted];
+	child2_g -> child2_i[style=dotted];
+	child1_h -> child1_p[style=dotted];
+	child1_h -> child1_g[style=dotted];
+	child1_h -> child1_i[style=dotted];
+	child2_h -> child2_p[style=dotted];
+	child2_h -> child2_g[style=dotted];
+	child2_h -> child2_i[style=dotted];
+}

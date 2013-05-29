@@ -1,0 +1,66 @@
+/* Inspired by the javascript grammar https://github.com/alexwarth/ometa-js/blob/master/bs-js-compiler.txt. */
+ometa Expr {
+
+    //TODO add escape characters for strings
+    //TODO bitwise operators
+
+    expr = orExpr:e ( '?' expr:t ':' expr:f                             ->['cond', e, t, f]
+                    | empty                                                 -> e
+    ),
+
+    orExpr = orExpr:e "||" andExpr:a                                        ->['||', e, a]
+           | andExpr,
+
+    andExpr = andExpr:e "&&" eqExpr:eq                                      ->['&&', e, eq]
+            | eqExpr,
+
+    eqExpr = eqExpr:e "==" cmpExpr:c                                        ->['==', e, c]
+           | eqExpr:e "!=" cmpExpr:c                                        ->['!=', e, c]
+           | cmpExpr,
+
+    cmp = ">" |  "<" | ">=" | "<=",
+    cmpExpr = cmpExpr:e ( ">" addExpr:a                                     ->['>', e, a]
+                          | "<" addExpr:a                                   ->['<', e, a]
+                          | ">=" addExpr:a                                  ->['>=', e, a]
+                          | "<=" addExpr:a                                  ->['<=', e, a]
+                          )
+                | addExpr,
+
+    addExpr = addExpr:e '+' mulExpr:m                                       ->['+', e, m]
+            | addExpr:e '-' mulExpr:m                                       ->['-', e, m]
+            | mulExpr,
+
+    mulExpr = mulExpr:e '*' unaryOp:m                                       ->['*', e, m]
+            | mulExpr:e '/' unaryOp:m                                       ->['/', e, m]
+            | mulExpr:e '%' unaryOp:m                                       ->['%', e, m]
+            | unaryOp,
+    
+    unaryOp = spaces '-' post:p                                                    ->['-', p]
+            | spaces "++" post:p                                                   ->['++pre', p]
+            | spaces "--" post:p                                                   ->['--pre', p]
+            | spaces '!' unaryOp:u                                                 ->['!', u]
+            | post,
+
+    post = primExpr:e ("++"                                                 ->['++post', e]
+                      |"--"                                                 ->['--post', e]
+                      | empty                                               -> e
+                      ),
+    primExpr = primExpr:e'('spaces listOf('expr',','):args spaces ')' spaces     ->['call', e, args]
+                          | baseExpr,
+
+    baseExpr = id
+             | string
+             | number
+             | spaces '(' expr:e ')' spaces                                               -> e,
+
+    number = spaces digit*:a '.' digit+:b 'f' spaces                    -> (a.concat(['.']).concat(b).concat(['f'])).join('')
+            | spaces digit*:a '.' digit+:b spaces                      -> (a.concat(['.']).concat(b)).join('')
+            | spaces digit+:ds spaces                                  -> parseInt(ds.join('')),
+
+    id = spaces (letter | '_'):b (letter | digit | '_')*:a spaces    -> [b].concat(a).join(''),
+
+    string = spaces dquote (~dquote char)*:s  dquote spaces                                  -> s.join('')
+            | spaces squote (~squote char)*:s  squote spaces                                 -> s.join(''),
+    dquote = '"',
+    squote = "'"
+}

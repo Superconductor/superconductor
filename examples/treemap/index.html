@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+	<!-- Cal colors: Yale Blue #0F4D92, California Gold #FFCC33 -->
+	<head>
+		<title>Election Treemap (Superconductor Demo)</title>
+
+		<script type="text/javascript">
+			/////////// Config toggles
+
+			// Which JSON data file to load (small dummy data, or full dataset)
+			// jsonDataFile = "data_sc_small.json";
+			jsonDataFile = "http://localhost:8888/examples/treemap/data_sc_big.json";
+			
+			//jsonDataFileFlat = "small.flat.json";
+			jsonDataFileFlat = "http://localhost:8888/examples/treemap/data.sparse.json"; //if not in repo, generate via
+			//1: make kbindings (via webcl/bin)
+			//  ./gen ../../src/msr_demo_all_borders.ftl ../examples/treemap
+			//2: make json (webcl/src)
+			//  ./node flattener.js tmp/data_sc_big.json ../bin/tmp/kbindings.js ../examples/treemap/big.flat.mt.json
+			
+			//jsonDataFileFlatMt = "http://localhost:8888/examples/treemap/small.flat.mt.json";
+			jsonDataFileFlatMt = "http://localhost:8888/examples/treemap/data.sparse.mt.json";
+			
+			// Turn on selectors in Superconductor?
+			useSelectors = false; //slow default as it ping-pongs between CPU/GPU
+
+			useFlat = false; //vs. dyn load
+			useMt = false;
+			numMaxWorkers = 4; // false for default
+			
+		</script>
+		
+
+		<link rel="stylesheet" href="style.css" />
+
+		<script src="../../superconductor.js" type="text/javascript"></script>
+		<script src="demo.js" type="text/javascript"></script>
+		<script src="spin.js" type="text/javascript"></script>
+<!--		<script src="stats.min.js"></script> -->
+<!--		<script src="../../selectors.js"></script> -->
+		<script src="../../selectorsGPU.js"></script>
+
+		<style type="sc" id="initStyle">
+		  Country {
+			fld_iroot_minturnout: 0.5;
+			fld_iroot_maxturnout:  0.75;
+			fld_iroot_width: 102400;
+			fld_iroot_height:  76800;
+			fld_iroot_showfraud: 0;
+			fld_iroot_showprojected: 0;
+			fld_iroot_fixwidth: 1;
+			fld_iroot_showjavascript: 1.0;
+			}		  
+		</style>
+		<style type="sc" id="initStyleZZ">
+		  Country {
+			fld_iroot_minturnout: 0.5;
+			fld_iroot_maxturnout:  0.75;
+		  }		  
+		  Country CountryContainer {
+			fld_node_minturnout: 0.88;
+			fld_node_maxturnout:  0.95;
+		  }		  
+		  Country > CountryContainer {
+			fld_node_minturnout: 0.3;
+			fld_node_maxturnout:  0.4;
+		  }		  
+		  Country HSquare PollingPlace {
+			fld_node_minturnout: 0.6;
+			fld_node_maxturnout:  0.7;
+		  }		  
+		  HSquare + HSquare#foo {
+			fld_node_minturnout: 0.1;
+			fld_node_maxturnout:  0.2;		  
+		  }
+		</style>
+		
+		
+		<link rel="stylesheet" id="themeCSS" href="iThing.css"> 
+		<script src="jquery-1.7.1.min.js" type="text/javascript"></script>
+		<script src="jquery-ui-1.9.2.custom.min.js"></script>
+		<script src="jQRangeSlider-min.js"></script>
+	</head>
+
+<body>
+	<div id="main_content">	
+		<div class="intro">
+			<div class="header">
+				<h1 class="anaglyph">Superconductor</h1>
+			</div>
+
+			<h2>Demo: Election Results</h2>
+
+			<div class="settings">
+				<div class="setting-item">
+					<label for="data">Data:</label>
+					<select id="data" disabled="true">
+						<option value="normal" SELECTED>Reported Results</option>
+						<option value="suspect">Suspect Results Highlighted</option>
+						<option value="projection">Fair Projection</option>
+					</select>
+				</div>
+			</div>
+
+			<div class="vote">Ruling Party: <span id="count">0</span>%</div>
+		</div>
+
+
+		<div id="vis-container">
+			<div class="vis-overlay">
+				<div id="turnout-container" class="vis-controls">
+
+					<div class="wide-control">
+						<div id="range-slider">
+						</div>
+
+						<script>
+							$("#range-slider").rangeSlider({defaultValues:{min: 0, max: 100}, valueLabels: "hide"});
+					    </script>
+					</div>
+				</div>
+
+
+				<div id="vert-control" class="vis-controls disabled">
+					<div class="my-control">
+						<label id="zoom-label" for="zoom-slider">Zoom</label>
+						<input id="zoom-slider" class="nav-slider" type="range" min="-18" max="-1.5" step="0.3" value="-7" disabled="true"/>
+					</div>
+				</div>
+			</div>
+
+			<canvas id="visualization" >ERROR: HTML canvas support not found.</canvas>
+
+			<script type="text/javascript">
+			var canvas = document.getElementById("visualization");
+
+			try {
+				window.superconductor = new Superconductor("kernels.visualization", canvas);
+			} catch(e) {
+				var msg = '\'' + e.message + '\'';
+				if(e.line && e.sourceURL) {
+					msg += (' at ' + e.sourceURL + ':' + e.line);
+				}
+				console.log("foobar", msg);
+				displayError(canvas, msg);
+				throw e;
+			}
+
+
+			// Display a loading 'spinner' while we load the data
+			var spinner = new Spinner({
+				lines: 13, // The number of lines to draw
+				length: 12, // The length of each line
+				width: 8, // The line thickness
+				radius: 24, // The radius of the inner circle
+				corners: 0.9, // Corner roundness (0..1)
+				rotate: 0, // The rotation offset
+				color: '#000', // #rgb or #rrggbb
+				speed: 1, // Rounds per second
+				trail: 60, // Afterglow percentage
+				shadow: false, // Whether to render a shadow
+				hwaccel: true, // Whether to use hardware acceleration
+				className: 'spinner', // The CSS class to assign to the spinner
+				zIndex: 2e9, // The z-index (defaults to 2000000000)
+				top: 'auto', // Top position relative to parent in px
+				left: 'auto' // Left position relative to parent in px
+			}).spin(document.getElementById('vis-container'));
+
+
+			// Load the data, after a slight delay to allow the spinner to start
+			setTimeout(function() {
+				if (useMt && !useFlat) throw 'inconsistent: useMt && !useFlat';
+				var whichFile = useMt ? jsonDataFileFlatMt : (useFlat ? jsonDataFileFlat : jsonDataFile);
+				var whichFunc = useMt ? 'loadDataFlatMt' : (useFlat ? 'loadDataFlat' : 'loadData');
+				console.log('url', whichFile);
+				window.superconductor.optNumMaxWorkers = numMaxWorkers;
+			  	window.superconductor[whichFunc](whichFile, function() {
+					var d = window.superconductor.data;
+			
+					//simple checksum
+					/*
+					for (var name in window.superconductor.clr) {
+						if (name.indexOf("_buffer_1") != -1 && name.indexOf("cl_") == -1) {
+							var sum = 0;
+							for (var i = 0; i < window.superconductor.clr[name].length; i++)
+								sum += window.superconductor.clr[name][i];
+							console.log(name, sum);//, window.superconductor.clr[name]); 							
+						}
+					}
+					*/
+					
+					
+			
+					if (useSelectors) {
+					    var style = document.getElementById('initStyle').innerHTML;
+					    console.log('found style');
+					    var t0 = new Date().getTime();
+						var selEngine = selectors(window.superconductor, style, window.superconductor.clr.tokens);
+						var t1 = new Date().getTime();
+						console.log('generated selectors ', t1 - t0, 'ms');
+						selEngine(window.superconductor.data);
+						var t2 = new Date().getTime();
+						console.log('ran selectors', t2 - t1, 'ms');
+					} else {
+						d.fld_iroot_minturnout.set(0, -0.001);
+						d.fld_iroot_maxturnout.set(0,  1.0);
+						d.fld_iroot_width.set(0, 102400);
+						d.fld_iroot_height.set(0,  76800);
+						d.fld_iroot_showfraud.set(0, 0);
+						d.fld_iroot_showprojected.set(0, 0);
+						d.fld_iroot_fixwidth.set(0, 1);
+						d.fld_iroot_showjavascript.set(0, 1.0);						
+					}
+					
+					spinner.stop()
+					window.superconductor.startVisualization();
+					enableSliders();
+
+					$("#range-slider").on("valuesChanging", function(e, data){
+//						console.log("Something moved. min: " + data.values.min + " max: " + data.values.max);
+						window.superconductor.data.fld_iroot_minturnout.set(0, data.values.min / 100.0);
+						window.superconductor.data.fld_iroot_maxturnout.set(0, data.values.max / 100.0);
+						updateDisplay();
+					});
+
+					$("#range-slider").rangeSlider({valueLabels: "show"});
+				});
+			}, 0);
+		</script>
+		</div>
+	</div>
+
+	
+</body>
+</html>

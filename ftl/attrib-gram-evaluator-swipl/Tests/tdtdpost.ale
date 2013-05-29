@@ -1,0 +1,30 @@
+//has to do second top-down after first because child sets a local that is needed
+interface top { }
+interface node {
+  var local0 : int;
+  var byparent0 : int;
+  var assumed1 : int;
+}
+
+class root : top {
+  children { next : node; }
+  actions {
+    next.byparent0 := 1;
+  }
+}
+
+class intermediate : node {
+  children { next : node; }
+  actions {
+    local0 := 3;
+    next.byparent0 := 1;
+    assumed1 := next.local0 + 2;
+  }
+}
+
+class leaf : node {
+  actions {
+    local0 := 4;
+    assumed1 := 3;
+  }
+}

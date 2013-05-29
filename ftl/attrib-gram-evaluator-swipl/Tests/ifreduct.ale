@@ -1,0 +1,23 @@
+interface TopI { var w : int; input x : int;  }
+interface LeafI { 
+  input w : int; 
+  var parentW : int;
+  var x : int; 
+}
+
+class Root : TopI {
+  children { leaves : [LeafI] }
+  actions {  
+    loop leaves* {
+	    if (1) {
+		  leaves.x := fold x .. $acc + leaves$i.w;
+		  w := leaves$$.x - x;
+		  leaves.parentW := w;
+		} else {
+		  leaves.x := 1;
+		  w := 2;
+		  leaves.parentW := 3;
+		}
+    }  
+  }
+} 

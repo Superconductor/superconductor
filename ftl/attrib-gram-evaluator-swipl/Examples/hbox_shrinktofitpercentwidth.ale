@@ -1,0 +1,85 @@
+type wConstraint = Px | Shrink | Pcnt;
+
+interface Top {
+    input x : int;
+    input y : int;
+    input w : int;
+    var h : int;
+}
+interface Node {
+  input wType : wConstraint;
+  input wVal : int;
+  var w : int;
+  var h : int;
+  var x : int;
+  var y : int;
+  var parentWidth : int;  
+}
+
+class TopBox : Top {
+  children { root : Node; }
+  actions {
+    root.x := x;
+    root.y := y;
+    h := root.h;
+    root.parentWidth := w;
+  }  
+}
+
+class HBox : Node {
+  children { child1 : Node; child2 : Node; }
+  attributes {
+    var cursor : int;
+    var childPercs : int;
+    var childPx : int;    
+  }
+  actions {
+    child1.x := x;
+    cursor := child1.w;
+    child2.x := x + cursor;  
+    childPercs := (child1.wType == Pcnt ? child1.wVal : 0) + (child2.wType == Pcnt ? child2.wVal : 0);
+    childPx := (child1.wType != Pcnt ? child1.wVal : 0) + (child2.wType != Pcnt ? child2.wVal : 0);
+    w := wType == Px ? wVal :
+         wType == Shrink ? ((childPx * 100) / (100 - childPercs))
+         : (parentWidth * wVal / 100);
+    h := max(child1.h, child2.h);
+    child1.y := y;
+    child2.y := y;
+    child1.parentWidth := w;
+    child2.parentWidth := w;     
+  }
+}
+
+class VBox : Node {
+  attributes {
+    var temph : int;
+  }
+  
+  children {
+    child1 : Node;
+    child2 : Node;
+  }
+  
+  actions {
+    child1.x := x;
+    child2.x := x;
+    child1.y := y;
+    temph := y + child1.h;
+    child2.y := temph;
+    h := child1.h + child2.h;
+    w := child1.w < child2.w ? child2.w : child1.w;
+    child1.parentWidth := w;
+    child2.parentWidth := w;
+  }
+
+}
+
+class LeafBox : Node {
+  attributes { input hInput : int; }
+  actions {
+    w := wType == Shrink ? 0 : 
+         wType == Px ? wVal :
+         (parentWidth * 100 * wVal);
+    h := hInput;
+  }
+}

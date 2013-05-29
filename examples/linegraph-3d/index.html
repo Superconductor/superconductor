@@ -1,0 +1,282 @@
+	<!DOCTYPE html>
+<html>
+	<head>
+	<title>GE (Superconductor Demo)</title>
+	<meta HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+	<style type="text/css">
+		#visualization {
+			width: 1024px;
+			height: 768px;
+			box-shadow: 0 .3em 0.3em #333;
+			background-color: #EBEBEB;
+			border: 1px solid #CCC;
+		}
+		body {
+			font-size: 2em;			
+			font-family: courier;
+		}	
+		h1 { 			
+			letter-spacing: -0.1em; 
+			font-size: 3em; 
+			line-height: 0.5em;
+			margin: 0em;
+			padding: 0em;
+			margin-top: 0.5em;			
+		}
+
+		li { display: inline; }
+	</style>	
+	<link rel="stylesheet" id="themeCSS" href="iThing.css"> 
+	<script src="jquery-1.7.1.min.js" type="text/javascript"></script>
+	<script src="jquery-ui-1.9.2.custom.min.js"></script>
+	<script src="jQRangeSlider-min.js"></script>
+	<script src="../../../superconductor.js" type="text/javascript"></script>
+	<script type="text/javascript">
+
+
+	var usePreprocessed = true;
+	dataURL = "http://localhost:8888/examples/linegraph-3d/data.sparse.mt.json";
+	numMaxWorkers = 4;
+
+	window.vizDefaults = {
+	  numGenerators: 200, 	//FIXME read from file as well (or edit genExamples.js)
+	  numSpikesPerGenerator: 500, 	//FIXME read from file as well (or edit genExamples.js)
+	  height: 10,
+	  radius: 27.0,
+	  minRadius: 7.0,
+	  tweenMin: 40,
+	  tweenMax: 60,
+	  rotation: 0
+	};
+
+	function genData() {
+
+		function makeSpike(val) {
+			return {class: "Spike", "val": val ? val : Math.random()};
+		}
+	
+		function makeGenerator (len) {
+			function clamp (v) { return Math.max(0, Math.min(1.0, v)); }
+	
+			var childs = [];
+			var roll = Math.random();
+			var range = 0.03;
+			for (var i = 0; i < len; i++) {
+				roll += range * Math.random() - range/2.0;
+				roll = clamp(roll);
+				childs.push(makeSpike(roll));
+			}
+			return {class: "Generator", children: { "childs": childs } };
+		}
+		
+		function makeRoot(numGenerators, numSpikes) {
+			var childs = [];
+			for (var i = 0; i < numGenerators; i++) {
+				childs.push(makeGenerator(numSpikes));
+			}
+			return {class: "Root",
+					"xOffset": window.vizDefaults.radius,
+					"yOffset": -2.4*window.vizDefaults.radius,
+					"tweenMin": window.vizDefaults.tweenMin / 100.0,
+					"tweenMax": window.vizDefaults.tweenMax / 100.0,
+					"height": window.vizDefaults.height,
+					"radius": window.vizDefaults.radius,
+					"minRadius": window.vizDefaults.minRadius,
+					children: {
+						"child": {
+							class: "Second",
+							children: {"childs": childs} }}};
+		}
+	
+							
+		var tinyData = makeRoot(window.vizDefaults.numGenerators, window.vizDefaults.numSpikesPerGenerator);
+		return tinyData;
+	}
+
+
+	var lastUpdate = new Date().getTime();
+	function updateDisplay() {		
+		var now = new Date().getTime();
+		var diff = now - lastUpdate;
+		if (diff < 20) {
+		  setTimeout(updateDisplay, 20 - diff);
+		  console.warn(diff, "ms is < 20ms between rerenders, delay for ", (20 - diff), "ms");
+		} else {
+		  lastUpdate = now;	
+		  window.superconductor.layoutAndRender();
+		  $('#numVertices').html(window.superconductor.data.fld_iroot___rendersize__.get(0));
+		}
+	}
+
+	window.onload = function() {
+		var canvas = document.getElementById("visualization");
+		window.superconductor = new Superconductor("kernels.visualization", canvas);
+		window.superconductor.glr.setW(10.0);
+		window.superconductor.glr.setRotation(-45, 0, 0);
+		window.superconductor.glr.movePosition(-0.5,1.7,4.2);
+		
+	
+				
+		var setDefaults = function () {
+			window.superconductor.startVisualization();
+
+
+			var rs = $('#range-slider').data().rangeSlider._values;
+			console.log(rs.min, rs.max);
+			window.superconductor.data.fld_iroot_tweenmin.set(0, rs.min / 100.0);
+			window.superconductor.data.fld_iroot_tweenmax.set(0, rs.max / 100.0);
+			
+			var rad = $('#radius-slider').data().rangeSlider._values;
+			window.superconductor.data.fld_iroot_minradius.set(0, rad.min);
+			window.superconductor.data.fld_iroot_radius.set(0, rad.max);
+	
+			window.superconductor.data.fld_iroot_height.set(0, $('#height-slider').attr('value'));		
+			window.superconductor.data.fld_iroot_rotation.set(0, $('#rotation-slider').attr('value'));
+		
+		
+		
+
+
+			updateDisplay();
+			console.log("proxy data",window.superconductor.clr.proxyData);
+
+			//sliding window
+			$("#range-slider").on("valuesChanging", function(e, data){
+				window.superconductor.data.fld_iroot_tweenmin.set(0, data.values.min / 100.0);
+				window.superconductor.data.fld_iroot_tweenmax.set(0, data.values.max / 100.0);
+				updateDisplay();
+			});
+			$("#range-slider").rangeSlider({valueLabels: "show"});
+
+
+			//height
+			$("#height-slider").change(function () {
+				window.superconductor.data.fld_root_height.set(0, (this.value));
+				updateDisplay();
+			});
+
+			//rotation
+			$("#rotation-slider").change(function () {
+				window.superconductor.data.fld_iroot_rotation.set(0, (this.value));
+				updateDisplay();
+			});
+
+
+			//radius
+			$("#radius-slider").on("valuesChanging", function(e, data){
+				window.superconductor.data.fld_iroot_minradius.set(0, data.values.min);
+				window.superconductor.data.fld_iroot_radius.set(0, data.values.max);
+				updateDisplay();
+			});
+			$("#radius-slider").rangeSlider({valueLabels: "show"});
+
+
+			/*			
+			for (var i = 0; i < window.superconductor.clr.proxyData.displayname.length; i++) {
+				if (window.superconductor.clr.classToToken("Generator") ==
+					window.superconductor.clr.proxyData.displayname.get(i)) {
+					console.log(
+						" gen idx, num spikes", 
+						window.superconductor.clr.proxyData.fld_node_idx.get(i),
+						window.superconductor.clr.proxyData.fld_node_levellength.get(i),
+						window.superconductor.clr.proxyData.fld_generator_numspikes.get(i));						
+				}
+			
+				continue;
+			    console.log(" node i: x y w h; offset/rightOffset/size/intrisSize",i,
+			      [window.superconductor.clr.proxyData.fld_node_x.get(i),
+			      window.superconductor.clr.proxyData.fld_node_y.get(i),
+			      window.superconductor.clr.proxyData.fld_node_w.get(i),
+			      window.superconductor.clr.proxyData.fld_node_h.get(i)],
+			      window.superconductor.clr.proxyData.fld_node_renderoffset.get(i),
+			      window.superconductor.clr.proxyData.fld_node_renderrightoffset.get(i),
+			      window.superconductor.clr.proxyData.fld_node_rendersize.get(i),
+			      window.superconductor.clr.proxyData.fld_node_intrinsrendersize.get(i));			      
+			}
+			*/			      
+		};		
+
+		setTimeout(function() { 
+			console.log("timeout");
+			if (usePreprocessed) {
+				window.superconductor.optNumMaxWorkers = numMaxWorkers;
+				window.superconductor.loadDataFlatMt(
+			    		dataURL,
+			    		setDefaults);	
+			} else {
+				window.superconductor.loadDataObj(genData(), setDefaults);					
+			}
+		}, 500);
+
+					
+
+
+	};
+	</script>
+</head>
+
+<body>
+			<h1>Superconductor</h1>
+
+	<div>
+		<ul>
+			<li>Data points: <b><span id="numPoints"><script>
+			document.write(window.vizDefaults.numGenerators * window.vizDefaults.numSpikesPerGenerator);
+			</script></span></b>. </li>
+			<li>GPU vertices: <b><span id="numVertices"></span></li>
+		</ul>
+	</div>
+
+
+	<div>	
+			
+			
+					<div class="wide-control">
+						<div id="range-slider">
+						</div>
+
+						<script>
+							$("#range-slider").rangeSlider({defaultValues:{min: window.vizDefaults.tweenMin, max: window.vizDefaults.tweenMax}, valueLabels: "hide"});
+					    </script>
+					</div>
+					
+
+
+
+
+			
+			<canvas style="background-color: black" id="visualization" >ERROR: HTML canvas support not found.</canvas>
+
+		<div>
+			<div style="width: 50%; float: left">
+				<div>Height</div>
+				<div><input type="range" id="height-slider" min="1" max="100" style="width:100%"></input><script>
+				$("#height-slider").
+					attr('value', window.vizDefaults.height);
+								
+			</script></div>
+			</div>
+			<div style="width: 50%; float: left; ">
+				<div>Radius</div>
+				<div class="wide-control">
+						<div id="radius-slider">
+						</div>
+
+						<script>
+							$("#radius-slider").rangeSlider({defaultValues:{min: window.vizDefaults.minRadius, max: window.vizDefaults.radius}, valueLabels: "hide"});
+					    </script>
+				</div>
+			</div>
+			<div style="width: 100%; clear: both">
+				<div>Rotation</div>
+				<div><input type="range" id="rotation-slider" min="0" max="360" style="width:100%"></input><script>
+				$("#rotation-slider").
+					attr('value', window.vizDefaults.rotation);
+								
+			</script></div>
+			</div>
+			
+		</div>					
+	</div>
+</body>
+</html>

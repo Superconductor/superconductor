@@ -1,0 +1,38 @@
+        // Child Order Grammar 
+        
+        IFace Par = new IFace("Par");
+        Par.addField("start");
+        Par.addAttributes("a", "b", "c", "d", "z");
+
+        IFace ChldA = new IFace("ChldA");
+        ChldA.addAttributes("e", "f", "g");
+
+        IFace ChldB = new IFace("ChldB");
+        ChldB.addAttributes("h", "i", "j", "k", "x", "y");
+
+        Class Parent = new Class("Parent", Par);
+        Parent.addChild("ca", ChldA);
+        Parent.addChild("cb", ChldB);
+        Parent.set("ca@f", "start");
+        Parent.apply("sum", "a", "ca@e", "cb@h");
+        Parent.set("b", "a");
+        Parent.set("cb@j", "b");
+        Parent.set("c", "ca@e");
+        Parent.set("ca@g", "b");
+        Parent.set("d", "c");
+        Parent.set("cb@i", "d");
+        Parent.set("z", "cb@x");
+        Parent.set("cb@y", "z");
+
+        Class ChildA = new Class("ChildA", ChldA);
+        ChildA.apply("getE", "e");
+
+        Class ChildB = new Class("ChildB", ChldB);
+        ChildB.apply("getX", "x");
+        ChildB.set("h", "y");
+        ChildB.set("k", "i");
+
+        ArrayList<IFace> inter = new ArrayList<IFace>();
+        ArrayList<Class> classes = new ArrayList<Class>();
+        inter.add(Par); inter.add(ChldA); inter.add(ChldB);
+        classes.add(Parent); classes.add(ChildA); classes.add(ChildB);

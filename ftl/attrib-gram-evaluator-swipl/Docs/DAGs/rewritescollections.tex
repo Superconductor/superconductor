@@ -1,0 +1,111 @@
+\begin{figure*}
+
+\begin{center}
+
+
+ \begin{tabular}{ll}
+\textbf{Input BNF} & \textbf{Output BNF} \\
+%INPUT BNF
+$\begin{array}{r l}
+Start &  \rightarrow  \text{@Start}~ N^{+} ~ R^{*} \\
+N &  \rightarrow  id \rightarrow id_{a}^{*} ~ \{ ~ ((\text{var} ~ | ~ \text{input})~ id_d : T_d )^{*} ~ \} \\
+T &  \rightarrow  \text{hostType} ~|~ [~\text{ref}~id~]\\
+R &  \rightarrow  id ~ \{ ((id_a id_{name}.id_{attrib}) := E))^{*} \} \\
+E &  \rightarrow {_{\rightarrow}E} ~|~ _{Z}E ~|~ _{+}E ~|~ _{id}E ~|~ _{loop}E ~ ~ | ~ _{|}E ~ | ~ _{@}E\\
+_{\rightarrow}E &  \rightarrow E \rightarrow id \\
+_{Z}E &  \rightarrow hostValue \\
+_{+}E &  \rightarrow hostFunction(E^{*}) \\
+_{id}E &  \rightarrow id ~|~ id.id \\
+_{loop}E & \rightarrow \text{reduce} ~ id_a (\text{where}~(id_b : T)^{+})? \\
+& ~~~~~ \{~ ((id_c | id_{name}.id_{attrib}) :=  (E_0 ~..~ E_i~ ...) ~|~ E)^{*}~ \} \\
+_{|}E & \rightarrow [ ~ E_{a} ~ |~ E_{b} ~] \\
+_{@}E & \rightarrow [ ~ E_{a} ~ @ ~ E_{b} ~] \\
+\end{array}$ 
+& %OUTPUT BNF
+$\begin{array}{r l}
+Start &  \rightarrow  \text{@Start}~ N^{+} ~ R^{*} \\
+N &  \rightarrow  id \rightarrow id^{*} ~ \{ (\text{phantom}?~(\text{var} ~ | ~ \text{input})~ id_d : T_d )^{*} ~ \} \\
+T &  \rightarrow  \text{hostType} \\
+R &  \rightarrow  id ~ \{ ((id_{a} ~ | ~ id_{name}.id_{attrib}) := E))^{*} \} \\
+E &  \rightarrow {_{\rightarrow}E} ~|~ _{Z}E ~|~ _{+}E ~|~ _{id}E ~|~ _{loop}E ~|~ _{|}E ~|~ _{@}E\\
+_{\rightarrow}E &  \rightarrow {\rightarrow}(id, ``(id \rightarrow)^{+}id") \\
+_{Z}E &  \rightarrow hostValue \\
+_{+}E &  \rightarrow hostFunction(E^{*}) \\
+_{id}E &  \rightarrow id ~|~ id.id \\
+_{loop}E & \rightarrow \text{loopBody}(id, \lambda_{*}, E^{*}) ~ | ~ \text{loopBody}(id, \lambda_{*}, E^{*}) ~ | ~ \text{loopVar}(E)\\
+_{|}E & \rightarrow \text{concat}(E_{a}, E_{b})\\
+_{@}E & \rightarrow \text{append}(E_{a}, E_{b})\\
+\end{array}$
+\end{tabular}
+
+\vspace{1em}
+
+\textbf{Type inference}
+%$$\inference{\Gamma |- f :  a \\ \Gamma |- a_i :  b & c & d }{\Gamma |-  e}[]$$
+$$\inference{\Gamma[\ldots N_i.id \leftarrow \tau_i ] |- N_i : \tau_i & \Gamma[\ldots N_i.id \leftarrow \tau_i] |- R_j : \tau_j}{\Gamma |- Start : \tau_1 }[Start]$$
+
+$$\inference{\Gamma |- id : \tau & \ldots \Gamma |- id_a : \tau_a & \ldots \Gamma |- id_b : \tau_b & \tau = \{ \ldots id_a : @\tau_a, ~ \ldots id_b : \tau_b, ~ \ldots id_d : \tau_d \}}{\Gamma |- N : \tau }[N]$$
+
+$$\inference{\Gamma |- id : \tau & \tau = \{ \ldots child : @\tau_{child}, ~ \ldots cousin : \tau_{cousin}, ~ \ldots attrib : \tau_{attrib} \} \\ \ldots id_a : \tau_a \in \tau|_{attrib} &  \ldots \Gamma |- E_a : \tau_a \\ \ldots id_{name} : \tau_{name} \in \tau |_{child} ~\vee~ id_{name} : @\tau_{name} \in \tau |_{cousin} & \ldots \Gamma |- E_b : \tau_b & \ldots id_{attrib} : \tau_b \in \tau_{name} }{\Gamma |- R : \tau}[R]$$
+\vspace{0.4em}
+\begin{tabular}{cc}
+$$\inference{\Gamma |- {_{*}E} : \tau}{\Gamma |- E : \tau}[E]$$
+&
+$$\inference{\Gamma |- E : \{ \ldots id : \tau \ldots \} }{\Gamma |- {_{\rightarrow}E} : \tau}[$_{\rightarrow}$E]$$
+\end{tabular}
+\vspace{0.4em}
+\begin{tabular}{cc}
+$$\inference{}{\Gamma |- {_{Z}E} : \text{hostType}}[$_{Z}$E]$$
+&
+$$\inference{ \Gamma |- E_i : \text{hostType}}{\Gamma |- {_{+}E} : \text{hostType}}[$_{+}$E]$$
+\end{tabular}
+\vspace{0.4em}
+\begin{tabular}{cc}
+$$\inference{id : \text{hostType} \in \Gamma}{\Gamma |- id : \text{hostType} }[$_{id}$E$_a$]$$
+&
+$$\inference{id_a : \{ \ldots id_b: \text{hostType} \ldots \} }{\Gamma |- id_a.id_b : \text{hostType} }[$_{id}$E$_b$]$$
+\end{tabular}
+%\end{center}
+%\caption{$GAG_{static}$: Syntax and type rules for an AG with non-local children translatable to a traditional AG compiler. Note special operator "$\rightarrow$" in output BNF for use by code generator.}
+%\label{fig:stattypes}
+%\end{figure*}
+%\begin{figure*}
+%\begin{center}
+
+\vspace{1em}
+
+\textbf{Rewrite rules}
+\begin{align*}
+\llbracket \cdot, \cdot \rrbracket : (Term \rightarrow \tau) \times GAG_{\text{static}} & ~~\rightarrow~~ AG_{\text{phantom}}\\
+%\end{align*}
+%\textbf{Schema rewrite rules}
+%\begin{align*}
+\llbracket \Gamma, Start ~~ \rightarrow ~~ \text{@Start}~ N^{+} ~ R^{*} \rrbracket & ~~ \Rightarrow ~~ \text{@Start}~ \llbracket \Gamma, N \rrbracket ^{+} ~ \llbracket \Gamma, R \rrbracket ^{*} \\
+\llbracket \Gamma, N ~~ \rightarrow ~~ id \rightarrow id_{a}^{*} ~ \{ ~ ((\text{var} ~ | ~ \text{input})~ id_d : T_d )^{*} ~ \} \rrbracket & ~~ \Rightarrow ~~ id \rightarrow (id_{a}|id_{b})^{*} ~ \{ \\
+& ~~~~~~~~~~~~~~~ \ldots \text{phantom var} ~ n\_a_\text{gather} : \tau; ~~ \\ 
+& ~~~~~~~~~~~~~~~ \ldots \text{phantom var} ~ n\_a_\text{broadcast} : \tau; \\
+& ~~~~~~~~~~~~~~~ ((\text{var} ~ | ~ \text{input})~ id_d : T_d )^{*} ~\} \\
+& ~~~~~~~~~~~~ \text{where} ~ \exists n, a, m, ``E \rightarrow a" \in m. ~  \Gamma \vdash E : @ \tau_n, ~ \Gamma \vdash n : \tau_n \\
+%\end{align*}
+%\textbf{Constraint rewrite rules}
+%\begin{align*}
+\llbracket \Gamma, R ~~ \rightarrow ~~ id ~ \{  ((id_a := E_a) | (id_{name}.id_{attrib} := E_b))^{*} \} \rrbracket & ~~ \Rightarrow ~~ id ~ \{ \\
+& ~~~~~~~~~~~~~~~ \ldots ~ n\_a_\text{gather} := \phi(\tau_{n}, n\_a) \wedge (\ldots \wedge child.n\_a_\text{gather}); ~~ \\
+& ~~~~~~~~~~~~~~~ \ldots  ~ child.n\_a_\text{broadcast} := n\_a_\text{broadcast}; \\
+& ~~~~~~~~~~~~~~~ \chi(\text{@start}) \\
+& ~~~~~~~~~~~~~~~ ((id_a := \llbracket \Gamma, E_a \rrbracket ) | (id_{name}.id_{attrib} := \llbracket \Gamma, E_b \rrbracket ))^{*}  \} \\
+& ~~~~~~~~~~~~ \text{where} ~ \exists n, a, m, ``E \rightarrow a" \in m. ~  \Gamma \vdash E : @ \tau_n ~ \wedge ~ \Gamma \vdash n : \tau_n \\
+& ~~~~~~~~~~~~ ~~ \text{and} ~ \Gamma \vdash id : \tau_{id} ~ \wedge ~ \tau_{id} = \{ \ldots child : \tau_{child} \} \\
+& ~~~~~~~~~~~~ \phi (\tau_n, n \_ a) = n\_a ~ \text{if}  ~ \tau_{n} = \tau_{id}  ~ \text{else} ~ true \\
+& ~~~~~~~~~~~~ \chi(isStart) = \text{if} ~ isStart ~ \text{then} ~ n\_a_\text{broadcast} := n\_a_\text{gather}; \\
+\llbracket \Gamma, ~ E \rightarrow {_{*}E} \rrbracket & ~~ \Rightarrow ~~ \llbracket \Gamma, {_{*}E} \rrbracket \\
+\llbracket \Gamma, ~ {_{\rightarrow}E} \rightarrow E \rightarrow a \rrbracket  & ~~ \Rightarrow ~~ {\rightarrow}(n\_a_{broadcast}, ``E \rightarrow a") ~~ \text{where} ~~ \Gamma \vdash E : @\tau \wedge \Gamma \vdash n : \tau \\
+\llbracket \Gamma, ~ {_{+}E} \rightarrow hostFunction (E^{*}) \rrbracket & ~~ \Rightarrow ~~ hostFunction(\llbracket \Gamma, ~ E\rrbracket^{*}) \\
+\llbracket \Gamma, ~ {_{Z}E} \rightarrow hostValue \rrbracket & ~~ \Rightarrow ~~ hostValue \\
+\llbracket \Gamma, ~ {_{id}E} \rightarrow E \rrbracket & ~~ \Rightarrow ~~ E \\
+\end{align*}
+
+\end{center}
+\caption{$GAG_{dyn~collect}$: Translation of an AG with first-class references and collections for a traditional AG compiler.}
+\label{fig:statrewrites}
+\end{figure*}

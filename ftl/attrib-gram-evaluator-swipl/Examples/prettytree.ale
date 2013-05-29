@@ -1,0 +1,105 @@
+type shapeType =  Rect | RoundedRect | Ellipse | Edge;
+
+interface Start { 
+    var x : int;
+    var y : int;
+    var w : int;
+    var h : int;
+}
+interface Node { 
+    var x : int;
+    var y : int;
+    var w : int;
+    var h : int;
+    var maxW : int;
+    var maxH : int;
+    var rad : int;
+}
+interface Edge { 
+    var x : int;
+    var y : int;
+    var w : int;
+    var h : int;
+}
+
+interface Renderable {
+  input align : string;
+  input bgColor : color;
+  input bold : bool;
+  input borderWidth : int;
+  input borderColor : color;
+  input clipsSelf : bool;
+  input clipsChildren : bool;
+  input cornerxRadius : int;
+  input corneryRadius : int;
+  input font : string;
+  input fontSize : int;
+  input image : string;
+  input italic : bool;
+  input lgradPCs : string;
+  input lgradStart : string;
+  input lgradStop : string;
+  input opacity : float;
+  input rgradCenter : string;
+  input rgradFP : string;
+  input rgradPCs : string;
+  input rgradRadius : string;
+  input shape : shapeType; 
+//  input text : string; //custom XML integration
+  input textColor : color;
+  input textWeight : int;
+  input underline : bool;
+  input visible : bool;
+  input z : int;  
+//  input id : int; //to simplify debugging
+}
+
+class Root : Start { 
+  children { start: Node; }
+  attributes { var rad : int; }
+  actions {
+    rad := 10;
+    w := start.maxW + rad * 2;
+    h := start.maxH + rad *2;
+    x := 0;
+    y := 0;
+    start.x := w / 2 - rad /2;
+    start.y := rad;
+    start.rad := rad;
+  }
+}
+class Binary : Node { 
+  children { left: Node; right: Node; lEdge : Edge; rEdge: Edge; }
+  actions {
+    w := rad;
+    h := rad;
+    left.rad := rad;
+    right.rad := rad;
+    left.x := x - w/2 + left.maxW/2;
+    right.x := x + w/2 - right.maxW/2;
+    left.y := y + rad * 2;
+    right.y := y + rad * 2;
+    maxW := left.maxW + right.maxW + rad * 2;
+    maxH := left.maxH + right.maxH;
+    
+    lEdge.x := x + rad/2;
+    lEdge.y := y + rad/2;
+    lEdge.w := left.x;
+    lEdge.h := left.y;
+    
+    rEdge.x := x + rad/2;
+    rEdge.y := y + rad/2;
+    rEdge.w := right.x;
+    rEdge.h := right.y;
+
+  }
+}
+class Leaf : Node {
+  actions {
+    w := rad;
+    h := rad;
+    maxW := w;
+    maxH := h;
+  } 
+}
+class CEdge : Edge { }

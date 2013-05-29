@@ -1,0 +1,85 @@
+digraph G{
+	subgraph cluster0{
+		color=black;
+		label="childAImp-graph";
+		subgraph cluster1{
+			label="childAImp";
+			node[style=filled];
+			childAImp_c[label="c"];
+			childAImp_d[label="d"];
+			childAImp_f[label="f", shape=box];
+		}
+		parent0[label="Parent",style=dotted];
+		childAImp_f -> childAImp_c[color=blue];
+		childAImp_c -> parent0[color=blue,label="1",fontcolor=darkgreen];
+	}
+	subgraph cluster2{
+		color=black;
+		label="childBImp-graph";
+		subgraph cluster3{
+			label="childBImp";
+			node[style=filled];
+			childBImp_e[label="e"];
+			childBImp_h[label="h"];
+			childBImp_g[label="g", shape=box];
+		}
+		parent1[label="Parent",style=dotted];
+		childBImp_g -> childBImp_h[color=blue];
+		childBImp_e -> childBImp_h[color=blue];
+		childBImp_h -> parent1[color=blue,label="2",fontcolor=indigo];
+	}
+	subgraph cluster4{
+		color=black;
+		label="nodeImp-graph";
+		subgraph cluster5{
+			label="nodeImp";
+			node[style=filled];
+			nodeImp_a[label="a"];
+			nodeImp_b[label="b"];
+			nodeImp_z[label="z"];
+		}
+		subgraph cluster6{
+			label="childA";
+			node[style=filled];
+			nodeImp_childA_f[label="f", shape=box];
+			nodeImp_childA_c[label="c"];
+			nodeImp_childA_d[label="d"];
+		}
+		subgraph cluster7{
+			label="childB";
+			node[style=filled];
+			nodeImp_childB_g[label="g", shape=box];
+			nodeImp_childB_e[label="e"];
+			nodeImp_childB_h[label="h"];
+		}
+		parent2[label="Parent",style=dotted];
+		nodeImp_childB_h -> nodeImp_b[color=indigo];
+		nodeImp_b -> nodeImp_childA_d[color=indigo];
+		nodeImp_z -> nodeImp_b[color=indigo];
+		nodeImp_childA_c -> nodeImp_a[color=darkgreen];
+		nodeImp_a -> nodeImp_childB_e[color=darkgreen];
+		nodeImp_a -> parent2[color=darkgreen,label="1",fontcolor=darkgreen];
+	}
+	subgraph cluster8{
+		color=black;
+		label="topImp-graph";
+		subgraph cluster9{
+			label="topImp";
+			node[style=filled];
+			topImp_x[label="x"];
+			topImp_y[label="y"];
+			topImp_w[label="$w", shape=box];
+		}
+		subgraph cluster10{
+			label="node";
+			node[style=filled];
+			topImp_node_a[label="a"];
+			topImp_node_b[label="b"];
+			topImp_node_z[label="z"];
+		}
+		topImp_x -> topImp_node_z[color=darkgreen];
+		topImp_w -> topImp_x[color=darkgreen];
+		topImp_node_a -> topImp_y[color=darkgreen];
+		topImp_y -> topImp_x[color=darkgreen];
+	}
+}

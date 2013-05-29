@@ -1,0 +1,180 @@
+%-----------------------------------------------------------------------------
+%
+%               Template for sigplanconf LaTeX Class
+%
+% Name:         sigplanconf-template.tex
+%
+% Purpose:      A template for sigplanconf.cls, which is a LaTeX 2e class
+%               file for SIGPLAN conference proceedings.
+%
+% Author:       Paul C. Anagnostopoulos
+%               Windfall Software
+%               978 371-2316
+%               paul@windfall.com
+%
+% Created:      15 February 2005
+%
+%-----------------------------------------------------------------------------
+
+
+\documentclass[preprint]{sigplanconf}
+
+% The following \documentclass options may be useful:
+%
+% 10pt          To set in 10-point type instead of 9-point.
+% 11pt          To set in 11-point type instead of 9-point.
+% authoryear    To obtain author/year citation style instead of numeric.
+
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{listings}
+\usepackage{stmaryrd}
+\newcommand{\code}[1]{\lstinline|#1|}
+
+\usepackage{semantic}
+
+
+\usepackage{amssymb}
+\usepackage{sepnum}
+\usepackage{epsfig}
+%\usepackage{fixltx2e}
+%%\usepackage{slashbox}
+\usepackage{verbatim}
+%%\usepackage{moreverb}
+\usepackage{times,citesort}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{url}
+\usepackage{alltt}
+%%\usepackage{multirow}
+\usepackage{atbeginend}
+%%\usepackage[footnotesize,bf]{caption2}
+\usepackage{booktabs}
+%\usepackage{graphicx}
+\usepackage{rotating}
+\usepackage{ifpdf}
+\usepackage{xspace}
+\usepackage{pifont}
+\usepackage{multicol}
+\usepackage{amsthm}
+%\usepackage[small]{titlesec}
+%%\usepackage{bigstrut}
+%%\usepackage{wrapfig}
+\usepackage{subfigure}
+\usepackage{semantic}
+\usepackage{stmaryrd}
+
+\input{mymacros}
+
+\def\etal{et al.\ }
+\def\cross{\ding{55}}
+\def\naive{na\"\i ve }
+\def\UrlFont{\fontfamily{cmtt}\selectfont}
+
+%\pagestyle{plain}
+\setlength{\abovecaptionskip}{1mm}
+\setlength{\belowcaptionskip}{-2mm}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{assumption}{Assumption}
+\newtheorem{corollary}{Corollary}
+%\addtolength{\textheight}{2.4cm}
+%\addtolength{\topmargin}{-2cm}
+\renewcommand{\floatpagefraction}{.7}
+\renewcommand{\dblfloatpagefraction}{.95}
+\renewcommand{\topfraction}{.6}
+\renewcommand{\dbltopfraction}{.5}
+\renewcommand{\bottomfraction}{.75}
+\renewcommand{\textfraction}{0.25}
+\setcounter{dbltopnumber}{2}
+\setcounter{topnumber}{1}
+\setcounter{totalnumber}{8}
+%\renewcommand{\totalnumber}{2}
+%\newcommand{\NumBench}{five\xspace}
+%\newcommand{\NumPolicies}{17\xspace}
+%\newcommand{\NumGen}{two\xspace}
+%\newcommand{\tool}{{\sc ConScript}\xspace}
+%\newcommand{\toolnospace}{{\sc Doloto}}
+%\newcommand{\empirical}[1]{\fbox{#1}}
+%\newcommand{\empirical}[1]{{#1}}
+%\date{}
+
+
+\begin{document}
+
+\lstset{language=Java,basicstyle=\small}
+
+%\conferenceinfo{WXYZ '05}{date, City.} 
+%\copyrightyear{2011} 
+%\copyrightdata{[to be supplied]} 
+
+%\titlebanner{banner above paper title}        % These are ignored unless
+\preprintfooter{Not for distribution}   % 'preprint' option specified.
+
+\title{Typing GAGs: Statically Scheduling Graph Attribute Grammars}
+%\subtitle{Subtitle Text, if any}
+
+\authorinfo{Leo Meyerovich}
+           {UC Berkeley}
+           {}
+\authorinfo{Rastislav Bodik}
+           {UC Berkeley}
+           {}
+
+\maketitle
+
+\begin{abstract}
+\input{abstract}
+\end{abstract}
+
+\category{CR-number}{subcategory}{third-level}
+
+\terms
+term1, term2
+
+\keywords
+keyword1, keyword2
+
+\section{Introduction}
+\input{introduction}
+
+\section{Dynamic GAGs: scheduling references}
+\label{sec:dynamic}
+\input{dynamic}
+
+\section{Analyzeable Reference Collections}
+\label{sec:collections}
+\input{collections}
+
+\section{Static GAGs}
+\label{sec:staticgags}
+\input{static}
+
+\section{Node Binding Syntax}
+\label{sec:syntax}
+
+\section{Comparison}
+
+First-class references increase precision as we can track provenence.
+
+%\appendix
+%\section{Appendix Title}
+
+%\acks
+%Acknowledgments, if needed.
+
+% We recommend abbrvnat bibliography style.
+
+\bibliographystyle{abbrvnat}
+
+% The bibliography should be embedded for final submission.
+
+\begin{thebibliography}{}
+\softraggedright
+
+\bibitem[Smith et~al.(2009)Smith, Jones]{smith02}
+P. Q. Smith, and X. Y. Jones. ...reference text...
+
+\end{thebibliography}
+
+\end{document}

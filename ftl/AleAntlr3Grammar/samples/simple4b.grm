@@ -1,0 +1,207 @@
+interface Root {
+	var x: float;
+	var y: float;
+	var h: float;
+	var w: float;
+	var _port_1: float;
+	var _port_0: float;
+	var _port_2: float;
+	var _port_3: float;
+}
+interface VBox2 {
+	var h: float;
+	var w: float;
+	var x: float;
+	var y: float;
+	var t: float;
+	var l: float;
+	var b: float;
+	var r: float;
+	var _port_5: float;
+	var _port_9: float;
+	var _port_11: float;
+	var _port_6: float;
+	var _port_8: float;
+	var _port_12: float;
+	var _port_7: float;
+	var _port_4: float;
+	var _port_10: float;
+}
+interface HBox2 {
+	var h: float;
+	var w: float;
+	var x: float;
+	var y: float;
+	var t: float;
+	var l: float;
+	var b: float;
+	var r: float;
+	var _port_13: float;
+	var _port_17: float;
+	var _port_16: float;
+	var _port_15: float;
+	var _port_20: float;
+	var _port_14: float;
+	var _port_19: float;
+	var _port_18: float;
+	var _port_21: float;
+}
+interface Leaf {
+	var x: float;
+	var y: float;
+	var t: float;
+	var l: float;
+	var b: float;
+	var r: float;
+	var w: float;
+	var h: float;
+	var _port_23: float;
+	var _port_22: float;
+}
+class Root1 {
+	attributes {}
+	children {VBox21: VBox2}
+	actions {
+		y = VBox21._port_12;
+		x = VBox21._port_11;
+		_port_3 = VBox21.l;
+		_port_2 = VBox21.t;
+		VBox21.h = _port_0;
+		VBox21.w = _port_1;
+		_port_3 = pfun209__port_3();
+		_port_2 = pfun210__port_2();
+		y = pfun211_y();
+		x = pfun212_x();
+		h = pfun213_h(_port_0);
+		w = pfun215_w(_port_1);
+	}
+}
+class VBox21 {
+	attributes {}
+	children {HBox21: HBox2; VBox20: VBox2}
+	actions {
+		_port_10 = HBox21.t;
+		_port_8 = VBox20.l;
+		_port_8 = HBox21.l;
+		y = VBox20._port_12;
+		y = HBox21._port_21;
+		_port_9 = VBox20.t;
+		x = VBox20._port_11;
+		x = HBox21._port_20;
+		HBox21.w = _port_6;
+		HBox21.h = _port_4;
+		VBox20.h = _port_5;
+		VBox20.w = _port_7;
+		_port_10 = pfun217__port_10();
+		_port_8 = pfun218__port_8();
+		y = pfun230_y(t, _port_12);
+		_port_9 = pfun219__port_9(_port_4);
+		h = pfun263_h(_port_5, _port_4);
+		b = pfun223_b(h, t);
+		w = pfun371_w(_port_6, _port_7);
+		r = pfun374_r(_port_6, _port_7, w, l);
+		x = pfun377_x(_port_6, _port_7, l, _port_11);
+	}
+}
+class HBox21 {
+	attributes {}
+	children {Leaf2: Leaf; Leaf3: Leaf}
+	actions {
+		_port_19 = Leaf3.t;
+		_port_19 = Leaf2.t;
+		_port_18 = Leaf2.l;
+		_port_17 = Leaf3.l;
+		x = Leaf3._port_22;
+		x = Leaf2._port_22;
+		y = Leaf3._port_23;
+		y = Leaf2._port_23;
+		Leaf3.w = _port_16;
+		Leaf2.w = _port_15;
+		Leaf3.h = _port_14;
+		Leaf2.h = _port_13;
+		_port_19 = pfun396__port_19();
+		_port_18 = pfun397__port_18();
+		_port_17 = pfun398__port_17(_port_15);
+		w = pfun409_w(_port_16, _port_15);
+		r = pfun443_r(w, l);
+		h = pfun553_h(_port_13, _port_14);
+		x = pfun400_x(l, _port_20);
+		y = pfun550_y(_port_13, _port_14, t, _port_21);
+		b = pfun559_b(_port_13, _port_14, h, t);
+	}
+}
+class Leaf2 {
+	attributes {}
+	children {}
+	actions {
+		h = pfun575_h();
+		w = pfun576_w();
+		r = pfun581_r(l);
+		b = pfun591_b(t);
+		x = pfun577_x(l, _port_22);
+		y = pfun587_y(t, _port_23);
+	}
+}
+class Leaf3 {
+	attributes {}
+	children {}
+	actions {
+		h = pfun575_h();
+		w = pfun576_w();
+		r = pfun581_r(l);
+		b = pfun591_b(t);
+		x = pfun577_x(l, _port_22);
+		y = pfun587_y(t, _port_23);
+	}
+}
+class VBox20 {
+	attributes {}
+	children {Leaf4: Leaf; Leaf5: Leaf}
+	actions {
+		_port_10 = Leaf4.t;
+		_port_8 = Leaf5.l;
+		_port_8 = Leaf4.l;
+		_port_9 = Leaf5.t;
+		y = Leaf5._port_23;
+		y = Leaf4._port_23;
+		x = Leaf5._port_22;
+		x = Leaf4._port_22;
+		Leaf5.w = _port_7;
+		Leaf4.w = _port_6;
+		Leaf5.h = _port_5;
+		Leaf4.h = _port_4;
+		_port_10 = pfun217__port_10();
+		_port_8 = pfun218__port_8();
+		_port_9 = pfun219__port_9(_port_4);
+		y = pfun230_y(t, _port_12);
+		h = pfun263_h(_port_5, _port_4);
+		b = pfun223_b(h, t);
+		w = pfun371_w(_port_6, _port_7);
+		r = pfun374_r(_port_6, _port_7, w, l);
+		x = pfun377_x(_port_6, _port_7, l, _port_11);
+	}
+}
+class Leaf4 {
+	attributes {}
+	children {}
+	actions {
+		h = pfun575_h();
+		w = pfun576_w();
+		r = pfun581_r(l);
+		b = pfun591_b(t);
+		y = pfun587_y(t, _port_23);
+		x = pfun577_x(l, _port_22);
+	}
+}
+class Leaf5 {
+	attributes {}
+	children {}
+	actions {
+		h = pfun575_h();
+		w = pfun576_w();
+		r = pfun581_r(l);
+		b = pfun591_b(t);
+		y = pfun587_y(t, _port_23);
+		x = pfun577_x(l, _port_22);
+	}
+}

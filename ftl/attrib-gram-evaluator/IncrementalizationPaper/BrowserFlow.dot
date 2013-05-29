@@ -1,0 +1,17 @@
+digraph G{
+	input[label="Input", shape="oval"];
+	layout[label="Layout AG", shape="box"];
+	layouteval[label="Layout AG Evaluator (AGEval)", shape="box"];
+	render[label="Render AG", shape="box"];
+	rendereval[label="Render AG Evaluator", shape="box"];
+	rendererAPI[label="C++ Rendering API", shape="box"];
+	renderer[label="Renderer", shape="box"];
+	page[label="Webpage", shape="box"];
+	layout->layouteval;
+	input->layouteval;
+	layouteval->rendereval;
+	render->rendereval;
+	rendereval->rendererAPI[dir=both];
+	rendererAPI->renderer;
+	renderer->page;
+}

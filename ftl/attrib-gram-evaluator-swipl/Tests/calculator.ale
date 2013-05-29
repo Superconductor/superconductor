@@ -1,0 +1,24 @@
+interface ast { var res : int; }
+
+class number : ast {
+  attributes { input val : int; }
+  actions { res := val; }
+}
+
+class plus : ast { 
+  children { left : ast; right : ast; }
+  actions { res := left.res + right.res; }
+}
+class times : ast { 
+  children { left : ast; right : ast; }
+  actions { res := left.res * right.res; }
+}
+class minus : ast { 
+  children { left : ast; right : ast; }
+  actions { res := left.res - right.res; }
+}
+class divide : ast { 
+  children { left : ast; right : ast; }
+  actions { res := left.res / right.res; }
+}
+

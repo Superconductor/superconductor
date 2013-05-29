@@ -1,0 +1,5 @@
+digraph G{
+	cpu[label="CPU"];
+	gpu[label="GPU"];
+	cpu->gpu[label="renderImg0, renderImg1, renderImg2, ... , renderImgI"];
+}

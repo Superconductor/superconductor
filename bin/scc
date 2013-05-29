@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 <input ftl file> <output visualization filename>"
+    echo "Utility to generate JavaScript visualization from an FTL grammar."
+    echo
+    echo "Should be executed from the WebCL directory (will look for the Makefile in cwd.)"
+    echo "Will put intermediate build products in ./tmp (can be removed with \`make clean\`.)"
+    exit 1
+fi
+
+GRAMMAR=$1
+KERNEL=$2
+
+# If the paths aren't absolute (don't start with a '/',) prepend pwd to them
+if [[ $GRAMMAR !=   '/'* ]]; then GRAMMAR=`pwd`/$GRAMMAR; fi
+if [[ $KERNEL != '/'* ]]; then KERNEL=`pwd`/$KERNEL; fi
+
+TMP=`pwd`/tmp
+EXPANDED="$TMP/expanded-grammar.ftl"
+pushd `dirname $0` > /dev/null
+BIN=`pwd`
+popd > /dev/null
+
+#echo "# make clean"
+make clean > /dev/null
+#echo "# Creating $TMP"
+mkdir -p $TMP > /dev/null
+
+
+echo -e "\e[33m########################################"
+echo "#       Running macro processor        #"
+echo -e "########################################\e[0m"
+cd "$BIN/.."
+./tools/macro-processor.js "$GRAMMAR" "$EXPANDED"
+echo
+echo
+
+
+cd $BIN/../../compiler  #project
+#echo "# cd'ing to FTL root, `pwd`"
+#echo "# Running FTL compiler: ./bin/runFtlWebCLfast $GRAMMAR $TMP"
+echo -e "\e[33m########################################"
+echo "#        Running FTL compiler          #"
+echo -e "########################################\e[0m"
+exec 3>&1 4>&2
+FTLOUTPUT=$({ `./bin/runFtlWebCLfast $EXPANDED $TMP` 2>&4 | grep -v -F 'BUILD SUCCESSFUL' 1>&3;} 4>&1) # 3>/dev/null (redirects stdout of ant to /dev/null)
+exec 3>&- 4>&-
+
+if [ -n "$FTLOUTPUT" ]; then echo -e "\n\e[1;31mError compiling FTL file\e[0m" >&2; exit 1; fi
+echo
+echo
+
+
+echo -e "\e[33m########################################"
+echo "#  Building JavaScript visualization   #"
+echo -e "########################################\e[0m"
+
+cd $BIN/..
+#echo "# cd to WebCL directory, `pwd`"
+
+GEN_PATH=$TMP make all2
+if [ "$?" -ne 0 ]; then echo -e "\n\e[1;31mError compiling JavaScript visualization file\e[0m" >&2; exit 1; fi
+
+echo
+echo
+ 
+
+
+echo -e "\e[33m########################################"
+echo    "#      Saving visualization files      #"
+echo -e "########################################\e[0m"
+
+echo "Saving $KERNEL"
+cp $BIN/../kernels.visualization $KERNEL
+
+###copy for use by flattener
+#echo "# Copying $TMP/kbindings.js to `dirname $KERNEL`/kbindings.js"
+echo "Saving `dirname $KERNEL`/kbindings.js"
+cp $TMP/kbindings.js `dirname $KERNEL`/kbindings.js
+echo
+echo
+
+
+echo -e "\e[1;32mCompiled Successfully\e[0m"
