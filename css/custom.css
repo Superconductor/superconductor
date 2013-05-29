@@ -58,3 +58,12 @@
 .warning-block {
 	margin: 1em;
 }
+
+.infobox {
+	padding: 0.8em 1em 0.8em 1em;
+	margin-bottom: 1.5em;
+}
+
+.infobox p {
+	margin: 0;
+}
