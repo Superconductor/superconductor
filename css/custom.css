@@ -1,0 +1,60 @@
+#github-ribbon {
+	position: fixed; 
+	right: 0; 
+	border: 0;
+	
+	top: 0; 
+	z-index: 2000
+}
+
+/*@media (min-width: 979px) { #github-ribbon {
+		top: 0; 
+		z-index: 2000
+}}
+@media (max-width: 978px) { #github-ribbon {
+		top: 50px; 
+		 FIXME: This is correctly occluded by the slide-down menu, but also is drawn behind
+		   things like the header's bottom border, etc. We only want the menu occluding it. 
+		z-index: -1;
+}}
+@media (max-width: 480px) { #github-ribbon {
+		display: none;
+}}*/
+
+.alert {
+	margin-bottom: 2em;
+}
+
+.alert h4 {
+	margin-bottom: 0.5em;
+	font-weight: 700;
+	font-size: 16pt;
+}
+
+
+.section {
+	border-bottom: 1px solid #eeeeee;
+	margin-bottom: 2em;
+}
+
+.section:last-child {
+	border-bottom: 0;
+}
+
+.list-heading {
+	font-weight: 700;
+	display: block;
+}
+
+.footnote {
+	display: block;
+	margin-top: 3em;
+	/*padding-left: 1em;*/
+	/*padding-right: 1em;*/
+	font-size: 8pt;
+	font-style: italic;
+}
+
+.warning-block {
+	margin: 1em;
+}
