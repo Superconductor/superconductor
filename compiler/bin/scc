@@ -1,55 +1,78 @@
 #!/usr/bin/env bash
 
-if [ $# -ne 2 ]; then
-    echo "Usage: $0 <input ftl file> <output visualization filename>"
-    echo "Utility to generate JavaScript visualization from an FTL grammar."
+################################################################################
+# Check & setup args
+################################################################################
+
+if [[ $# -ne 1 && $# -ne 2  ]]; then
+	echo "Superconductor visualization compiler"
+    echo "Usage: $0 <input ftl file> [<output visualization filename>]"
+ 	echo "<output visualization filename> is the (optional) name to write the compiled visualization to."
+ 	echo "\tIf not supplied, the visualization will have the same name and path as the input file, but with a .visualization extension"
     echo
-    echo "Should be executed from the WebCL directory (will look for the Makefile in cwd.)"
     echo "Will put intermediate build products in ./tmp (can be removed with \`make clean\`.)"
     exit 1
 fi
 
 GRAMMAR=$1
-KERNEL=$2
+if [ ! -r $GRAMMAR ]; then
+	echo "Error: could not read from input file $GRAMMAR" >&2
+	exit 1
+fi
+
+# If not supplied, imply the output filename from the input filename
+if [ $# -eq 2 ]; then
+	KERNEL=$2
+else
+	KERNEL=${GRAMMAR%.*}'.visualization'
+	if [ -e $KERNEL ]; then
+		echo "Error: no output filename supplied. Assumed $KERNEL, but a file by that name already exists. To overwrite the existing file, supply the output filename explicitly." >&2
+		exit 1
+	fi
+fi
 
 # If the paths aren't absolute (don't start with a '/',) prepend pwd to them
 if [[ $GRAMMAR !=   '/'* ]]; then GRAMMAR=`pwd`/$GRAMMAR; fi
 if [[ $KERNEL != '/'* ]]; then KERNEL=`pwd`/$KERNEL; fi
 
-TMP=`pwd`/tmp
-EXPANDED="$TMP/expanded-grammar.ftl"
-pushd `dirname $0` > /dev/null
-BIN=`pwd`
-popd > /dev/null
 
-#echo "# make clean"
+################################################################################
+# Check & setup args
+################################################################################
+
+BASEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/../.."
+JSDIR="$BASEDIR/superconductorjs"
+COMPILERDIR="$BASEDIR/compiler"
+TMPDIR="$JSDIR/tmp"
+
+EXPANDED="$TMPDIR/expanded-grammar.ftl"
+
+
+cd "$JSDIR"
 make clean > /dev/null
-#echo "# Creating $TMP"
-mkdir -p $TMP > /dev/null
+mkdir -p "$TMPDIR" > /dev/null
 
 
 echo -e "\e[33m########################################"
 echo "#       Running macro processor        #"
 echo -e "########################################\e[0m"
-cd "$BIN/.."
 ./tools/macro-processor.js "$GRAMMAR" "$EXPANDED"
 echo
 echo
 
 
-cd $BIN/../ftl  #project
-#echo "# cd'ing to FTL root, `pwd`"
-#echo "# Running FTL compiler: ./bin/runFtlWebCLfast $GRAMMAR $TMP"
+cd "$COMPILERDIR"
 echo -e "\e[33m########################################"
 echo "#        Running FTL compiler          #"
 echo -e "########################################\e[0m"
-# exec 3>&1 4>&2
-# FTLOUTPUT=$({ `./runFtlWebCLfast $EXPANDED $TMP` 2>&4 | grep -v -F 'BUILD SUCCESSFUL' 1>&3;} 4>&1) # 3>/dev/null (redirects stdout of ant to /dev/null)
-echo "Running ./runFtlWebCLfast $EXPANDED $TMP"
-./runFtlWebCLfast $EXPANDED $TMP
-# exec 3>&- 4>&-
+exec 3>&1 4>&2
+FTLOUTPUT=$({ ./runFtlWebCLfast \"$EXPANDED\" \"$TMPDIR\" 2>&4 | grep -v -F 'BUILD SUCCESSFUL' 1>&3;} 4>&1) # 3>/dev/null (redirects stdout of ant to /dev/null)
+exec 3>&- 4>&-
 
-# if [ -n "$FTLOUTPUT" ]; then echo -e "\n\e[1;31mError compiling FTL file\e[0m" >&2; exit 1; fi
+if [ -n "$FTLOUTPUT" ]; then echo -e "\n\e[1;31mError compiling FTL file\e[0m" >&2; exit 1; fi
+# echo "Running ./runFtlWebCLfast $EXPANDED $TMPDIR"
+# ./runFtlWebCLfast $EXPANDED $TMPDIR
+
 echo
 echo
 
@@ -58,10 +81,9 @@ echo -e "\e[33m########################################"
 echo "#  Building JavaScript visualization   #"
 echo -e "########################################\e[0m"
 
-cd $BIN/..
-#echo "# cd to WebCL directory, `pwd`"
+cd "$JSDIR"
 
-GEN_PATH=$TMP make all2
+GEN_PATH=$TMPDIR make all2
 if [ "$?" -ne 0 ]; then echo -e "\n\e[1;31mError compiling JavaScript visualization file\e[0m" >&2; exit 1; fi
 
 echo
@@ -74,12 +96,11 @@ echo    "#      Saving visualization files      #"
 echo -e "########################################\e[0m"
 
 echo "Saving $KERNEL"
-cp $BIN/../kernels.visualization $KERNEL
+cp $JSDIR/kernels.visualization $KERNEL
 
 ###copy for use by flattener
-#echo "# Copying $TMP/kbindings.js to `dirname $KERNEL`/kbindings.js"
 echo "Saving `dirname $KERNEL`/kbindings.js"
-cp $TMP/kbindings.js `dirname $KERNEL`/kbindings.js
+cp $TMPDIR/kbindings.js `dirname $KERNEL`/kbindings.js
 echo
 echo
 
