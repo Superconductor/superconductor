@@ -8,6 +8,86 @@ section: 'about'
 	<h1>About Superconductor <small>how it works, and who made it</small></h1>
 </div>
 
-<p>
-	Coming soon!
-</p>
+<div class="row"> 
+<div class="span12">
+	<div class="section">
+		<!-- <h2 id="who">Who built this?</h2> -->
+		<p>Superconductor is a framework for creating interactive big data visualizations in the web browser. It contains two components: a JavaScript library for running visualizations in your browser, and a compiler which generates the high-performance visualization code from our simple domain specific language for describing visualizations.</p> 
+		
+		<p>Superconductor was created by <a href="http://www.eecs.berkeley.edu/~lmeyerov/">Leo Meyerovich</a> and <a href="http://matthewtorok.com">Matthew Torok</a> at the University of California, Berkeley's Parallel Computing Laboratory. The ideas behind it evolved out of our research in the parallel browser project. Over the last two years, we've worked to apply the ideas behind that research to the task of big data visualization, and to create a polished, easy-to-use framework based around that work. Superconductor is the result.</p>
+	</div>
+	
+	
+	
+	<div class="section">
+		<h2>Parallel Web Programming for Massive Visualizations</h2>
+		
+		<p>Superconductor is a collection of compilers for scripting large, interactive visualizations. </p>
+
+		<p>By supporting data sets of hundreds of thousands of data points, Superconductor enables new classes of interactive visualizations that were previously out of reach.</p>
+
+		<h3>Three key ideas</h3>
+		<ol class="big-list">
+			<li>
+				<h4 id="dsls">Domain specific languages (DSLs)</h4>
+				
+				<p>Programs are written in a high-level <em>domain specific languages</em> (DSLs) &mdash; and mostly standard web ones at that. Superconductor supports the core visualization pipeline: data loading, styling, layout, rendering, and interaction.</p>
+
+				<p>Superconductor supports the web languages widely known today:</p>
+				<ul>
+					<li>JSON for data</li>
+					<li>CSS selectors for styling</li>
+					<li>JavaScript for interaction</p></li>
+				</ul>
+
+				<p>It also introduces our own FTL domain specific language for building custom layouts:</p>
+				<ul>
+					<li>FTL is a declarative language ("attribute grammar")</li>
+					<li>We've used it for 2D and 3D graphics, charting, hierarchical data, and interactive animations</li>
+					<li>A layout is a tree schema with local constraints between node attributes</li>
+				</ul>
+
+				<p style="margin-top: 1.5em;">An example of FTL code:</p>
+<pre>
+class HBox : Node { 
+  children { left: Node; right : Node }
+	  actions {
+		width := left.width + right.width
+
+		@render paintRect(x, y, width, height, red)
+	}
+}
+
+class VBox : Node { ... }
+</pre>
+
+				<p style="margin-top: 1.5em;">This snippet demonstration one constraint we place on the FTL language to allow our compiler to parallelize it: attributes must be solvable as a sequences of parallel tree traversals. How these tree traversals are done is automatically determined by the compiler, as long as this constraint holds true.</p>
+			
+			</li>
+
+			<li>
+				<h4 id="auto-parallel">Automatic Parallelism</h4>
+						
+				<p>Aggressive compilers employ program synthesis and modern parallel algorithms. Superconductor's DSL compilers are aggressive, yet are hidden from typical programming interactions. Superconductor provides compilers for each of its high-level DSLs. It automatically finds and exploits parallelism.</p>
+				
+				<ul>
+					<li>It uses the GPU for the basic animation/interaction loop, except for data loading (parsing), which is multicore</li>
+					<li>It optimizes data representation and scheduling, but largely hides this from the programming API</li>
+					<li>It uses modern data parallel compilation techniques when viable</li>
+					<li>It uses new techniques in program synthesis to find parallelism in the layout language</li>
+				</ul>
+			</li>
+
+			<li><h4 id="parallel-js">Parallel JavaScript</h4>
+						
+				<p>Portability and scriptability is through exploiting modern web standards from multicore and GPU processing. Superconductor automates use of: web workers (multicore), WebCL (GPU), and WebGL (GPU). For portability and scriptability, Superconductor uses parallel JavaScript: </p>
+				<ul>
+					<li>multicore (web workers) and GPU (WebCL, and WebGL)</li>
+					<li>programming is in our DSLs; Superconductor generates the parallel JavaScript code</li>
+					<li>visualizations live in standard webpages, meaning they interact normally with the surrounding page through standard JavaScript</li>
+					<li>we are working on supporting multiple backends, but the focus is on enabling new types of experiences on modern clients</li>
+				</ul>
+			</li>
+		</ol>
+	</div>
+</div> </div>
