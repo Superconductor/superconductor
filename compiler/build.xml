@@ -18,9 +18,9 @@
     </fail>
 
     <property name="base.dir" value="${basedir}" />
-    <property name="build.dir" value="${base.dir}/bin" />
+    <property name="build.dir" value="${base.dir}/lib" />
     <property name="dist.dir" value="${base.dir}/dist" />
-    <property name="lib.dir" value="${basedir}/libraries" /> 
+    <property name="lib.dir" value="${basedir}/external" /> 
 
     <property name="mud.sources.dir" value="${base.dir}/tbh/src/mud" />
     <property name="mud.version" value="0.5" />
