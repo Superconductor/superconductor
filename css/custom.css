@@ -75,3 +75,11 @@
 .section p + p {
 	margin-top: 1.75em;
 }
+
+.section li p {
+	margin-top: 0;
+}
+
+.big-list > li {
+	margin-bottom: 2em;
+}
