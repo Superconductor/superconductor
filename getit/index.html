@@ -48,18 +48,18 @@ section: 'getit'
 			<h2 id="viewing">Viewing Visualizations</h2>
 			<p>Underneath the hood, Superconductor uses the power of <a href="http://www.khronos.org/webcl/">WebCL</a> and <a href="http://www.khronos.org/webgl/">WebGL</a> to unleash your GPU to run big, interactive visualizations. <strong>To view Superconductor visualizations, you'll need a web browser which supports both together.</strong></p>
 			
-			<p>At present, WebCL is right on the bleeding edge of web standards, and so <strong>the only browser we are aware of that supports both WebCL and WebGL together is Samsung's version of WebKit</strong><!-- <sup><a id="footnote-browsers-origin" href="#footnote-browsers">1</a></sup> -->. As WebCL matures, we hope to see wider browser support. We are also actively working on alternatives for when WebCL isn't available.</p>
+			<p>At present, WebCL is right on the bleeding edge of web standards, and so <strong>the only browser we are aware of which supports both WebCL and WebGL together is Samsung's WebKit-WebCL for Mac OS X</strong><!-- <sup><a id="footnote-browsers-origin" href="#footnote-browsers">1</a></sup> -->. As WebCL matures, we hope to see wider browser support. We are also actively working on alternatives for when WebCL isn't available.</p>
 			
 			<p>To get and run WebKit-WebCL:
 				<ol>
-					<li>Be sure you have <a href="https://developer.apple.com/downloads/index.action">Command Line Tools for XCode</a>.</li>
+					<li>If you don't already have it, install Command Line Tools for Xcode from within Xcode's preferences (preferred), or from <a href="https://developer.apple.com/downloads/index.action">here</a>.</li>
 					<li>Clone Samsung's <a href="https://github.com/SRA-SiliconValley/webkit-webcl">WebKit-WebCL GitHub repo</a>.</li>
 					<li>In a Terminal window, <code>cd</code> to the root of the cloned repo and run <code>./Tools/Scripts/build-webkit</code>,</li>
 					<li>Run the WebCL-enabled version of Safari with <code>./Tools/Scripts/run-safari</code></li>
 				</ol>
 			</p>
 
-			<p class=""><span class="label label-warning">Warning</span> You will need to run the <code>run-safari</code> script from WebKit-WebCL every time you want to launch WebCL-enabled Safari. Running Safari without using the script will launch the normal version of Safari, without WebCL support.</p>
+			<p class=""><span class="label label-warning">Warning</span> You will need to use the <code>run-safari</code> script from WebKit-WebCL every time you want to launch WebCL-enabled Safari. Running Safari without using the script will launch the normal version of Safari, without WebCL support.</p>
 				
 			<p>You can test WebCL is enabled by opening the <code>./Examples/WebCL/Hello/index.html</code> page included in WebKit-WebCL; you should see a message like "Computed 1014/1024 correct values" (it's OK if not all values were correct in this demo.)</p>
 			
