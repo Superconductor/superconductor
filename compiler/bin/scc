@@ -96,7 +96,7 @@ echo    "#      Saving visualization files      #"
 echo -e "########################################\e[0m"
 
 echo "Saving $KERNEL"
-cp $JSDIR/kernels.visualization $KERNEL
+cp $TMPDIR/kernels.visualization $KERNEL
 
 ###copy for use by flattener
 echo "Saving `dirname $KERNEL`/kbindings.js"

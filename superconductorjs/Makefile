@@ -8,16 +8,16 @@ all: \
 	superconductor.min.js
 all2: \
 	all \
-	kernels.visualization
+	tmp/kernels.visualization
 
 
-kernels.cl: $(GEN_PATH)/unionvariants.h $(GEN_PATH)/cl_runner_generated_buffer_info.h $(GEN_PATH)/cl_generated_aleactions.h $(GEN_PATH)/traversals.cl
+tmp/kernels.cl: $(GEN_PATH)/unionvariants.h $(GEN_PATH)/cl_runner_generated_buffer_info.h $(GEN_PATH)/cl_generated_aleactions.h $(GEN_PATH)/traversals.cl
 	cat $+ > $@
 
-kernels.visualization: kernels.cl $(GEN_PATH)/kbindings.js
-	$(CHUNKER) kernels.cl -n "this.kernelSource" -o clSource.tmp
+tmp/kernels.visualization: tmp/kernels.cl $(GEN_PATH)/kbindings.js
+	$(CHUNKER) tmp/kernels.cl -n "this.kernelSource" -o tmp/clSource.tmp
 	cp $(GEN_PATH)/kbindings.js kbindings.js
-	cat clSource.tmp >> kbindings.js
+	cat tmp/clSource.tmp >> kbindings.js
 	mv kbindings.js $@
 
 .INTERMEDIATE: clSource.js
@@ -40,7 +40,7 @@ superconductor.js: \
 	$(JS_COMPILER) $< --compress --output $@
 
 clean:
-	rm -rf kernels.cl kernels.visualization clSource.tmp tmp
+	rm -rf  tmp
 
 cleanall: clean
 	rm superconductor.js superconductor.min.js
