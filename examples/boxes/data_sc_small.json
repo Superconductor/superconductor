@@ -1,0 +1,18 @@
+data = {
+	class: "Root", 
+	children: {
+		"child": {
+			class: "HBox",
+			children: {
+				"childs": [
+					{class: "Leaf"},
+					{class: "Leaf"},
+					{class: "HBox",
+					 children: {
+					   childs: [{class: "Leaf"}, {class: "Leaf"}]}},
+					{class: "Leaf"},
+					{class: "Leaf"}]						   
+			}
+		} 
+	}
+};

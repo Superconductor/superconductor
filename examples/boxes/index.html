@@ -1,0 +1,77 @@
+	<!DOCTYPE html>
+<html>
+	<head>
+	<title>Superconductor Template</title>
+	<meta HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+	<style type="text/css">
+		#visualization {
+			width: 1024px;
+			height: 768px;
+			box-shadow: 0 .3em 0.3em #333;
+			background-color: #EBEBEB;
+			border: 1px solid #CCC;
+		}	
+	</style>	
+	<script src="/superconductorjs/superconductor.js" type="text/javascript"></script>
+	<script type="text/javascript">
+						
+	var tinyData = { //set to null to instead load JSON file
+		class: "Root", 
+		children: {
+			"child": {
+				class: "HBox",
+				children: {
+					"childs": [
+						{class: "Leaf"},
+						{class: "Leaf"},
+						{class: "HBox",
+						 children: {
+						   childs: [{class: "Leaf"}, {class: "Leaf"}]}},
+						{class: "Leaf"},
+						{class: "Leaf"}]
+				}
+			} 
+		}
+	};
+	
+	var useDummyData = false; //dummy small or real big JSON file
+
+	function updateDisplay() {
+		window.superconductor.layoutAndRender();
+	}
+
+	window.onload = function() {
+		var canvas = document.getElementById("visualization");
+		window.superconductor = new Superconductor("kernels.visualization", canvas);
+		window.superconductor.glr.setW(10.0);
+		
+		var setDefaults = function () {
+			window.superconductor.startVisualization();
+			updateDisplay();
+		};		
+
+		setTimeout(function() { 
+				if (tinyData) {
+					console.log("using in-memory tiny data", tinyData);
+					window.superconductor.loadDataObj(tinyData, setDefaults);
+				} else {
+			    	window.superconductor.loadData(
+			    		useDummyData ? "data_sc_small.json" : "data_sc_big.json", 
+			    		setDefaults);	
+				}
+			}, 500);
+					
+
+
+	};
+	</script>
+</head>
+
+<body>
+	<div>	
+			<h1>Superconductor</h1>
+			<canvas id="visualization" >ERROR: HTML canvas support not found.</canvas>
+
+	</div>
+</body>
+</html>
