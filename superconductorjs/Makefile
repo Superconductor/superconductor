@@ -20,8 +20,8 @@ tmp/kernels.visualization: tmp/kernels.cl $(GEN_PATH)/kbindings.js
 	cat tmp/clSource.tmp >> kbindings.js
 	mv kbindings.js $@
 
-.INTERMEDIATE: clSource.js
-clSource.js: ./src/common.h ./src/drawing2.cl
+.INTERMEDIATE: tmp/clSource.js
+tmp/clSource.js: ./src/common.h ./src/drawing2.cl
 	$(CHUNKER) $+ -n "CLRunner.prototype.kernelHeaders" -o $@
 
 superconductor.js: \
@@ -32,7 +32,7 @@ superconductor.js: \
 	./src/GLRunner.js \
 	./src/CLDataWrapper.js \
 	./src/CLRunner.js \
-	clSource.js
+	./tmp/clSource.js
 
 	$(JS_COMPILER) $(filter %.js,$^) --beautify width=120 --output $@
 
