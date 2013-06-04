@@ -117,7 +117,7 @@ exports.compress = function (jsonFilePath, kbindingsFilePath, mode, opts, output
 				var flattener = new clr.CLRunner(null, {ignoreCL: true});
 				ret.kbindingsFn.apply(flattener, []); //extend clr
 	
-				flattener.loadData(ret.treeJSON);
+				flattener.loadData(ret.treeJSON, true);
 				
 				var bufferLabels = getBuffers(flattener);
 				ret.bufferLabels = bufferLabels;

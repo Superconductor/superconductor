@@ -71,7 +71,7 @@ function GLRunner(canvas, cfg) {
 			context.closePath();
 		};	
 		//ignore these
-		["RectangleOutline_size","Rectangle_size","paintStart","RectangleZ_size", "glBufferMacro"]
+		["Line_size", "Line_draw", "RectangleOutline_size","Rectangle_size","paintStart","RectangleZ_size", "glBufferMacro"]
 			.forEach(function (name) {  window[name] = function () {};  });
 	} else { //FIXME throw exn or implement for other cases
 

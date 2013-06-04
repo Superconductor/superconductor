@@ -63,7 +63,8 @@ Superconductor.prototype.loadData = function(url, callback) {
 				that.data = that.clr.proxyData;
 				console.log('total time', new Date().getTime() - startTime, 'ms');	
 		
-				callback(data);	
+				callback(data);
+
 			}
 
 			if(responseText === null) {
@@ -71,18 +72,20 @@ Superconductor.prototype.loadData = function(url, callback) {
 				return;
 			}
 
+			var obj;
 			try {
-				var obj = JSON.parse(responseText);
-				flatten(obj);
+				obj = JSON.parse(responseText);
 			} catch (e) {
 				console.error('JSON parse err (trying eval instead):', e);				
-				eval.call(that.clr, responseText);
 				try {
-					flatten(data);
+					eval.call(that.clr, responseText);
+					obj = data;
 				} catch (e) {
 					console.error('eval failed', e);
+					throw e;
 				}
 			}
+			flatten(obj);
 		}, true);
 };
 

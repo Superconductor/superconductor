@@ -56,18 +56,20 @@ Superconductor.prototype.loadData = function(url, callback) {
             console.error("Empty response");
             return;
         }
+        var obj;
         try {
-            var obj = JSON.parse(responseText);
-            flatten(obj);
+            obj = JSON.parse(responseText);
         } catch (e) {
             console.error("JSON parse err (trying eval instead):", e);
-            eval.call(that.clr, responseText);
             try {
-                flatten(data);
+                eval.call(that.clr, responseText);
+                obj = data;
             } catch (e) {
                 console.error("eval failed", e);
+                throw e;
             }
         }
+        flatten(obj);
     }, true);
 };
 
@@ -1017,7 +1019,7 @@ function GLRunner(canvas, cfg) {
             context.strokeRect(x, -y, w, -h);
             context.closePath();
         };
-        [ "RectangleOutline_size", "Rectangle_size", "paintStart", "RectangleZ_size", "glBufferMacro" ].forEach(function(name) {
+        [ "Line_size", "Line_draw", "RectangleOutline_size", "Rectangle_size", "paintStart", "RectangleZ_size", "glBufferMacro" ].forEach(function(name) {
             window[name] = function() {};
         });
     } else {
@@ -1785,7 +1787,7 @@ CLRunner.prototype.flatten = function(data, treeSize) {
     return res;
 };
 
-CLRunner.prototype.loadData = function(data) {
+CLRunner.prototype.loadData = function(data, skipProxies) {
     this.tree_size = this.treeSize(data);
     this._gen_allocateHostBuffers(this.tree_size);
     this._gen_allocateHostProxies(this.tree_size);
@@ -1804,6 +1806,8 @@ CLRunner.prototype.loadData = function(data) {
         this._gen_transferTree();
         var t3 = new Date().getTime();
         console.log("GPU transfer time", t3 - t2, "ms");
+    } else {
+        if (!skipProxies) this._gen_allocateProxyObjects();
     }
 };
 

@@ -584,7 +584,7 @@ CLRunner.prototype.flatten = function (data, treeSize) {
 // typed arrays which will hold the flattened data, flattens & splits the JSON into the typed 
 // arrays, then allocates the GPU memory, creates proxy objects (for interacting with GPU data,) and
 // and transfers the CPU-side data to the GPU.
-CLRunner.prototype.loadData = function(data) {
+CLRunner.prototype.loadData = function(data, skipProxies) {
 	// We read the tree size from the JSON file
 	this.tree_size = this.treeSize(data);
 	
@@ -633,6 +633,12 @@ CLRunner.prototype.loadData = function(data) {
 		var t3 = (new Date()).getTime();
 		console.log('GPU transfer time', t3 - t2, 'ms');
 	
+	} else {
+	
+		// This creates the Javascript proxy objects
+		if (!(skipProxies)) 
+			this._gen_allocateProxyObjects();	
+
 	}
 };
 
