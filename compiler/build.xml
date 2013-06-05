@@ -18,9 +18,9 @@
     </fail>
 
     <property name="base.dir" value="${basedir}" />
-    <property name="build.dir" value="${base.dir}/lib" />
+    <property name="build.dir" value="${base.dir}/class" />
     <property name="dist.dir" value="${base.dir}/dist" />
-    <property name="lib.dir" value="${basedir}/external" /> 
+    <property name="lib.dir" value="${basedir}/lib" /> 
 
     <property name="mud.sources.dir" value="${base.dir}/tbh/src/mud" />
     <property name="mud.version" value="0.5" />
@@ -116,7 +116,7 @@
         <javac srcdir="${ale.SPsources.dir}"  destdir="${build.dir}" classpathref="build.path" includeantruntime="false">
         </javac>
     </target>
-
+    
    <target name="run-alegen-ftl" depends="ale-swipl, ftl-syn" description="schedule grammar and generate ftl cpp">
         <java classname="AGEvalSwipl.CppGenerator" fork="yes">
             <env key="SWI_HOME_DIR" value="${swipl.home}"/>
