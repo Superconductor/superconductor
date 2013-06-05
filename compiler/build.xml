@@ -27,6 +27,7 @@
     <property name="ale.AGsources.dir" value="${base.dir}/attrib-gram-evaluator/AGEval" />
     <property name="ale.FEsources.dir" value="${base.dir}/AleAntlr3Grammar/aleGrammar" />
     <property name="ale.SPsources.dir" value="${base.dir}/attrib-gram-evaluator-swipl/AGEvalSwipl" />
+    <property name="ale.resources.dir" value="${base.dir}/lib" />
     <property name="ale.test.dir" value="${base.dir}/attrib-gram-evaluator-swipl/Tests" />
     <property name="ale.grammar" value="${ale.FEsources.dir}/ALE.g" />
     <property name="ale.backends.html5.dir" value="${base.dir}/backends/Html5" />
@@ -162,7 +163,7 @@
                 <path refid="build.path" /> 
             </classpath>
             <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
-            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${ale.resources.dir}"/>
             <arg path="${aleGrammar}"/>
             <arg path="${output.dir}"/>
             <arg value="true"/>
@@ -181,7 +182,7 @@
                 <path refid="build.path" /> 
             </classpath>
             <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
-            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${ale.resources.dir}"/>
             <arg path="${aleGrammar}"/>
             <arg path="${output.dir}"/>
             <arg value="true"/>
@@ -201,7 +202,7 @@
                 <path refid="build.path" /> 
             </classpath>
             <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
-            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${ale.resources.dir}"/>
             <arg path="${aleGrammar}"/>
             <arg path="${output.dir}"/>
             <arg value="true"/>
@@ -221,7 +222,7 @@
                 <path refid="build.path" /> 
             </classpath>
             <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
-            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${ale.resources.dir}"/>
             <arg path="${aleGrammar}"/>
             <arg path="${output.dir}"/>
             <arg value="true"/>
@@ -240,7 +241,7 @@
                 <path refid="build.path" /> 
             </classpath>
             <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
-            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${ale.resources.dir}"/>
             <arg path="${aleGrammar}"/>
             <arg path="${output.dir}"/>
             <arg value="true"/>
@@ -262,7 +263,7 @@
                 <path refid="build.path" /> 
             </classpath>
             <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
-            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${ale.resources.dir}"/>
             <arg path="${aleGrammar}"/>
             <arg path="${output.dir}"/>
             <arg value="true"/>
@@ -281,7 +282,7 @@
                 <path refid="build.path" /> 
             </classpath>
             <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
-            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${ale.resources.dir}"/>
             <arg path="${aleGrammar}"/>
             <arg path="${output.dir}"/>
             <arg value="true"/>
@@ -300,7 +301,7 @@
                 <path refid="build.path" /> 
             </classpath>
             <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
-            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${ale.resources.dir}"/>
             <arg path="${aleGrammar}"/>
             <arg path="${output.dir}"/>
             <arg value="true"/>
@@ -319,7 +320,7 @@
                 <path refid="build.path" /> 
             </classpath>
             <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
-            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${ale.resources.dir}"/>
             <arg path="${aleGrammar}"/>
             <arg path="${output.dir}"/>
             <arg value="true"/>
@@ -381,7 +382,7 @@
                 <path refid="build.path" /> 
             </classpath>
             <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
-            <arg path="${ale.SPsources.dir}"/>
+            <arg path="${ale.resources.dir}"/>
             <arg path="${build.dir}"/>
             <arg path="${ale.test.dir}"/>
         </java>
