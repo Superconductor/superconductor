@@ -22,18 +22,12 @@
     <property name="dist.dir" value="${base.dir}/dist" />
     <property name="lib.dir" value="${basedir}/lib" /> 
 
-    <property name="mud.sources.dir" value="${base.dir}/tbh/src/mud" />
-    <property name="mud.version" value="0.5" />
     <property name="ale.AGsources.dir" value="${base.dir}/attrib-gram-evaluator/AGEval" />
     <property name="ale.FEsources.dir" value="${base.dir}/AleAntlr3Grammar/aleGrammar" />
     <property name="ale.SPsources.dir" value="${base.dir}/attrib-gram-evaluator-swipl/AGEvalSwipl" />
     <property name="ale.resources.dir" value="${base.dir}/lib" />
     <property name="ale.test.dir" value="${base.dir}/attrib-gram-evaluator-swipl/Tests" />
     <property name="ale.grammar" value="${ale.FEsources.dir}/ALE.g" />
-    <property name="ale.backends.html5.dir" value="${base.dir}/backends/Html5" />
-    <property name="ftl.sources.dir" value="${base.dir}/ftl" />
-
-    <property name="sys.lib.dir" value="/usr/lib" />
 
     <path id="build.path">
         <pathelement location="${build.dir}"  />
@@ -47,11 +41,6 @@
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${dist.dir}"/>
 
-        <exec executable="hg">
-            <arg value="id"/>
-            <arg value="-n"/>
-            <redirector outputproperty="revision"/>
-        </exec>
         <tstamp>
             <format property="Now" pattern="MMMMM dd yyyy HH:mm" />
         </tstamp>
@@ -116,42 +105,6 @@
     <target name="ale-swipl" description="compiles alegen (Leo's)" depends="init, alegen">
         <javac srcdir="${ale.SPsources.dir}"  destdir="${build.dir}" classpathref="build.path" includeantruntime="false">
         </javac>
-    </target>
-    
-   <target name="run-alegen-ftl" depends="ale-swipl, ftl-syn" description="schedule grammar and generate ftl cpp">
-        <java classname="AGEvalSwipl.CppGenerator" fork="yes">
-            <env key="SWI_HOME_DIR" value="${swipl.home}"/>
-            <classpath>
-                <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
-                <path refid="build.path" /> 
-            </classpath>
-            <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
-            <arg path="${ale.SPsources.dir}"/>
-            <arg path="${aleGrammar}"/>
-            <arg path="${ftl.sources.dir}"/>
-            <arg value="true"/>
-            <arg value="true"/>
-            <arg value="false"/>
-            <arg value="8"/>            
-        </java>
-    </target>
-
-   <target name="run-alegen-ftlfast" description="schedule grammar and generate ftl cpp (do not compile first)">
-        <java classname="AGEvalSwipl.CppGenerator" fork="yes">
-            <env key="SWI_HOME_DIR" value="${swipl.home}"/>
-            <classpath>
-                <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
-                <path refid="build.path" /> 
-            </classpath>
-            <jvmarg value="-Djava.library.path=${swipl.runtime}"/>
-            <arg path="${ale.SPsources.dir}"/>
-            <arg path="${aleGrammar}"/>
-            <arg path="${ftl.sources.dir}"/>
-            <arg value="true"/>
-            <arg value="true"/>
-            <arg value="false"/>
-            <arg value="8"/>            
-        </java>
     </target>
     
     <target name="run-alegen-html5" depends="ale-swipl" description="schedule grammar and generate html5">
@@ -330,49 +283,6 @@
         </java>
     </target>
 
-    <target name="ftl-syn" description="toggle FTL synthesized" depends="init">
-        <copy file="${ftl.sources.dir}/constants.h.syn" tofile="${ftl.sources.dir}/constants.h" overwrite="true" />    
-    </target>
-    
-    <target name="ftl" description="compile FTL" depends="init">
-       <mkdir dir="${build.dir}/browser"/>
-       <cc name="${CC}" outtype="executable" subsystem="console" exceptions="yes" multithreaded="yes" objdir="${build.dir}" outfile="${build.dir}/browser/browser">
-            <includepath path="${lib.dir}/libxml2-2.7.7.win32/include" if="isWindows" />
-            <includepath path="${lib.dir}/iconv-1.9.2.win32/include" if="isWindows" />
-            <includepath path="${lib.dir}/freetype-2.3.5.win32/include" if="isWindows" />
-            <includepath path="${lib.dir}/tbb30.win32/include" if="isWindows" />
-            <includepath path="${lib.dir}/pthreads-2.8.win32/include" if="isWindows" />
-            <includepath path="${ftl.sources.dir}/windows" if="isWindows" />
-            <includepath path="${libxml.include}" unless="isWindows" />
-            <includepath path="${freetype.include}" unless="isWindows" />
-            <includepath path="${freetype.include2}" unless="isWindows" />
-            <includepath path="${tbb.inc.dir}" unless="isWindows" />
-            <fileset dir="${ftl.sources.dir}" includes="*.c, *.cpp"/>
-            <fileset dir="${ftl.sources.dir}/windows" includes="*.c, *.cpp" if="isWindows"/>
-            <libset dir="${tbb.lib.dir}" libs="tbb,tbbmalloc" unless="isWindows"/>
-            <libset dir="${sys.lib.dir}" libs="stdc++,xml2,freetype,tbb,tbbmalloc" unless="isWindows"/>
-            <libset dir="${lib.dir}/libxml2-2.7.7.win32/lib" libs="libxml2" if="isWindows" />
-            <libset dir="${lib.dir}/iconv-1.9.2.win32/lib" libs="iconv" if="isWindows" />
-            <libset dir="${lib.dir}/freetype-2.3.5.win32/lib" libs="freetype"  if="isWindows" />
-            <libset dir="${lib.dir}/pthreads-2.8.win32/lib" libs="pthreadVC2" if="isWindows" />
-            <libset dir="${lib.dir}/tbb30.win32/lib/ia32/vc9" libs="tbb,tbbmalloc" if="isWindows" />
-        </cc>
-        <cc name="${CC}" outtype="shared" subsystem="console" exceptions="yes" multithreaded="yes" objdir="${build.dir}" outfile="${build.dir}/browser/browser">
-            <fileset dir="${ftl.sources.dir}" includes="*.c, *.h, *.cpp" excludesfile="${ftl.sources.dir}/driver.cpp"/>
-            <libset dir="${sys.lib.dir}" libs="stdc++,xml2,freetype,tbb,tbbmalloc" unless="isWindows"/>
-        </cc>
-        <mkdir dir="${build.dir}/browser/fonts"/>
-         <copy todir="${build.dir}/browser/fonts">
-          <fileset dir="${ftl.sources.dir}/fonts"/>
-        </copy>
-        <copy file="${ftl.sources.dir}/runAll" tofile="${build.dir}/browser/runAll" />
-        <mkdir dir="${build.dir}/browser/demos"/>
-        <copy todir="${build.dir}/browser/demos">
-          <fileset dir="${ftl.sources.dir}/demos"/>
-        </copy>
-        <copy file="${ftl.sources.dir}/extradatahandler.properties" tofile="${build.dir}/browser/extradatahandler.properties" />
-    </target>
-
     <target name="test" description="test everything" depends="ale-swipl">
         <echo message="Testing Alegen-Swipl"/>
         <java classname="AGEvalSwipl.Tests" fork="yes" failonerror="true">
@@ -386,8 +296,6 @@
             <arg path="${build.dir}"/>
             <arg path="${ale.test.dir}"/>
         </java>
-        <echo message="Testing Mud" />
-        <echo message="Todo" />
     </target>
 </project>
 <!-- vim: set et ff=dos ts=8 sw=4 : -->
