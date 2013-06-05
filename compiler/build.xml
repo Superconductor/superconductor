@@ -175,7 +175,7 @@
 
     <target name="run-alegen-html5fast" description="schedule grammar and generate html5 (do not compile first)">
         <property name="output.dir" value="./" />
-        <java classname="AGEvalSwipl.Html5Generator" fork="yes">
+        <java classname="AGEvalSwipl.Html5Generator" fork="yes" failonerror="true">
             <env key="SWI_HOME_DIR" value="${swipl.home}"/>
             <classpath>
                 <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
@@ -195,7 +195,7 @@
 
     <target name="run-alegen-html5fastall" description="schedule grammar and generate html5 (do not compile first)">
         <property name="output.dir" value="./" />
-        <java classname="AGEvalSwipl.Html5Generator" fork="yes">
+        <java classname="AGEvalSwipl.Html5Generator" fork="yes" failonerror="true">
             <env key="SWI_HOME_DIR" value="${swipl.home}"/>
             <classpath>
                 <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
@@ -215,7 +215,7 @@
 
     <target name="run-alegen-webcl" depends="ale-swipl" description="schedule grammar and generate webcl">
         <property name="output.dir" value="./" />
-        <java classname="AGEvalSwipl.WebCLGenerator" fork="yes">
+        <java classname="AGEvalSwipl.WebCLGenerator" fork="yes" failonerror="true">
             <env key="SWI_HOME_DIR" value="${swipl.home}"/>
             <classpath>
                 <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
@@ -234,7 +234,7 @@
 
     <target name="run-alegen-webclfast" description="schedule grammar and generate webcl (do not compile first)">
         <property name="output.dir" value="./" />
-        <java classname="AGEvalSwipl.WebCLGenerator" fork="yes">
+        <java classname="AGEvalSwipl.WebCLGenerator" fork="yes" failonerror="true">
             <env key="SWI_HOME_DIR" value="${swipl.home}"/>
             <classpath>
                 <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
@@ -256,7 +256,7 @@
     
     <target name="run-alegen-flatcpp" depends="ale-swipl" description="schedule grammar and generate Flat (ClusteredTree) C++">
         <property name="output.dir" value="./" />
-        <java classname="AGEvalSwipl.FlatCppGenerator" fork="yes">
+        <java classname="AGEvalSwipl.FlatCppGenerator" fork="yes" failonerror="true">
             <env key="SWI_HOME_DIR" value="${swipl.home}"/>
             <classpath>
                 <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
@@ -275,7 +275,7 @@
 
     <target name="run-alegen-flatcpp-fast" description="schedule grammar and generate Flat (ClusteredTree) C++ (do not compile first)">
         <property name="output.dir" value="./" />
-        <java classname="AGEvalSwipl.FlatCppGenerator" fork="yes">
+        <java classname="AGEvalSwipl.FlatCppGenerator" fork="yes" failonerror="true">
             <env key="SWI_HOME_DIR" value="${swipl.home}"/>
             <classpath>
                 <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
@@ -294,7 +294,7 @@
 
     <target name="run-alegen-opencl" depends="run-alegen-flatcpp" description="schedule grammar and generate OpenCL and necessary Flat C++">
         <property name="output.dir" value="./" />
-        <java classname="AGEvalSwipl.OpenCLGenerator" fork="yes">
+        <java classname="AGEvalSwipl.OpenCLGenerator" fork="yes" failonerror="true">
             <env key="SWI_HOME_DIR" value="${swipl.home}"/>
             <classpath>
                 <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
@@ -313,7 +313,7 @@
 
     <target name="run-alegen-opencl-fast" depends="run-alegen-flatcpp-fast" description="schedule grammar and generate OpenCL and necessary Flat C++ (do not compile first)">
         <property name="output.dir" value="./" />
-        <java classname="AGEvalSwipl.OpenCLGenerator" fork="yes">
+        <java classname="AGEvalSwipl.OpenCLGenerator" fork="yes" failonerror="true">
             <env key="SWI_HOME_DIR" value="${swipl.home}"/>
             <classpath>
                 <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
@@ -375,7 +375,7 @@
 
     <target name="test" description="test everything" depends="ale-swipl">
         <echo message="Testing Alegen-Swipl"/>
-        <java classname="AGEvalSwipl.Tests" fork="yes">
+        <java classname="AGEvalSwipl.Tests" fork="yes" failonerror="true">
             <env key="SWI_HOME_DIR" value="${swipl.home}"/>
             <classpath>
                 <pathelement path="${lib.dir}/antlr-3.3-complete.jar"/> 
