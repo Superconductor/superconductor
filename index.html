@@ -8,7 +8,33 @@ section: 'home'
 <!-- Main hero unit for a primary marketing message or call to action -->
 <div class="hero-unit">
   <h1>Superconductor</h1>
-  <p>Superconductor is a new framework for creating interactive big data visualizations on the web. It uses <a href="http://www.khronos.org/webcl/">WebCL</a> and <a href="http://www.khronos.org/webgl/">WebGL</a> to unleash the power of your GPU for fast, parallel computation in the browser.</p>
+  <style>  	
+  	#gallery div {
+  		display: inline-block;
+  		border: 1px solid black;
+  		-moz-border-radius: 15px;
+		border-radius: 15px;
+		width: 8em;
+		height: 8em;
+		overflow: hidden;
+  	}
+  	#gallery { opacity: 0.3; }
+  	#gallery:hover {opacity: 1.0; }
+  	#gallery img {
+  		width: 100%;
+  		height: 100%;
+  	}
+  </style>
+  <div id="gallery">
+  	<div><img src="{{site.url}}img/gallery/small/election.png"/></div>
+  	<div><img src="{{site.url}}img/gallery/small/ge.png"/></div>
+  	<div><img src="{{site.url}}img/gallery/small/line.png"/></div>
+  	<div><img src="{{site.url}}img/gallery/small/parlabscreenshot2.png"/></div>
+  	<div><img src="{{site.url}}img/gallery/small/star1.png"/></div>
+  </div>
+  <p>Superconductor is a new framework for creating interactive big data visualizations on the web. 
+  It uses <a href="http://www.khronos.org/webcl/">WebCL</a>, <a href="http://www.khronos.org/webgl/">WebGL</a>,
+  and <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/Performance/Using_web_workers">web workers</a> to unleash the power of parallel hardware for fast and cross-platform data visualization.</p>
   <p><a href="{{site.url}}about/" class="btn btn-primary btn-large">Learn more &raquo;</a></p>
 </div>
 
