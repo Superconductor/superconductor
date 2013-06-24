@@ -1,0 +1,17 @@
+  {
+    "interfaces": {
+      "i": {
+          "vars": [],
+          "inputs": ["display", "refname"]
+        }
+    },
+    "traits": {
+},
+    "classes": {
+      "c": {
+          "interface": "i",
+          "vars": ["x"],
+          "inputs": []
+        }
+    }
+  }

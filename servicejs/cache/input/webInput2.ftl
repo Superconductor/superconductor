@@ -1,0 +1,1 @@
+interface I {} class C : I { children {} attributes { var x : int; } actions { x := 1; }}
