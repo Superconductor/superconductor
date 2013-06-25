@@ -1,1 +1,1 @@
-rsync -a -u --exclude="- *." ../superconductorService/ .
+git push ec2
