@@ -1,0 +1,2 @@
+swipl.home=/opt/local/lib/swipl-6.2.5/
+swipl.runtime=/opt/local/lib/swipl-6.2.5/lib/x86_64-darwin12.2.0/
