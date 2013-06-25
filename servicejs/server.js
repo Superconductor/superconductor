@@ -145,6 +145,25 @@ function routeCompile (req, res){
 
 	console.log('running service');
 
+	//CORS for Chrome
+	if (req.method == 'OPTIONS') {
+		var origin = (req.headers.origin || "*");
+		res.writeHead(
+                "204",
+                "No Content",
+                {
+                    "access-control-allow-origin": origin,
+                    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+                    "access-control-allow-headers": "content-type, accept, X-Requested-With",
+                    "access-control-max-age": 10, // Seconds.
+                    "content-length": 0
+                }
+            );
+
+	    return( res.end() );
+	}
+
+
 	try {
 		if (req.method != 'POST')
 			return failJSON('compiler requires post, got ' + req.method, req, res);
