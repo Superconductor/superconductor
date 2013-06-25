@@ -36,7 +36,7 @@ Seq().seq(function () {}).__proto__.chainWrite = function (file, src) {
 };
 
 function failJSON(err, req, res) {
-	 res.writeHead(200, {"Content-Type": "application/json"});
+	 res.writeHead(200, {"Content-Type": "application/json",  "Access-Control-Allow-Origin": "*"});
 	 res.write(JSON.stringify({err: err}));
 	 res.end();
 	 return false;
@@ -130,7 +130,7 @@ function handleData(data, req, res) {
 		.seq(function () {
 			console.log('successfully returning');
 			
-			 res.writeHead(200, {"Content-Type": "application/json"});
+			 res.writeHead(200, {"Content-Type": "application/json",  "Access-Control-Allow-Origin": "*"});
 			 res.write(JSON.stringify(ret.js));
 			 res.end();
 		})
