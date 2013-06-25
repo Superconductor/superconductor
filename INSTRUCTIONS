@@ -1,4 +1,4 @@
-1. Check in locally
-2. "git push ec2 master" => /home/ec2-user/www/sc-serve
+1. Do normal commit
 
+2. "git push ec2 " => /home/ec2-user/www/sc-serve
 	(via /home/ec2-user/gitserver.git/hooks/post-receive)
