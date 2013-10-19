@@ -16,3 +16,4 @@
 /compiler/AleAntlr3Grammar/aleGrammar/FTLSyntaxParser.java
 /compiler/*.tokens
 *.class
+/superconductorjs/node_modules/
