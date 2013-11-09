@@ -41,9 +41,9 @@ function CLRunner(glr, cfg) {
 				throw new SCException('Could not create a shared CL/GL context using the WebCL extension system');
 			}
 			
-			this.context = extension.createContext({platform: platform, devices: this.devices, deviceType: this.cl.DEVICE_TYPE_GPU, hint: null, shareGroup: 1});
+			this.context = extension.createContext({platform: platform, devices: this.devices, deviceType: this.cl.DEVICE_TYPE_GPU, sharedContext: null});
 		} else { 	// Otherwise, use the old style CL/GL sharing
-			this.context = this.cl.createContext({platform: platform, devices: this.devices, deviceType: this.cl.DEVICE_TYPE_GPU, shareGroup: 1, hint: null});
+			this.context = this.cl.createContext({platform: platform, devices: this.devices, deviceType: this.cl.DEVICE_TYPE_GPU, sharedContext: null});
 		}
 		
 
@@ -1091,13 +1091,9 @@ CLRunner.prototype.runRenderTraversal = function() {
 	} else {
  
 		try {
-			//FIXME: why does skipping this makes it work?
-			//this.queue.enqueueAcquireGLObjects(this.clVBO);
-	
+			this.queue.enqueueAcquireGLObjects([this.clVBO]);
 			this[renderTraversal](this.clVBO);
-	
-			//FIXME: why does skipping this makes it work?
-			//this.queue.enqueueReleaseGLObjects(this.clVBO);
+			this.queue.enqueueReleaseGLObjects([this.clVBO]);
 			this.queue.finish();
 		} catch(e) {
 			console.error("Error running OpenCL render traversal: " + e.message);
@@ -1119,13 +1115,9 @@ CLRunner.prototype.runRenderTraversalAsync = function(cb) {
 	} else {
 		//FIXME async
 		try {
-			//FIXME: why does skipping this makes it work?
-			//this.queue.enqueueAcquireGLObjects(this.clVBO);
-	
-			this[renderTraversal](this.clVBO);
-	
-			//FIXME: why does skipping this makes it work?
-			//this.queue.enqueueReleaseGLObjects(this.clVBO);
+			this.queue.enqueueAcquireGLObjects([this.clVBO]);	
+			this[renderTraversal](this.clVBO);	
+			this.queue.enqueueReleaseGLObjects([this.clVBO]);
 
 			this.queue.finish();
 			cb();

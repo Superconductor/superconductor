@@ -1308,16 +1308,14 @@ function CLRunner(glr, cfg) {
                 platform: platform,
                 devices: this.devices,
                 deviceType: this.cl.DEVICE_TYPE_GPU,
-                hint: null,
-                shareGroup: 1
+                sharedContext: null
             });
         } else {
             this.context = this.cl.createContext({
                 platform: platform,
                 devices: this.devices,
                 deviceType: this.cl.DEVICE_TYPE_GPU,
-                shareGroup: 1,
-                hint: null
+                sharedContext: null
             });
         }
         if (this.context == null) {
@@ -2197,7 +2195,9 @@ CLRunner.prototype.runRenderTraversal = function() {
         this[renderTraversal]();
     } else {
         try {
+            this.queue.enqueueAcquireGLObjects([ this.clVBO ]);
             this[renderTraversal](this.clVBO);
+            this.queue.enqueueReleaseGLObjects([ this.clVBO ]);
             this.queue.finish();
         } catch (e) {
             console.error("Error running OpenCL render traversal: " + e.message);
@@ -2215,7 +2215,9 @@ CLRunner.prototype.runRenderTraversalAsync = function(cb) {
         this[renderTraversal](null, cb);
     } else {
         try {
+            this.queue.enqueueAcquireGLObjects([ this.clVBO ]);
             this[renderTraversal](this.clVBO);
+            this.queue.enqueueReleaseGLObjects([ this.clVBO ]);
             this.queue.finish();
             cb();
         } catch (e) {
