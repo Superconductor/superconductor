@@ -2164,7 +2164,7 @@ CLRunner.prototype.buildKernels = function() {
     }
     this.program = this.context.createProgram(kernels);
     try {
-        this.program.build(this.devices[0]);
+        this.program.build(this.devices);
     } catch (e) {
         console.error("Error loading WebCL kernels: " + e.message);
         console.error("Inputs:", {
@@ -2197,9 +2197,7 @@ CLRunner.prototype.runRenderTraversal = function() {
         this[renderTraversal]();
     } else {
         try {
-            this.queue.enqueueAcquireGLObjects(this.clVBO);
             this[renderTraversal](this.clVBO);
-            this.queue.enqueueReleaseGLObjects(this.clVBO);
             this.queue.finish();
         } catch (e) {
             console.error("Error running OpenCL render traversal: " + e.message);
@@ -2217,9 +2215,7 @@ CLRunner.prototype.runRenderTraversalAsync = function(cb) {
         this[renderTraversal](null, cb);
     } else {
         try {
-            this.queue.enqueueAcquireGLObjects(this.clVBO);
             this[renderTraversal](this.clVBO);
-            this.queue.enqueueReleaseGLObjects(this.clVBO);
             this.queue.finish();
             cb();
         } catch (e) {

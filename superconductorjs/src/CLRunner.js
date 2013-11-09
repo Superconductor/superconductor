@@ -1054,7 +1054,7 @@ CLRunner.prototype.buildKernels = function() {
 
 	this.program = this.context.createProgram(kernels);
 	try {
-		this.program.build(this.devices[0]);
+		this.program.build(this.devices);
 	} catch(e) {
 		console.error("Error loading WebCL kernels: " + e.message);
 		console.error("Inputs:", {headers: this.kernelHeaders, source: this.kernelSource});
@@ -1091,11 +1091,13 @@ CLRunner.prototype.runRenderTraversal = function() {
 	} else {
  
 		try {
-			this.queue.enqueueAcquireGLObjects(this.clVBO);
+			//FIXME: why does skipping this makes it work?
+			//this.queue.enqueueAcquireGLObjects(this.clVBO);
 	
 			this[renderTraversal](this.clVBO);
 	
-			this.queue.enqueueReleaseGLObjects(this.clVBO);
+			//FIXME: why does skipping this makes it work?
+			//this.queue.enqueueReleaseGLObjects(this.clVBO);
 			this.queue.finish();
 		} catch(e) {
 			console.error("Error running OpenCL render traversal: " + e.message);
@@ -1117,11 +1119,14 @@ CLRunner.prototype.runRenderTraversalAsync = function(cb) {
 	} else {
 		//FIXME async
 		try {
-			this.queue.enqueueAcquireGLObjects(this.clVBO);
+			//FIXME: why does skipping this makes it work?
+			//this.queue.enqueueAcquireGLObjects(this.clVBO);
 	
 			this[renderTraversal](this.clVBO);
 	
-			this.queue.enqueueReleaseGLObjects(this.clVBO);
+			//FIXME: why does skipping this makes it work?
+			//this.queue.enqueueReleaseGLObjects(this.clVBO);
+
 			this.queue.finish();
 			cb();
 		} catch(e) {
