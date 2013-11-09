@@ -41,6 +41,7 @@ superconductor.js: \
 
 clean:
 	rm -rf  tmp
+	mkdir tmp
 
 cleanall: clean
-	rm superconductor.js superconductor.min.js
+	rm -f superconductor.js superconductor.min.js
