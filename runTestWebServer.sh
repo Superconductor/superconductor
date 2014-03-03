@@ -5,5 +5,5 @@
 # Due to security restrictions in the browser, these requests are not allowed to target local files,
 # even if the requesting page is also local.
 
-cd ../examples
+#cd examples
 python -m SimpleHTTPServer 8888
