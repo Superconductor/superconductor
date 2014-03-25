@@ -30,18 +30,16 @@
 	<script src="jquery-1.7.1.min.js" type="text/javascript"></script>
 	<script src="jquery-ui-1.9.2.custom.min.js"></script>
 	<script src="jQRangeSlider-min.js"></script>
-	<script src="/superconductorjs/superconductor.js" type="text/javascript"></script>
+	<script src="../../superconductorjs/superconductor.js" type="text/javascript"></script>
 	<script type="text/javascript">
 
 
-	var usePreprocessed = true;
-	dataURL = "http://localhost:8888/examples/linegraph-3d/data.sparse.mt.json";
 	numMaxWorkers = 4;
 
 	window.vizDefaults = {
 	  numGenerators: 200, 	//FIXME read from file as well (or edit genExamples.js)
-	  numSpikesPerGenerator: 500, 	//FIXME read from file as well (or edit genExamples.js)
-	  height: 10,
+	  numSpikesPerGenerator: 1000, 	//FIXME read from file as well (or edit genExamples.js)
+	  height: 7,
 	  radius: 27.0,
 	  minRadius: 7.0,
 	  tweenMin: 40,
@@ -75,8 +73,8 @@
 				childs.push(makeGenerator(numSpikes));
 			}
 			return {class: "Root",
-					"xOffset": window.vizDefaults.radius,
-					"yOffset": -2.4*window.vizDefaults.radius,
+					"xOffset": 0,//window.vizDefaults.radius,
+					"yOffset": 0,//window.vizDefaults.radius,
 					"tweenMin": window.vizDefaults.tweenMin / 100.0,
 					"tweenMax": window.vizDefaults.tweenMax / 100.0,
 					"height": window.vizDefaults.height,
@@ -95,122 +93,120 @@
 
 
 	var lastUpdate = new Date().getTime();
-	function updateDisplay() {		
+	function updateDisplay(sc) {		
 		var now = new Date().getTime();
 		var diff = now - lastUpdate;
 		if (diff < 20) {
-		  setTimeout(updateDisplay, 20 - diff);
+		  setTimeout(function () { updateDisplay(sc); }, 20 - diff);
 		  console.warn(diff, "ms is < 20ms between rerenders, delay for ", (20 - diff), "ms");
 		} else {
 		  lastUpdate = now;	
-		  window.superconductor.layoutAndRender();
-		  $('#numVertices').html(window.superconductor.data.fld_iroot___rendersize__.get(0));
+		  sc.layoutAndRender();
+		  $('#numVertices').html(sc.data.fld_iroot___rendersize__.get(0));
 		}
 	}
 
+	function setDefaults (sc) {
+
+		sc.startVisualization();
+
+		var rs = $('#range-slider').data().rangeSlider._values;
+		console.log(rs.min, rs.max);
+		sc.data.fld_iroot_tweenmin.set(0, rs.min / 100.0);
+		sc.data.fld_iroot_tweenmax.set(0, rs.max / 100.0);
+		
+		var rad = $('#radius-slider').data().rangeSlider._values;
+		sc.data.fld_iroot_minradius.set(0, rad.min);
+		sc.data.fld_iroot_radius.set(0, rad.max);
+
+//			sc.data.fld_iroot_height.set(0, $('#height-slider').attr('value'));		
+		sc.data.fld_iroot_rotation.set(0, $('#rotation-slider').attr('value'));
+	
+		updateDisplay(sc);
+		console.log("proxy data", sc.clr.proxyData);
+
+		//sliding window
+		$("#range-slider").on("valuesChanging", function(e, data){
+			sc.data.fld_iroot_tweenmin.set(0, data.values.min / 100.0);
+			sc.data.fld_iroot_tweenmax.set(0, data.values.max / 100.0);
+			updateDisplay(sc);
+		});
+		$("#range-slider").rangeSlider({valueLabels: "show"});
+
+
+		//height
+		$("#height-slider").change(function () {
+			sc.data.fld_root_height.set(0, (this.value));
+			updateDisplay(sc);
+		});
+
+		//rotation
+		$("#rotation-slider").on('input', function () {
+			sc.data.fld_iroot_rotation.set(0, (this.value));
+			updateDisplay(sc);
+		});
+
+
+		//radius
+		$("#radius-slider").on("valuesChanging", function(e, data){
+			sc.data.fld_iroot_minradius.set(0, data.values.min);
+			sc.data.fld_iroot_radius.set(0, data.values.max);
+			updateDisplay(sc);
+		});
+		$("#radius-slider").rangeSlider({valueLabels: "show"});
+	}	
+
+
+
+	function getUrlVar (key) {
+		return decodeURI(
+			window.location.search.replace(
+					new RegExp("^(?:.*[&\\?]" + encodeURI(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), 
+					"$1"));
+	}
+
+	function getSettings (kernel) {
+        var ignoreCL = getUrlVar('ignoreCL') == 'true';
+        var webworkerLayout = ignoreCL && (getUrlVar('webworkerLayout') == 'true');
+        var ignoreGL = ignoreCL && (getUrlVar('ignoreGL') == 'true');        
+        var settings = {
+            ignoreCL: ignoreCL,
+            webworkerLayout: webworkerLayout,
+            ignoreGL: ignoreGL,
+            numWorkers: webworkerLayout ? 4 : 0,
+            minParallelLayoutLevelLength: 500, 
+            antialias: true,
+            src: kernel + (ignoreCL ? '.js' : '')
+        };
+        return settings;
+	}
+
+
 	window.onload = function() {
+
 		var canvas = document.getElementById("visualization");
-		window.superconductor = new Superconductor("kernels.visualization", canvas);
-		window.superconductor.glr.setW(10.0);
-		window.superconductor.glr.setRotation(-45, 0, 0);
-		window.superconductor.glr.movePosition(-0.5,1.7,4.2);
-		
-	
-				
-		var setDefaults = function () {
-			window.superconductor.startVisualization();
+		var settings = getSettings("kernels.visualization");
+		console.log('Settings', settings);
+        new Superconductor(settings.src, canvas, settings,
+			function (err, sc) {
+				if (err) return console.error('failed sc init', err);
 
-
-			var rs = $('#range-slider').data().rangeSlider._values;
-			console.log(rs.min, rs.max);
-			window.superconductor.data.fld_iroot_tweenmin.set(0, rs.min / 100.0);
-			window.superconductor.data.fld_iroot_tweenmax.set(0, rs.max / 100.0);
-			
-			var rad = $('#radius-slider').data().rangeSlider._values;
-			window.superconductor.data.fld_iroot_minradius.set(0, rad.min);
-			window.superconductor.data.fld_iroot_radius.set(0, rad.max);
-	
-			window.superconductor.data.fld_iroot_height.set(0, $('#height-slider').attr('value'));		
-			window.superconductor.data.fld_iroot_rotation.set(0, $('#rotation-slider').attr('value'));
-		
-		
-		
-
-
-			updateDisplay();
-			console.log("proxy data",window.superconductor.clr.proxyData);
-
-			//sliding window
-			$("#range-slider").on("valuesChanging", function(e, data){
-				window.superconductor.data.fld_iroot_tweenmin.set(0, data.values.min / 100.0);
-				window.superconductor.data.fld_iroot_tweenmax.set(0, data.values.max / 100.0);
-				updateDisplay();
-			});
-			$("#range-slider").rangeSlider({valueLabels: "show"});
-
-
-			//height
-			$("#height-slider").change(function () {
-				window.superconductor.data.fld_root_height.set(0, (this.value));
-				updateDisplay();
-			});
-
-			//rotation
-			$("#rotation-slider").change(function () {
-				window.superconductor.data.fld_iroot_rotation.set(0, (this.value));
-				updateDisplay();
-			});
-
-
-			//radius
-			$("#radius-slider").on("valuesChanging", function(e, data){
-				window.superconductor.data.fld_iroot_minradius.set(0, data.values.min);
-				window.superconductor.data.fld_iroot_radius.set(0, data.values.max);
-				updateDisplay();
-			});
-			$("#radius-slider").rangeSlider({valueLabels: "show"});
-
-
-			/*			
-			for (var i = 0; i < window.superconductor.clr.proxyData.displayname.length; i++) {
-				if (window.superconductor.clr.classToToken("Generator") ==
-					window.superconductor.clr.proxyData.displayname.get(i)) {
-					console.log(
-						" gen idx, num spikes", 
-						window.superconductor.clr.proxyData.fld_node_idx.get(i),
-						window.superconductor.clr.proxyData.fld_node_levellength.get(i),
-						window.superconductor.clr.proxyData.fld_generator_numspikes.get(i));						
+				if (settings.ignoreCL && settings.ignoreGL) {
+					sc.glr.setW(10);
+					sc.glr.movePosition(22,0,0);
+				} else if (!settings.ignoreGL) {
+					sc.glr.setW(2.5);
+					sc.glr.movePosition(19,-13.5,0);
+					sc.glr.rotate(-20,0,0);
 				}
-			
-				continue;
-			    console.log(" node i: x y w h; offset/rightOffset/size/intrisSize",i,
-			      [window.superconductor.clr.proxyData.fld_node_x.get(i),
-			      window.superconductor.clr.proxyData.fld_node_y.get(i),
-			      window.superconductor.clr.proxyData.fld_node_w.get(i),
-			      window.superconductor.clr.proxyData.fld_node_h.get(i)],
-			      window.superconductor.clr.proxyData.fld_node_renderoffset.get(i),
-			      window.superconductor.clr.proxyData.fld_node_renderrightoffset.get(i),
-			      window.superconductor.clr.proxyData.fld_node_rendersize.get(i),
-			      window.superconductor.clr.proxyData.fld_node_intrinsrendersize.get(i));			      
-			}
-			*/			      
-		};		
 
-		setTimeout(function() { 
-			console.log("timeout");
-			if (usePreprocessed) {
-				window.superconductor.optNumMaxWorkers = numMaxWorkers;
-				window.superconductor.loadDataFlatMt(
-			    		dataURL,
-			    		setDefaults);	
-			} else {
-				window.superconductor.loadDataObj(genData(), setDefaults);					
-			}
-		}, 500);
+				//sc.glr.setW(10.0);
+				//sc.glr.setRotation(-45, 0, 0);
+				//sc.glr.movePosition(-0.5,1.7,4.2);
 
-					
+				sc.loadDataObj(genData(), function () { setDefaults(sc); });					
 
-
+			});				
 	};
 	</script>
 </head>
@@ -244,20 +240,14 @@
 
 
 
-			
-			<canvas style="background-color: black" id="visualization" >ERROR: HTML canvas support not found.</canvas>
-
-		<div>
-			<div style="width: 50%; float: left">
-				<div>Height</div>
-				<div><input type="range" id="height-slider" min="1" max="100" style="width:100%"></input><script>
-				$("#height-slider").
-					attr('value', window.vizDefaults.height);
-								
-			</script></div>
+			<div style="margin-left: auto; margin-right: auto; text-align: center">
+				<div style="display: inline-block">
+					<canvas style="" id="visualization">ERROR: HTML canvas support not found.</canvas>
+				</div>
 			</div>
-			<div style="width: 50%; float: left; ">
-				<div>Radius</div>
+		<div>			
+			<div style="width: 100%;">
+				<div>Radius &amp; Rotation</div>
 				<div class="wide-control">
 						<div id="radius-slider">
 						</div>
@@ -278,5 +268,8 @@
 			
 		</div>					
 	</div>
+	<a href="index.html?webworkerLayout=false&ignoreCL=true&ignoreGL=true">naive</a>
+	<a href="index.html?webworkerLayout=true&ignoreCL=true&ignoreGL=false">workers</a>
+	<a href="index.html?webworkerLayout=false&ignoreCL=false&ignoreGL=false">webcl</a>
 </body>
 </html>

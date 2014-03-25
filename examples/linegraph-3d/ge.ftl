@@ -147,7 +147,7 @@ class Second (propagateIntermediate,propagateChilds) : SecondI {
   	}
 
 	//background
-	@render @RectangleZ(xOffset - radius, yOffset - radius, 4 * radius, 4 * radius, -0.1f, rgb(0,0,0));
+	@render @RectangleZ(xOffset, yOffset, 4 * radius, 4 * radius, -0.1f, rgb(0,0,0));
 	w := 10;
     loop childs {
 			childs.rx := fold x .. childs$-.rx + 5 + 10;
@@ -219,7 +219,7 @@ class Spike : Leaf {
 					((isFirst == 1) ? increment/1.0f : tween)
 				  ) * sin(angle), 
 				height * valPrev,
-				0.15f, rgba(0, 204, 255, 102));
+				0.15f, rgba(0, 204, 255, 204));
 		@render (isOn != 1 || enableShadow != 1) ? 0 : //shadow
 			@Line3D(
 				xOffset + 1.5 + radius + minRadius * cos(angle) + (radius * 
@@ -245,7 +245,7 @@ class Spike : Leaf {
 				xOffset + 1.5 + radius + minRadius * cos(angle) + (radius * (1.0f + increment/1.0f)  ) * cos(angle), 
 				yOffset + 1.5 + radius + minRadius * sin(angle) + (radius * (1.0f + increment/1.0f)  ) * sin(angle), 
 				0.0f,
-				0.1f, rgba(255, 255, 255, 125));
+				0.1f, rgba(255, 255, 255, 204));
 		@render (isOn != 1 || isFirst != 1) ? 0 : // vertical beginning
 			@Line3D(
 				xOffset + 1.5 + radius + minRadius * cos(angle) + (radius * 
@@ -262,6 +262,6 @@ class Spike : Leaf {
 					increment/1.0f
 				  ) * sin(angle), 
 				0.0f,
-				0.1f, rgba(0, 204, 255, 102));
+				0.1f, rgba(0, 204, 255, 204));
 	}
 }

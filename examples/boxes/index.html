@@ -4,73 +4,493 @@
 	<title>Superconductor Template</title>
 	<meta HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
 	<style type="text/css">
-		#visualization {
+		.visualization {
 			width: 1024px;
-			height: 768px;
+			height: 268px;
 			box-shadow: 0 .3em 0.3em #333;
-			background-color: #EBEBEB;
+			background-color: #FFF;
 			border: 1px solid #CCC;
 		}	
 	</style>	
 	<script src="/superconductorjs/superconductor.js" type="text/javascript"></script>
+	<script src="js/jquery-1.7.1.min.js"></script>
 	<script type="text/javascript">
-						
+
+	function clamp(v, min, max) {
+		return Math.min(Math.max(v, min), max);
+	}
+	function clamp255 (v) { 
+		return clamp(v, 0, 255); 
+	}
+
+	function rgba(r, g, b, a) {
+		return [r,g,b,a]
+            .map(clamp255)
+            .map(function (v, i) { return v << ((3 - i) * 8); })
+            .reduce(function (a, b) { return a + b; });
+	}
+	function rgb(r,g,b) {
+		return rgba(r,g,b,255);
+	}
+
 	var tinyData = { //set to null to instead load JSON file
 		class: "Root", 
+        "userInput": 5,
 		children: {
 			"child": {
 				class: "HBox",
 				children: {
 					"childs": [
-						{class: "Leaf"},
-						{class: "Leaf"},
+						{class: "Leaf", color: rgb(0,0,0)},
+						{class: "Leaf", color: rgb(255,0,0)},
 						{class: "HBox",
 						 children: {
-						   childs: [{class: "Leaf"}, {class: "Leaf"}]}},
-						{class: "Leaf"},
-						{class: "Leaf"}]
+						   childs: [{class: "Leaf", color: rgb(0,255,0)}, {class: "Leaf", color: rgb(0,255,0)}]}},
+						{class: "Leaf", color: rgb(0,0,255)},
+						{class: "Leaf", color: rgba(255,0,0,102)}]
 				}
 			} 
 		}
 	};
+
+    /*
+    //print node colors
+    (function (node) {
+        if (node.color) console.log('color', node.color);
+        ((node.children || {}).childs || []).forEach(arguments.callee);
+    })(tinyData.children.child);
+    */
+
 	
 	var useDummyData = false; //dummy small or real big JSON file
 
-	function updateDisplay() {
-		window.superconductor.layoutAndRender();
+	function getUrlVar (key) {
+		return decodeURI(
+			window.location.search.replace(
+					new RegExp("^(?:.*[&\\?]" + encodeURI(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), 
+					"$1"));
 	}
 
+
+
+    function getPixels (sc, x, y) {
+        window.superconductor = sc;
+        if (sc.glr.context.readPixels) {
+            var pixels = new Uint8Array(4);
+            var data = sc.glr.context.readPixels(x, y, 1, 1, 
+                sc.glr.context.RGBA, sc.glr.context.UNSIGNED_BYTE, pixels);
+            return pixels;
+        } else { 
+            return sc.glr.context.getImageData(x, y, 1, 1).data;
+        }
+    }
+
+
 	window.onload = function() {
-		var canvas = document.getElementById("visualization");
-		window.superconductor = new Superconductor("kernels.visualization", canvas);
-		window.superconductor.glr.setW(10.0);
-		
-		var setDefaults = function () {
-			window.superconductor.startVisualization();
-			updateDisplay();
-		};		
 
-		setTimeout(function() { 
-				if (tinyData) {
-					console.log("using in-memory tiny data", tinyData);
-					window.superconductor.loadDataObj(tinyData, setDefaults);
-				} else {
-			    	window.superconductor.loadData(
-			    		useDummyData ? "data_sc_small.json" : "data_sc_big.json", 
-			    		setDefaults);	
-				}
-			}, 500);
-					
+        var canvas = document.getElementById("viz-top");        
+        var ignoreCL = getUrlVar('ignoreCL') == 'true';
+        var webworkerLayout = ignoreCL && (getUrlVar('webworkerLayout') == 'true');
+        var ignoreGL = ignoreCL && (getUrlVar('ignoreGL') == 'true');
+        var settings = {
+            ignoreCL: ignoreCL,
+            webworkerLayout: webworkerLayout,
+            ignoreGL: ignoreGL,
+            numWorkers: webworkerLayout ? 4 : 0
+        };
+
+        console.log('settings', settings);
 
 
+        $('#renderButton').on('click', function () {            
+    		try {
+
+    			var sc = new Superconductor("kernels.visualization" + (ignoreCL ? '.js' : ''), canvas, settings);
+
+                if (!settings.ignoreGL) {
+                    sc.glr.setW(1.0);
+                    sc.glr.movePosition(0,-6,0);
+                }
+
+                sc.setupInteraction();
+
+    			sc.loadDataObj(tinyData, function () {
+                    sc.layoutAndRenderAsync(function () {
+                        var cb = function (evt) {
+                            var x = evt.pageX - $(this).offset().left;
+                            var y = evt.pageY - $(this).offset().top;
+                            console.log('clicked', x, y);
+
+                            var pixels = getPixels(sc, x, y);
+                            console.log('pixels x/y', x, y, 'rgba', pixels[0], pixels[1], pixels[2], pixels[3]);
+                            
+                            //SCAN canvas for any non-zero...
+                            try {
+                                for (var col = 0; col < 1000; col += 10) {
+                                    for (var row = 0; row < 1000; row += 10) {
+                                        var pixels = getPixels(sc, row, col);
+                                        var sum = 0;
+                                        for (var i = 0; i < 4; i++) sum = sum | pixels[i];
+                                        if (sum) throw [row, col, pixels[0], pixels[1], pixels[2], pixels[3]];
+                                    }
+                                }
+                                throw 'could not find';
+                            } catch (e) {
+                                console.log('looking for non-zero:', e);
+                            }
+                            console.log(x, y, pixels);
+                            
+                        };
+
+                        $('#viz-top').on('click', cb);
+
+                    });
+                });
+
+
+    		} catch (e) { alert('err'); }
+        });
+		runTests(settings);
 	};
+
+	function runTests(settings) {
+
+        var base = window.location.protocol + "//" + window.location.host + '/examples/boxes/';
+        var canvas = $("#viz-top")[0];
+
+        var loadSC = function (k, lbl, cb) {
+
+            var dims = {
+                width: $(canvas).width(),
+                height: $(canvas).height()
+            };
+
+            var freshCanvas = $('<canvas/>').addClass('visualization');
+            var lblD = $("<p/>").text(lbl);
+            $('#visualizations').append($('<div/>').append(lblD).append(freshCanvas));
+
+            try {
+               new Superconductor("kernels.visualization" + (settings.ignoreCL ? '.js' : ''), freshCanvas[0], settings, 
+                    function (err, sc) { 
+                        if (err) return k(err);
+                        if (!sc) return k('no sc');
+                        return cb(sc);                        
+                    });  
+            } catch (e) {
+                k('load sc exn: ' + (e || '').toString());
+            }
+        }
+
+		var tests = [
+			{name: '---- ok', fn: function (k) { k(); }},
+			{name: '---- fail on call', fn: function () { throw 'expected oops'; }},
+			{name: '---- fail deferred', fn: function (k) { setTimeout(function () { k('expected oops'); }, 10); }},
+			{name: '---- never returned', fn: function () { }},
+			///////////////////
+            {name: 'construct ' + (settings.ignoreCL ? 'web workers' : 'webcl'), fn: function (k) {
+				new Superconductor("kernels.visualization" + (settings.ignoreCL ? '.js' : ''), canvas, settings);
+				k();
+			}},
+			{name: 'deferred construct', fn: function (k) {
+				new Superconductor("kernels.visualization" + (settings.ignoreCL ? '.js' : ''), canvas, settings, 
+					function (err, sc) { return k(err ? err : !sc ? 'no sc' : null) });
+			}},
+			{name: 'load data dynamic', fn: function (k) {
+                loadSC(k, this.name, function (sc) { 
+					sc.loadDataObj(tinyData, function (err, data) {
+                        if (err) return k(err);
+                        try {
+                            return k(sc.clr.tree_size == 9 ? null : ('incorrect count: ' + sc.clr.tree_size));
+                        } catch (e) {
+                            return k(e || 'exn');
+                        }
+
+                    });
+				});
+			}},
+            {name: 'load data dynamic (null data)', fn: function (k) {
+                loadSC(k, this.name, function (sc) {
+                    sc.loadDataObj(null, function (err) {
+                        k(err ? null : 'did not get expected error')
+                    });
+                });
+            }},
+            {name: 'load data dynamic (missing data)', fn: function (k) {
+                loadSC(k, this.name, function (sc) {
+                    sc.loadDataObj({}, function (err) {
+                        k(err ? null : 'did not get expected error')
+                    });
+                });
+            }},
+            {name: 'load json', fn: function (k) {
+                loadSC(k, this.name, function (sc) {
+                    sc.loadData(base + "data_sc_small.json", function (err, data) {
+                        if (err) return k(err);
+                        try {
+                            return k(sc.clr.tree_size == 9 ? null : ('incorrect count: ' + sc.clr.tree_size));
+                        } catch (e) {
+                            return k(e || 'exn');
+                        }
+
+                    });
+                });
+            }},
+            {name: 'load json (404)', fn: function (k) {
+                loadSC(k, this.name, function (sc) {
+                    sc.loadData(null, function (err) {
+                        k(err ? null : 'did not get expected error');
+                    });
+                });
+            }},
+
+            {name: 'load json (wrong format)', fn: function (k) {
+                loadSC(k, this.name, function (sc) {
+                    sc.loadData(base + 'data.sparse.json', function (err) {
+                        k(err ? null : 'did not get expected error');
+                    });
+                });
+            }},
+            {name: 'load json.sparse.mt', fn: function (k) {
+                loadSC(k, this.name, function (sc) {
+                    sc.loadDataFlatMt(base + "data.sparse.json", function (err, data) {
+                        if (err) return k(err);
+                        try {
+                            return k(sc.clr.tree_size == 9 ? null : ('incorrect count: ' + sc.clr.tree_size));
+                        } catch (e) {
+                            return k(e || 'exn');
+                        }
+
+                    });
+                });
+            }},
+            {name: 'load json.sparse.mt (404)', fn: function (k) {
+                loadSC(k, this.name, function (sc) {
+                    sc.loadDataFlatMt(null, function (err) {
+                        k(err ? null : 'did not get expected error');
+                    });
+                });
+            }},
+            {name: 'load json .sparse.mt (wrong format)', fn: function (k) {
+                loadSC(k, this.name, function (sc) {
+                    sc.loadDataFlatMt(base + 'data_sc_small.json', function (err) {
+                        k(err ? null : 'did not get expected error');
+                    });
+                });
+            }},
+            {name: 'run layout', fn: function (k) {
+                loadSC(k, this.name, function (sc) {
+                    sc.loadDataObj(tinyData, function (err) {
+                        console.warn('loaded', err);
+                        if (err) return k({msg: err, lbl: 'load'});
+                        sc.layoutAndRenderAsync(function () {
+                            console.warn('rendered');
+                            return k();
+                        })
+                    })
+                })
+            }},
+            {name: 'check layout', fn: function (k) {
+                loadSC(k, this.name, function (sc) {
+                    sc.loadDataObj(tinyData, function (err) {
+                        if (err) return k(err);
+                        sc.layoutAndRenderAsync(function () {
+                            try {
+                                var v = sc.data.fld_iroot_w.get(0);
+                                return k(v == 115 ? null : ('wrong layout val: ' + v));
+                            } catch (e) {
+                                return k(e || 'exn on layout get');
+                            }
+                        })
+                    })
+                })
+            }},
+            {name: 'write', fn: function (k) {
+                loadSC(k, this.name, function (sc) {
+                    sc.loadDataObj(tinyData, function (err) {
+                        if (err) return k(err);
+                        try {
+                            sc.data.fld_iroot_userinput.set(0, 10);
+                            var v = sc.data.fld_iroot_userinput.get(0);
+                            return k(v == 10 ? null : {msg: 'bad set', v: v});
+                        } catch (e) {
+                            return k(e || 'bad set')
+                        }
+                    })
+                });
+            }},
+            {name: 'relayout', fn: function (k) {
+                loadSC(k, this.name, function (sc) {
+                    sc.loadDataObj(tinyData, function (err) {
+                        if (err) return k(err);
+                        try {
+                            sc.data.fld_iroot_userinput.set(0, 10);                                                        
+                            sc.layoutAndRenderAsync(function () {
+                                try {
+                                    var w = sc.data.fld_node_x.get(1);
+                                    if (w != 15) {
+                                        return k('expected 15 before');
+                                    }
+                                    sc.data.fld_iroot_userinput.set(0, 15);
+                                    sc.layoutAndRenderAsync(function () {
+                                        try {
+                                            var w2 = sc.data.fld_node_x.get(1);                                            
+                                            return k(w2 == 15 + 5 ? null : {msg: 'wrong val', v: w2})
+                                        } catch (e) { return k(e || 'bad set') }
+                                    });
+                                } catch (e) { return k(e || 'bad set') }
+                            });
+                        } catch (e) { return k(e || 'bad set') }
+                    })
+                });
+            }},
+            {name: 'pixel test', fn: function (k) {
+                loadSC(k, this.name, function (sc) {
+
+                    sc.loadDataObj(tinyData, function (err) {                        
+                        if (err) return k(err);
+
+                        sc.layoutAndRenderAsync(function (err) {
+                            if (err) return k(err);
+
+                            var expected = [
+                                [[20, 15], [0, 0, 0, 255]],
+                                [[30, 15], [255, 0, 0, 255]],
+                                [[50, 20], [0, 255, 0, 255]],
+                                [[65, 20], [0, 255, 0, 255]],
+                                [[90, 15], [0, 0, 255, 255]],
+                                [[100, 15], [255, 0, 0, 102]]
+                            ];
+
+                            try {
+                                expected.forEach(function (test, testIdx) {
+                                    var pixels = getPixels(sc, test[0][0], test[0][1]);
+                                    for (var i = 0; i < 4; i++) {
+                                        if (test[1][i] != pixels[i]) 
+                                            throw {box: testIdx, wanted: test[1][i], got: pixels[i], pixels: pixels};
+                                    }
+                                });
+                            } catch (e) {
+                                return k(e || {msg: 'exn'});
+                            }
+                            return k();
+                        });
+                    });
+                });
+            }},
+            {name: 'zoom pixel test', fn: function (k) {
+                loadSC(k, this.name, function (sc) {
+
+                    sc.loadDataObj(tinyData, function (err) {                        
+                        if (err) return k(err);
+
+                        var zoom = 2.0;
+                        sc.glr.setW(zoom);
+
+                        sc.layoutAndRenderAsync(function (err) {
+                            if (err) return k(err);
+
+                            var expected = [
+                                [[20, 15], [0, 0, 0, 255]],
+                                [[30, 15], [255, 0, 0, 255]],
+                                [[50, 20], [0, 255, 0, 255]],
+                                [[65, 20], [0, 255, 0, 255]],
+                                [[90, 15], [0, 0, 255, 255]],
+                                [[100, 15], [255, 0, 0, 102]]
+
+                            ];
+
+                            try {
+                                expected.forEach(function (test, testIdx) {
+                                    var pixels = getPixels(sc, test[0][0] * zoom, test[0][1] * zoom);
+                                    for (var i = 0; i < 4; i++) {
+                                        if (test[1][i] != pixels[i]) 
+                                            throw {box: testIdx, wanted: test[1][i], got: pixels[i], pixels: pixels};
+                                    }
+                                });
+                            } catch (e) {
+                                return k(e || {msg: 'exn'});
+                            }
+                            return k();
+                        });
+                    });
+                });
+            }}
+
+		];
+
+		//============================
+
+		//show all setup first
+		var doms = tests.map(function (o) { 
+			return $('<li></li>')
+				.append($('<span></span>').addClass('test-name').text(o.name))
+				.append($('<span></span>').addClass('test-result').addClass('status-waiting'));
+		});
+		doms.forEach(function (d) { $('#tests').append(d); });
+
+		//trickle in results, may be async
+		tests.forEach(function (test, i) {
+			var d = $('.test-result', doms[i]);
+			setTimeout(
+				function () {
+					try {
+						test.fn(function (err) {
+							d.removeClass('status-waiting').addClass('status-' + (err ? 'fail' : 'pass'));
+							d.text(err ? 'exn: ' + err.toString()  : 'pass');
+                            if (err) console.error("FAILED TEST", i + 1, test.name, err);
+						});
+					} catch (e) {
+						console.error('exn', test.name, e);
+						d.removeClass('status-waiting').addClass('status-fail').text('exn: ' + e.toString());
+                        console.error("FAILED TEST", i + 1, test.name, e);
+					} 
+				}, 10);
+		})
+
+	}
+
+
 	</script>
+	<style>
+		#tests { max-width: 40em; font-size: 1.2em; }
+		#tests > li { padding: 0.5em; }
+		#tests .pass, #tests .fail { padding-left: 1em; }
+		#tests .test-name { width: 10em; display: inline-block;}
+		#tests li { border-bottom: 1px dotted #CCC;}
+		#tests .test-result { padding: 0.5em; }		
+		#tests .pass, #tests .status-pass { background-color: #CFC; color: #070; }
+		#tests .fail, #tests .status-fail { background-color: red; color: white; font-weight: bold; }
+		#tests .cfg { background-color: #CCC; }
+		#tests > li { margin: 0.5em; }
+
+		.test-name { color: blue; }
+		.test-name:after { content: ":";}
+		.test-result.status-waiting:before { content: "waiting"; }
+
+	</style>
 </head>
 
 <body>
 	<div>	
-			<h1>Superconductor</h1>
-			<canvas id="visualization" >ERROR: HTML canvas support not found.</canvas>
+			<div>
+				<a href="index.html?webworkerLayout=false&ignoreCL=true&ignoreGL=true">naive</a>
+				<a href="index.html?webworkerLayout=true&ignoreCL=true&ignoreGL=false">workers</a>
+				<a href="index.html?webworkerLayout=false&ignoreCL=false&ignoreGL=false">webcl</a>
+			</div>
+			<div>
+				<h1>tests</h1>
+				<ol id="tests">
+				</ol>
+			</div>
+
+            <div><input type="button" id="renderButton" value="render"/></div>
+            <div>
+                10px <div style="display:inline-block; width: 10px; height: 10px; background-color: gray"> </div>
+                20px <div style="display:inline-block; width: 20px; height: 20px; background-color: gray"> </div>
+            </div>
+            <div id="visualizations">
+            </div>
+            <canvas id="viz-top" class="visualization">ERROR: HTML canvas support not found.</canvas>
 
 	</div>
 </body>

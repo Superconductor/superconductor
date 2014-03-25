@@ -3,79 +3,96 @@
 	<!-- Cal colors: Yale Blue #0F4D92, California Gold #FFCC33 -->
 	<head>
 		<title>Election Treemap (Superconductor Demo)</title>
+		<script type="text/javascript">
+					
+		function getParams () {
+			var parts = document.URL.split("?")
+			if (parts.length == 0) {
+				return {};
+			} else {
+				var end = parts[parts.length - 1];
+				var res = {};
+				var pairs = end.split('&');
+				for (var i = 0; i < pairs.length; i++) {
+					var kv = pairs[i].split('=');
+					res[kv[0]] = kv[1];
+				}
+				return res;			
+			}
+		}			
+		window.cfg = getParams();
+		
+
+		function getUrlVar (key) {
+			return decodeURI(
+				window.location.search.replace(
+						new RegExp("^(?:.*[&\\?]" + encodeURI(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), 
+						"$1"));
+		}
+
+		function getSettings (kernel) {
+	        var ignoreCL = (getUrlVar('ignoreCL') == 'true') || !window.webcl;
+	        var webworkerLayout = ignoreCL && (getUrlVar('webworkerLayout') == 'true');
+	        var ignoreGL = ignoreCL && !(getUrlVar('ignoreGL') === 'false');
+	        var numWorkers = parseInt(getUrlVar("numWorkers") || "1");
+	        var settings = {
+	            ignoreCL: ignoreCL,
+	            webworkerLayout: webworkerLayout,
+	            ignoreGL: ignoreGL,
+	            numWorkers: numWorkers,
+	            minParallelLayoutLevelLength: 500, 
+	            antialias: true,
+	            src: kernel + (ignoreCL ? '.js' : '')
+	        };
+	        return settings;
+		}		
+		
+		</script>
+
 
 		<script type="text/javascript">
 			/////////// Config toggles
 
+
+			var base = window.location.protocol + "//" + window.location.host + '/examples/treemap/'
 			// Which JSON data file to load (small dummy data, or full dataset)
-			// jsonDataFile = "data_sc_small.json";
-			jsonDataFile = "http://localhost:8888/examples/treemap/data_sc_big.json";
+			//jsonDataFile = "data_sc_small.json";
+			jsonDataFile = base + "data_sc_big.json";
 			
 			//jsonDataFileFlat = "small.flat.json";
-			jsonDataFileFlat = "http://localhost:8888/examples/treemap/data.sparse.json"; //if not in repo, generate via
+			jsonDataFileFlat = base + "data.sparse.json"; //if not in repo, generate via
 			//1: make kbindings (via webcl/bin)
-			//  ./gen ../../src/msr_demo_all_borders.ftl ../examples/treemap
+			//  ./gen ../../src/msr_demo_all_borders.ftl ../examples/election-treemapGen
 			//2: make json (webcl/src)
-			//  ./node flattener.js tmp/data_sc_big.json ../bin/tmp/kbindings.js ../examples/treemap/big.flat.mt.json
+			//  node flattener.js ../../examples/treemap/data_sc_big.json ../../examples/treemap/kbindings.js sparseMT "{}" ../../examples/treemap/data.sparse.mt.json
 			
-			//jsonDataFileFlatMt = "http://localhost:8888/examples/treemap/small.flat.mt.json";
-			jsonDataFileFlatMt = "http://localhost:8888/examples/treemap/data.sparse.mt.json";
+			//jsonDataFileFlatMt = "http://localhost:8888/examples/election-treemapGen/small.flat.mt.json";
+			jsonDataFileFlatMt = base + "data.sparse.mt.json";
 			
 			// Turn on selectors in Superconductor?
 			useSelectors = false; //slow default as it ping-pongs between CPU/GPU
 
-			useFlat = false; //vs. dyn load
-			useMt = false;
+			useFlat = window.cfg.useFlat == "true" ? true : false; //vs. dyn load
+			useMt = useFlat;
 			numMaxWorkers = 4; // false for default
-			
+
 		</script>
 		
 
 		<link rel="stylesheet" href="style.css" />
 
-		<script src="/superconductorjs/superconductor.js" type="text/javascript"></script>
+		<script src="../../superconductorjs/superconductor.js" type="text/javascript"></script>
 		<script src="demo.js" type="text/javascript"></script>
-		<script src="spin.js" type="text/javascript"></script>
-<!--		<script src="stats.min.js"></script> -->
-<!--		<script src="../../selectors.js"></script> -->
-		<script src="/superconductorjs/selectorsGPU.js"></script>
-
-		<style type="sc" id="initStyle">
-		  Country {
-			fld_iroot_minturnout: 0.5;
-			fld_iroot_maxturnout:  0.75;
-			fld_iroot_width: 102400;
-			fld_iroot_height:  76800;
-			fld_iroot_showfraud: 0;
-			fld_iroot_showprojected: 0;
-			fld_iroot_fixwidth: 1;
-			fld_iroot_showjavascript: 1.0;
-			}		  
-		</style>
-		<style type="sc" id="initStyleZZ">
-		  Country {
-			fld_iroot_minturnout: 0.5;
-			fld_iroot_maxturnout:  0.75;
-		  }		  
-		  Country CountryContainer {
-			fld_node_minturnout: 0.88;
-			fld_node_maxturnout:  0.95;
-		  }		  
-		  Country > CountryContainer {
-			fld_node_minturnout: 0.3;
-			fld_node_maxturnout:  0.4;
-		  }		  
-		  Country HSquare PollingPlace {
-			fld_node_minturnout: 0.6;
-			fld_node_maxturnout:  0.7;
-		  }		  
-		  HSquare + HSquare#foo {
-			fld_node_minturnout: 0.1;
-			fld_node_maxturnout:  0.2;		  
-		  }
-		</style>
-		
-		
+<script>
+/* MONKEY PATCHING */
+function updateDisplay (sc) {
+  sc.layoutAndRenderAsync(function () {
+	  var ur = sc.data.fld_iroot_votesur.get(0);
+	  document.getElementById("count").textContent = Math.round(ur * 100);  
+  });
+}
+</script>		
+		<script src="spin.js" type="text/javascript"></script>		
 		<link rel="stylesheet" id="themeCSS" href="iThing.css"> 
 		<script src="jquery-1.7.1.min.js" type="text/javascript"></script>
 		<script src="jquery-ui-1.9.2.custom.min.js"></script>
@@ -83,13 +100,43 @@
 	</head>
 
 <body>
+<style>
+#banner { 
+	background-color: black;
+	color: white;
+	text-align: left;
+	padding: 1em;
+}
+#banner h2 {
+	margin: 0; padding: 0;
+}
+#banner a {
+	color: white;
+	font-size: 1.5em;
+}
+#banner span {
+	padding: 2em;
+}
+
+</style>
+<div id="banner">
+<h2>Treemap Demos</h2>
+
+<a href="index.html?webworkerLayout=false&ignoreCL=true&ignoreGL=true">Pure JS</a>
+<a href="index.html?webworkerLayout=false&ignoreCL=true&ignoreGL=false">WebGL</a>
+<a href="index.html?webworkerLayout=true&ignoreCL=true&ignoreGL=false">Web Workers + WebGL</a>
+<a href="index.html?webworkerLayout=false&ignoreCL=false&ignoreGL=false">WebCL+WebGL</a>
+
+</div>
+
 	<div id="main_content">	
 		<div class="intro">
 			<div class="header">
 				<h1 class="anaglyph">Superconductor</h1>
 			</div>
 
-			<h2>Demo: Election Results</h2>
+			<h2>Demo: Voter Precinct by Party &amp; Turnout</h2>
+						
 
 			<div class="settings">
 				<div class="setting-item">
@@ -102,16 +149,34 @@
 				</div>
 			</div>
 
-			<div class="vote">Ruling Party: <span id="count">0</span>%</div>
+			<div class="vote" style="margin-top: 0em">Ruling Party: <span id="count">0</span>%</div>
+			
+			<div id="legend" style="margin: 2em; font-size: 1.5em">
+			<b>Legend</b>
+				<ul>
+					<li>Small square: voting precinct</li>
+					<li>Square size: votes cast</li> 
+					<li>Red: town voted for the incumbent</li>
+					<li>Black borders: different districts</li>
+				</ul>
+			</div>
+			
 		</div>
 
 
 		<div id="vis-container">
 			<div class="vis-overlay">
+
+
 				<div id="turnout-container" class="vis-controls">
+
 
 					<div class="wide-control">
 						<div id="range-slider">
+							<div style="background-color: white; font-size: 1.5em">
+								Select towns based on the voter turnout range (0-100%).
+							</div>
+
 						</div>
 
 						<script>
@@ -120,22 +185,93 @@
 					</div>
 				</div>
 
-
-				<div id="vert-control" class="vis-controls disabled">
-					<div class="my-control">
-						<label id="zoom-label" for="zoom-slider">Zoom</label>
-						<input id="zoom-slider" class="nav-slider" type="range" min="-18" max="-1.5" step="0.3" value="-7" disabled="true"/>
-					</div>
-				</div>
 			</div>
 
-			<canvas id="visualization" >ERROR: HTML canvas support not found.</canvas>
+			<canvas id="visualization" width="875"	height="700">ERROR: HTML canvas support not found.</canvas>
+
 
 			<script type="text/javascript">
 			var canvas = document.getElementById("visualization");
 
+			function postInit(err, sc, settings) {
+
+				if (err) {
+					console.error('could not init', err);
+					return;
+				}
+
+///////////////
+
+
+				if (settings.ignoreGL) {
+					sc.glr.setW(0.95);
+					sc.glr.setW(1);
+				} else {					
+					sc.glr.setW(0.32 / window.devicePixelRatio);
+					if (window.devicePixelRatio == 1) {
+						sc.glr.movePosition(2.8,-12,0);
+					} else {
+						sc.glr.movePosition(12.45,-25.5,0);
+					}
+				}
+
+				var useMt = true;
+				var useFlat = true;
+
+				if (useMt && !useFlat) throw 'inconsistent: useMt && !useFlat';
+				var whichFile = useMt ? jsonDataFileFlatMt : (useFlat ? jsonDataFileFlat : jsonDataFile);
+				var whichFunc = useMt ? 'loadDataFlatMt' : (useFlat ? 'loadDataFlat' : 'loadData');
+				console.log('url', whichFile);
+				sc.optNumMaxWorkers = numMaxWorkers;				
+			  	sc[whichFunc](whichFile, function (err) {
+			  		try {
+				  		if (err) {
+				  			console.error('data loading error', err);
+				  			return;
+				  		}
+
+						var d = sc.data;
+									
+					
+						console.log('sc', sc);
+						var cnv = $("#visualization")[0];
+						d.fld_iroot_minturnout.set(0, -0.001);
+						d.fld_iroot_maxturnout.set(0,  1.0);
+						d.fld_iroot_width.set(0, $(cnv).attr('width'));
+						d.fld_iroot_height.set(0,  $(cnv).attr('height'));
+						d.fld_iroot_showfraud.set(0, 0);
+						d.fld_iroot_showprojected.set(0, 0);
+						d.fld_iroot_fixwidth.set(0, 1);
+						d.fld_iroot_showjavascript.set(0, 1.0);						
+
+						spinner.stop()
+						sc.setupInteraction();
+						enableSliders(sc);
+						updateDisplay(sc);
+
+						$("#range-slider").on("valuesChanging", function(e, data){
+							console.log("Something moved. min: " + data.values.min + " max: " + data.values.max);
+							sc.data.fld_iroot_minturnout.set(0, data.values.min / 100.0);
+							sc.data.fld_iroot_maxturnout.set(0, data.values.max / 100.0);
+							updateDisplay(sc);
+						});
+
+						$("#range-slider").rangeSlider({valueLabels: "show"});
+					} catch (e) {
+						console.error('could not bind to loaded data', e);
+					}
+				});
+
+/////////////// postInit
+			}
+
+			var settings = getSettings("election-treemap.visualization");
+			console.log('settings', settings);
 			try {
-				window.superconductor = new Superconductor("kernels.visualization", canvas);
+				$(function () { 
+					new Superconductor(settings.src, canvas, settings, 
+						function (err, sc) { postInit(err, sc, settings); }); 
+				});		
 			} catch(e) {
 				var msg = '\'' + e.message + '\'';
 				if(e.line && e.sourceURL) {
@@ -166,66 +302,6 @@
 				left: 'auto' // Left position relative to parent in px
 			}).spin(document.getElementById('vis-container'));
 
-
-			// Load the data, after a slight delay to allow the spinner to start
-			setTimeout(function() {
-				if (useMt && !useFlat) throw 'inconsistent: useMt && !useFlat';
-				var whichFile = useMt ? jsonDataFileFlatMt : (useFlat ? jsonDataFileFlat : jsonDataFile);
-				var whichFunc = useMt ? 'loadDataFlatMt' : (useFlat ? 'loadDataFlat' : 'loadData');
-				console.log('url', whichFile);
-				window.superconductor.optNumMaxWorkers = numMaxWorkers;
-			  	window.superconductor[whichFunc](whichFile, function() {
-					var d = window.superconductor.data;
-			
-					//simple checksum
-					/*
-					for (var name in window.superconductor.clr) {
-						if (name.indexOf("_buffer_1") != -1 && name.indexOf("cl_") == -1) {
-							var sum = 0;
-							for (var i = 0; i < window.superconductor.clr[name].length; i++)
-								sum += window.superconductor.clr[name][i];
-							console.log(name, sum);//, window.superconductor.clr[name]); 							
-						}
-					}
-					*/
-					
-					
-			
-					if (useSelectors) {
-					    var style = document.getElementById('initStyle').innerHTML;
-					    console.log('found style');
-					    var t0 = new Date().getTime();
-						var selEngine = selectors(window.superconductor, style, window.superconductor.clr.tokens);
-						var t1 = new Date().getTime();
-						console.log('generated selectors ', t1 - t0, 'ms');
-						selEngine(window.superconductor.data);
-						var t2 = new Date().getTime();
-						console.log('ran selectors', t2 - t1, 'ms');
-					} else {
-						d.fld_iroot_minturnout.set(0, -0.001);
-						d.fld_iroot_maxturnout.set(0,  1.0);
-						d.fld_iroot_width.set(0, 102400);
-						d.fld_iroot_height.set(0,  76800);
-						d.fld_iroot_showfraud.set(0, 0);
-						d.fld_iroot_showprojected.set(0, 0);
-						d.fld_iroot_fixwidth.set(0, 1);
-						d.fld_iroot_showjavascript.set(0, 1.0);						
-					}
-					
-					spinner.stop()
-					window.superconductor.startVisualization();
-					enableSliders();
-
-					$("#range-slider").on("valuesChanging", function(e, data){
-//						console.log("Something moved. min: " + data.values.min + " max: " + data.values.max);
-						window.superconductor.data.fld_iroot_minturnout.set(0, data.values.min / 100.0);
-						window.superconductor.data.fld_iroot_maxturnout.set(0, data.values.max / 100.0);
-						updateDisplay();
-					});
-
-					$("#range-slider").rangeSlider({valueLabels: "show"});
-				});
-			}, 0);
 		</script>
 		</div>
 	</div>

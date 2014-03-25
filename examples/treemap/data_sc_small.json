@@ -1,4 +1,4 @@
-data = {
+{
 	"class": "Root",
 	"width": 400, "height": 400,
 	"fixWidth": 1.0,
@@ -563,4 +563,4 @@ data = {
 			]}}
 		]}
 	}
-}};
+}}

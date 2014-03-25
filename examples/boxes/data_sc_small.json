@@ -1,18 +1,19 @@
-data = {
-	class: "Root", 
-	children: {
+{
+	"class": "Root", 
+	"userInput": 5,
+	"children": {
 		"child": {
-			class: "HBox",
-			children: {
+			"class": "HBox",
+			"children": {
 				"childs": [
-					{class: "Leaf"},
-					{class: "Leaf"},
-					{class: "HBox",
-					 children: {
-					   childs: [{class: "Leaf"}, {class: "Leaf"}]}},
-					{class: "Leaf"},
-					{class: "Leaf"}]						   
+					{"class": "Leaf"},
+					{"class": "Leaf"},
+					{"class": "HBox",
+					 "children": {
+					   "childs": [{"class": "Leaf"}, {"class": "Leaf"}]}},
+					{"class": "Leaf"},
+					{"class": "Leaf"}]						   
 			}
 		} 
 	}
-};
+}

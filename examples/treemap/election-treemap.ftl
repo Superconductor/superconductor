@@ -1,3 +1,6 @@
+//schedule {
+//	"P=[(_,td,_,_,_),(_,bu,_,_,_),(_,td,_,_,_),(_,bu,_,_,_),(_,td,_,_,_)]"}
+//}
 interface IRoot {
     input width : float;
     input height : float;
@@ -99,15 +102,15 @@ class CountryContainer(tweenMagnitude) : Node{
     }
     actions{
         x := rx - w;
-        y := by - h;
+        y := 0;
         
-        @render fixWidth != 0 ? @RectangleOutline(x, y, w, h, rgb(0,0,0)) : 0;
+        @render fixWidth != 0 ? @RectangleOutline(x, y, w, h, 10.0f, rgb(0,0,0)) : 0;
 
         loop childs{
             childs.w := (childs$i.totalMag / totalMag) * w;
             childs.h := h;
             childs.rx := fold x .. childs$-.rx + childs$i.w;
-            childs.by := y + h;
+            childs.by := 0;
         }
     }
 }
@@ -125,7 +128,7 @@ class Region(tweenMagnitude) : Node{
             childs.w := w;
             childs.h := (childs$i.totalMag / totalMag) * h;
             childs.rx := x + w;
-            childs.by := fold y .. childs$-.by + childs$i.h;
+            childs.by := fold 0 .. childs$-.by + childs$i.h;
         }
     }
 }
@@ -138,7 +141,7 @@ class District(tweenMagnitude) : Node{
         x := rx - w;
         y := by - h;
         
-        @render fixWidth != 0 ? @RectangleOutline(x, y, w, h, rgb(0,0,0)) : 0;
+        @render fixWidth != 0 ? @RectangleOutline(x, y, w, h, 1.0f, rgb(0,0,0)) : 0;
 
         loop childs{
             childs.w := (childs$i.totalMag / totalMag) * w;
@@ -220,7 +223,7 @@ class PollingPlace : Node{
         calcVotesColor := turnout > 0.83f ? lerpColor(calcRegularColor, calcProjectedColor, showProjected) : calcRegularColor;
         calcFraudColor := (turnout > 0.83f) ? fraudColor : calcVotesColor;
         
-        @render @Rectangle(x, y, w, h, 255*256*256*256 + lerpColor(calcVotesColor, calcFraudColor, showFraud));
+        @render @Rectangle(x, y, w, h, lerpColor(calcVotesColor, calcFraudColor, showFraud));
 
         x := rx - w;
         y := by - h;

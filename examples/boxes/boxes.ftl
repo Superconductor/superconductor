@@ -1,4 +1,7 @@
-interface IRoot { 
+interface IRoot {
+
+	input userInput : int;
+
 	var w : float;
 	var h : float;
 }
@@ -21,7 +24,7 @@ class Root : IRoot {
 	actions {
 		w := child.w + 10;
 		h := child.h + 10;
-		child.x := 5;
+		child.x := 5 + userInput;
 		child.rx := child.x + child.w;
 		child.y := 5;
 		
@@ -42,13 +45,30 @@ class HBox : Node {
 			h := fold 5 .. $-.h > (childs$i.h + 10) ? $-.h : (childs$i.h + 10);
 			childs.y := y + 5;
 		}
-		@render @RectangleOutline(x, y, w, h, rgb(100,0,0));
+		
+		@render @RectangleOutline(x, y, w, h, 1.0f, rgb(100,0,0));
+		
+		@render @RectangleZ(x, y + 40, w, h, 0.0f, rgba(255,0,0, 153));
+
+		@render @Line3D(
+			x, y + 80, 0.0f, 
+			x + 10, y + 10 + 80, 0.0f, 
+			5.0f, rgba(255, 0, 0, 153));
+
+		@render @Line(
+			x + 20, y + 80,
+			x + 20 + 10, y + 10 + 80,
+			5.0f, rgba(0, 0, 255, 153));
+
 	}
 }
 class Leaf : Node { 
+	attributes {
+		input color : int;
+	}
 	actions {
 		w := 10;
 		h := 10;
-		@render @Rectangle(x, y, w, h, rgb(255,0,0));
+		@render @Rectangle(x, y, w, h, color);
 	}
 }
