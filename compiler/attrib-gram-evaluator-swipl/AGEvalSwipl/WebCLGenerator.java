@@ -104,9 +104,15 @@ public class WebCLGenerator extends OpenCLGenerator {
 	}
 	private void generateSetKernelArgumentsFunction (StringBuilder contents) {
 		contents.append("this._gen_setKernelArguments = function(kernel) {\n");
-		contents.append("\tvar types = WebCLKernelArgumentTypes;\n");
-		contents.append("\tkernel.setArg(0, 0, types.UINT);\t// start_idx (default to 0)\n");
-		contents.append("\tkernel.setArg(1, this.tree_size, types.UINT);\n");		
+        contents.append("if (typeof webcl.enableExtension == \"function\") {\n");
+        contents.append("\tkernel.setArg(0, new Uint32Array([0]));\t// start_idx (default to 0)\n");
+        contents.append("\tkernel.setArg(1, new Uint32Array([this.tree_size]));\n");
+        contents.append("} else {\n");
+        contents.append("\tconsole.debug(\"Legacy set args\");\n");
+        contents.append("\tvar types = window.WebCLKernelArgumentTypes;\n");
+        contents.append("\tkernel.setArg(0, 0, types.UINT);\t// start_idx (default to 0)\n");
+        contents.append("\tkernel.setArg(1, this.tree_size, types.UINT);\n");
+        contents.append("}\n");
 		int i = 2;
 		for (OpenCLFieldsHelper.CLBuffer buffer : fields.getOclBuffers()) {
 			contents.append("\tkernel.setArg(" + i + ", this.cl_" + buffer.getBuffer_name() + ");\n"); //int => cl_int_buffer_1

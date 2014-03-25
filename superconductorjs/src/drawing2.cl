@@ -1,6 +1,7 @@
 typedef struct {
-	float4 vertex;
-	float4 color;
+	float2 xy;
+	float z;
+	int color;
 } VertexAndColor;
 
 
@@ -26,8 +27,8 @@ int Circle_draw(__global VertexAndColor* gl_buffer, unsigned int buf_index, int 
 int Rectangle_size(float x, float y, float w, float h, int colorRgb);
 int Rectangle_draw(__global VertexAndColor* gl_buffer, int buffer_offset, int num_vertices, float x, float y, float w, float h, int colorRgb);
 
-int RectangleOutline_size(float x, float y, float w, float h, int colorRgb);
-int RectangleOutline_draw(__global VertexAndColor* gl_buffer, int buffer_offset, int num_vertices, float x, float y, float w, float h, int colorRgb);
+int RectangleOutline_size(float x, float y, float w, float h, float thickness, int colorRgb);
+int RectangleOutline_draw(__global VertexAndColor* gl_buffer, int buffer_offset, int num_vertices, float x, float y, float w, float h, float thickness, int colorRgb);
 
 int RectangleZ_size(float x, float y, float w, float h, float z, int rgb_col);
 int RectangleZ_draw(__global VertexAndColor* gl_buffer, int buffer_offset, int num_vertices, 
@@ -54,8 +55,6 @@ int Line_draw(__global VertexAndColor* gl_buffer, int buffer_offset, int num_ver
 #define NUM_VERT_CIRCLE 50
 // Max number of vertices to use when drawing a circle.
 #define NUM_VERT_ARC 20
-// The width when drawing outline-style objects
-#define BORDER_WIDTH 200
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -66,7 +65,7 @@ int Line_draw(__global VertexAndColor* gl_buffer, int buffer_offset, int num_ver
 // Converts a point on a circle to x & y coordinates.
 // The point is given as radians from the '3' position, the radius, and x/y 
 // coords of the center of the circle.
-float2 AngleToCoord(float angle, float radius, int x, int y);
+float2 AngleToCoord(float angle, float radius, float x, float y);
 
 // Radians <-> degrees
 float DegToRad(int degrees);
@@ -162,11 +161,9 @@ int ArcZ_draw(__global VertexAndColor* gl_buffer, unsigned int buf_index, int nu
 		return CircleZ_draw(gl_buffer, buf_index, num_vertices, x, y, z, radius, colorRgb);
 	}
 
-	float4 gl_color = (float4)(getRedComponent8B(colorRgb), getGreenComponent8B(colorRgb), getBlueComponent8B(colorRgb), getAlphaComponent8B(colorRgb));
-
 	float start_ang = DegToRadf(alpha) - DegToRadf(sectorAng / 2.0f);
 	float end_ang = DegToRadf(alpha) + DegToRadf(sectorAng / 2.0f);
-	int inner_radius = radius - w;
+	float inner_radius = radius - w;
 
 	// We need to reserve two vertices for our degenerate triangles
 	num_vertices -= 2;
@@ -179,17 +176,15 @@ int ArcZ_draw(__global VertexAndColor* gl_buffer, unsigned int buf_index, int nu
 	float angle_increment = fabs(end_ang - start_ang) / ((num_vertices - 2) / 2);
 
 	VertexAndColor inner_vertex;
-	inner_vertex.color = gl_color;
-	inner_vertex.vertex.zw = (float2)(z, W_VALUE);
-	VertexAndColor outer_vertex;
-	outer_vertex.color = gl_color;
-	outer_vertex.vertex.zw = (float2)(z, W_VALUE);
+	inner_vertex.color = colorRgb;
+	inner_vertex.z = -z;
+	VertexAndColor outer_vertex = inner_vertex;
 
 	for(int i = 0; i < (num_vertices / 2); i++) {
 		float current_angle = start_ang + (i * angle_increment);
 
-		inner_vertex.vertex.xy = AngleToCoord(current_angle, inner_radius, x, y);
-		outer_vertex.vertex.xy = AngleToCoord(current_angle, radius, x, y);
+		inner_vertex.xy = AngleToCoord(current_angle, inner_radius, x, y);
+		outer_vertex.xy = AngleToCoord(current_angle, radius, x, y);
 
 		// Duplicate the first vertex
 		if(i == 0) {
@@ -231,8 +226,6 @@ int Circle_draw(__global VertexAndColor* gl_buffer, unsigned int buf_index, int 
 
 
 int CircleZ_draw(__global VertexAndColor* gl_buffer, unsigned int buf_index, int num_vertices, float x, float y, float z, float radius, int colorRgb) {
-	float4 gl_color = (float4)(getRedComponent8B(colorRgb), getGreenComponent8B(colorRgb), getBlueComponent8B(colorRgb), getAlphaComponent8B(colorRgb));
-	
 	// Take one off to reserve an extra vertex for the degenerate triangle
 	num_vertices -= 1;
 
@@ -248,13 +241,13 @@ int CircleZ_draw(__global VertexAndColor* gl_buffer, unsigned int buf_index, int
 	//	Robust for both odd and even num_vertices. Only requirement is
 	//	num vertices >= 3 so we can make at least one triangle
 	VertexAndColor vert;
-	vert.color = gl_color;
-	vert.vertex.zw =  (float2)(z, W_VALUE);
+	vert.color = colorRgb;
+	vert.z = -z;
 
 	const float angle_increment = (2* M_PI_F) / num_vertices;
 
 	// Place the first vertex at angle 0
-	vert.vertex.xy = AngleToCoord(0.0f, radius, x, y);
+	vert.xy = AngleToCoord(0.0f, radius, x, y);
 	gl_buffer[buf_index] = vert;
 	buf_index++;
 
@@ -267,7 +260,7 @@ int CircleZ_draw(__global VertexAndColor* gl_buffer, unsigned int buf_index, int
 	// There's probably room for optimization here...
 	while(b_index >= a_index) {
 		// Place a_index
-		vert.vertex.xy = AngleToCoord(a_index * angle_increment, radius, x, y);
+		vert.xy = AngleToCoord(a_index * angle_increment, radius, x, y);
 		gl_buffer[buf_index] = vert;
 		a_index++;
 		buf_index++;
@@ -276,7 +269,7 @@ int CircleZ_draw(__global VertexAndColor* gl_buffer, unsigned int buf_index, int
 		// ...but first, make sure the loop invariant still holds since we're
 		// writing two vertices at a time.
 		if(b_index >= a_index) {
-			vert.vertex.xy = AngleToCoord(b_index * angle_increment, radius, x, y);
+			vert.xy = AngleToCoord(b_index * angle_increment, radius, x, y);
 			gl_buffer[buf_index] = vert;
 			b_index--;
 			buf_index++;
@@ -299,11 +292,11 @@ int Rectangle_draw(__global VertexAndColor* gl_buffer, int buffer_offset, int nu
 	// 6 is the minimum # of vertices to draw a rect
 
 	VertexAndColor vert;
-	vert.color = (float4)(getRedComponent8B(colorRgb), getGreenComponent8B(colorRgb), getBlueComponent8B(colorRgb), getAlphaComponent8B(colorRgb));
-	vert.vertex.zw = (float2)(Z_VALUE, W_VALUE);
+	vert.color = colorRgb;
+	vert.z = Z_VALUE;
 
 	// Draw lower-left corner
-	vert.vertex.xy = (float2)(x , y);
+	vert.xy = (float2)(x , y);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 	// Duplicate it to create a degenerate triangle
@@ -311,17 +304,17 @@ int Rectangle_draw(__global VertexAndColor* gl_buffer, int buffer_offset, int nu
 	buffer_offset++;
 
 	// Draw upper-left corner
-	vert.vertex.xy = (float2)(x, y + h);
+	vert.xy = (float2)(x, y + h);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 
 	// Draw lower-right corner
-	vert.vertex.xy = (float2)(x + w, y);
+	vert.xy = (float2)(x + w, y);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 
 	// Draw upper-right corner
-	vert.vertex.xy = (float2)(x + w, y + h);
+	vert.xy = (float2)(x + w, y + h);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 	// Duplicate the last vertex
@@ -338,11 +331,11 @@ float x, float y, float w, float h, float z, int rgb_color) {
 	// 6 is the minimum # of vertices to draw a rect
 
 	VertexAndColor vert;
-	vert.color = (float4)(getRedComponent8B(rgb_color), getGreenComponent8B(rgb_color), getBlueComponent8B(rgb_color), getAlphaComponent8B(rgb_color));
-	vert.vertex.zw = (float2)(Z_VALUE + z, W_VALUE);
+	vert.color = rgb_color;
+	vert.z = Z_VALUE - z;
 
 	// Draw lower-left corner
-	vert.vertex.xy = (float2)(x , -y);
+	vert.xy = (float2)(x , y);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 	// Duplicate it to create a degenerate triangle
@@ -350,17 +343,17 @@ float x, float y, float w, float h, float z, int rgb_color) {
 	buffer_offset++;
 
 	// Draw upper-left corner
-	vert.vertex.xy = (float2)(x, -y - h);
+	vert.xy = (float2)(x, y + h);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 
 	// Draw lower-right corner
-	vert.vertex.xy = (float2)(x + w, -y);
+	vert.xy = (float2)(x + w, y);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 
 	// Draw upper-right corner
-	vert.vertex.xy = (float2)(x + w, -y - h);
+	vert.xy = (float2)(x + w, y + h);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 	// Duplicate the last vertex
@@ -374,66 +367,66 @@ float x, float y, float w, float h, float z, int rgb_color) {
 
 
 
-int RectangleOutline_size(float x, float y, float w, float h, int colorRgb) { 
+int RectangleOutline_size(float x, float y, float w, float h, float thickness, int colorRgb) { 
 	return 12; 
 }
 
 
 // Requires 12 vertices
-int RectangleOutline_draw(__global VertexAndColor* gl_buffer, int buffer_offset, int num_vertices, float x, float y, float w, float h, int colorRgb) { 
+int RectangleOutline_draw(__global VertexAndColor* gl_buffer, int buffer_offset, int num_vertices, float x, float y, float w, float h, float thickness, int colorRgb) { 
 	VertexAndColor vert;
-	vert.color = (float4)(getRedComponent8B(colorRgb), getGreenComponent8B(colorRgb), getBlueComponent8B(colorRgb), getAlphaComponent8B(colorRgb));
-	vert.vertex.zw = (float2)(Z_VALUE + 100, W_VALUE);
+	vert.color = colorRgb;
+	vert.z = Z_VALUE;
 
 	// Draw trapazoids in the following order: left, top, right, bottom
 
 	// Left trapazoid
-	vert.vertex.xy = (float2)(x , y);
+	vert.xy = (float2)(x , y);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 	// Duplicate first vertex to create degenerate triangle
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 
-	vert.vertex.xy = (float2)(x + BORDER_WIDTH, y + BORDER_WIDTH);
+	vert.xy = (float2)(x + thickness, y + thickness);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 
-	vert.vertex.xy = (float2)(x, y + h);
+	vert.xy = (float2)(x, y + h);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 
-	vert.vertex.xy = (float2)(x + BORDER_WIDTH, y + h - BORDER_WIDTH);
+	vert.xy = (float2)(x + thickness, y + h - thickness);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 
 
 	// Top trapazoid
-	vert.vertex.xy = (float2)(x + w, y + h);
+	vert.xy = (float2)(x + w, y + h);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 
-	vert.vertex.xy = (float2)(x + w - BORDER_WIDTH, y + h - BORDER_WIDTH);
+	vert.xy = (float2)(x + w - thickness, y + h - thickness);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 
 
 	// Right trapazoid
-	vert.vertex.xy = (float2)(x + w, y);
+	vert.xy = (float2)(x + w, y);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 
-	vert.vertex.xy = (float2)(x + w - BORDER_WIDTH, y + BORDER_WIDTH);
+	vert.xy = (float2)(x + w - thickness, y + thickness);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 
 
 	// Bottom trapazoid
-	vert.vertex.xy = (float2)(x, y);
+	vert.xy = (float2)(x, y);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 
-	vert.vertex.xy = (float2)(x + BORDER_WIDTH, y + BORDER_WIDTH);
+	vert.xy = (float2)(x + thickness, y + thickness);
 	gl_buffer[buffer_offset] = vert;
 	buffer_offset++;
 
@@ -444,9 +437,8 @@ int RectangleOutline_draw(__global VertexAndColor* gl_buffer, int buffer_offset,
 }
 
 
-#define SETVERT(x,y,z) \
-	vert.vertex.zw = (float2)(z, W_VALUE); \
-	vert.vertex.xy = (float2)(x, y); \
+#define SETVERT(x, y) \
+	vert.xy = (float2)(x, y); \
 	gl_buffer[buffer_offset] = vert; \
 	buffer_offset++;
 
@@ -454,27 +446,25 @@ int Line_size(float x1, float y1, float x2, float y2, float thickness, int rgb_c
 int Line_draw(__global VertexAndColor* gl_buffer, int buffer_offset, int num_vertices, 
   float x1, float y1, float x2, float y2, float thickness, int rgb_color) {
 
-	//float thickness = 0.1f;
-
 	VertexAndColor vert;
-	vert.color = (float4)(getRedComponent8B(rgb_color), getGreenComponent8B(rgb_color), getBlueComponent8B(rgb_color), getAlphaComponent8B(rgb_color));
+	vert.color = rgb_color;
+	vert.z = Z_VALUE;
 
 	//face A
-	SETVERT(x2 + thickness,-y2,0.0f);
-	SETVERT(x2 + thickness,-y2,0.0f);
-	SETVERT(x2 - thickness,-y2,0.0f);
-	SETVERT(x1 + thickness,-y1,0.0f);
-	SETVERT(x1 - thickness,-y1,0.0f);
-	SETVERT(x1 - thickness,-y1,0.0f);
+	SETVERT(x2 + thickness,y2);
+	SETVERT(x2 + thickness,y2);
+	SETVERT(x2 - thickness,y2);
+	SETVERT(x1 + thickness,y1);
+	SETVERT(x1 - thickness,y1);
+	SETVERT(x1 - thickness,y1);
 	
 	return 1;
 }
 #undef SETVERT
 
 
-#define SETVERT(x,y,z) \
-	vert.vertex.zw = (float2)(z, W_VALUE); \
-	vert.vertex.xy = (float2)(x, y); \
+#define SETVERT(x,y) \
+	vert.xy = (float2)(x, y); \
 	gl_buffer[buffer_offset] = vert; \
 	buffer_offset++;
 
@@ -483,15 +473,17 @@ int Line3D_draw(__global VertexAndColor* gl_buffer, int buffer_offset, int num_v
 float x1, float y1, float z1, float x2, float y2, float z2, float thickness, int rgb_color) {
 
 	VertexAndColor vert;
-	vert.color = (float4)(getRedComponent8B(rgb_color), getGreenComponent8B(rgb_color), getBlueComponent8B(rgb_color), getAlphaComponent8B(rgb_color));
+	vert.color = rgb_color;
 
 	//face A
-	SETVERT(x2 + thickness,-y2,z2);
-	SETVERT(x2 + thickness,-y2,z2);
-	SETVERT(x2 - thickness,-y2,z2);
-	SETVERT(x1 + thickness,-y1,z1);
-	SETVERT(x1 - thickness,-y1,z1);
-	SETVERT(x1 - thickness,-y1,z1);
+	vert.z = -z2;
+	SETVERT(x2 + thickness, y2 + thickness);
+	SETVERT(x2 + thickness, y2 + thickness);
+	SETVERT(x2 - thickness, y2 - thickness);
+	vert.z = -z1;
+	SETVERT(x1 + thickness, y1 + thickness);
+	SETVERT(x1 - thickness, y1 - thickness);
+	SETVERT(x1 - thickness, y1 - thickness);
 	
 	return 1;
 }
@@ -503,7 +495,7 @@ float x1, float y1, float z1, float x2, float y2, float z2, float thickness, int
 ///////////////////////////////////////////////////////////////////////////////
 
 
-float2 AngleToCoord(float angle, float radius, int x, int y) {
+float2 AngleToCoord(float angle, float radius, float x, float y) {
 	return (float2)((radius * cos(angle)) + x, (radius * sin(angle)) + y);
 	
 }
@@ -518,39 +510,39 @@ float DegToRadf(float degrees) {
 
 
 float getAlphaComponent8B(int rgb_color) {
-	rgb_color = rgb_color >> 24;
 	rgb_color = rgb_color & 255;
 	return (rgb_color / 255.0f);
 }
 float getRedComponent8B(int rgb_color) {
-	rgb_color = rgb_color >> 16;
+	rgb_color = rgb_color >> 24;
 	rgb_color = rgb_color & 255;
 	return (rgb_color / 255.0f);
 }
 float getGreenComponent8B(int rgb_color) {
-	rgb_color = rgb_color >> 8;
+	rgb_color = rgb_color >> 16;
 	rgb_color = rgb_color & 255;
 	return (rgb_color / 255.0f);
 }
 float getBlueComponent8B(int rgb_color) {
+	rgb_color = rgb_color >> 8;
 	rgb_color = rgb_color & 255;
 	return (rgb_color / 255.0f);
 }
 
 
 int igetAlphaComponent8B(int rgb_color) {
-	rgb_color = rgb_color >> 24;
 	return rgb_color & 255;
 }
 int igetRedComponent8B(int rgb_color) {
-	rgb_color = rgb_color >> 16;
+	rgb_color = rgb_color >> 24;
 	return rgb_color & 255;
 }
 int igetGreenComponent8B(int rgb_color) {
-	rgb_color = rgb_color >> 8;
+	rgb_color = rgb_color >> 16;
 	return rgb_color & 255;
 }
 int igetBlueComponent8B(int rgb_color) {
+	rgb_color = rgb_color >> 8;
 	return rgb_color & 255;
 }
 
@@ -596,27 +588,27 @@ int lerpColor(int start_color, int end_color, float fk) {
 	int green = green_blended & 255;
 	int blue = blue_blended & 255;
 	
-	result = (result | ((alpha & 255) << 24));
-	result = (result | ((red & 255) << 16));
-	result = (result | ((green & 255) << 8));
-	result = (result | (blue & 255));
+	result = (result | ((alpha & 255) << 0));
+	result = (result | ((red & 255) << 24));
+	result = (result | ((green & 255) << 16));
+	result = (result | ((blue & 255) << 8));
 
 	return result;
 	// return 0;
 }
 
 int rgb(int r, int g, int b) {
-	int res = 255 << 24;
-	res = res | ((r & 255) << 16);
-	res = res | ((g & 255) << 8);
-	res = res | (b & 255);
+	int res = 255;
+	res = res | ((r & 255) << 24);
+	res = res | ((g & 255) << 16);
+	res = res | ((b & 255) << 8);
 	return res;
 }
 
 int rgba(int r, int g, int b, int a) {
-	int res = (a & 255) << 24;
-	res = res | ((r & 255) << 16);
-	res = res | ((g & 255) << 8);
-	res = res | (b & 255);
+	int res = (a & 255);
+	res = res | ((r & 255) << 24);
+	res = res | ((g & 255) << 16);
+	res = res | ((b & 255) << 8);
 	return res;
 }

@@ -2,429 +2,73 @@
 // glr is the GLRunner object resposible for rendering the visualization
 // ignoreCL = true => use this just for data flattening 
 function CLRunner(glr, cfg) {
+	this.init(glr, cfg);
+}
+
+//Use initialization method rather than constructor to facilitate monkey-patched backends
+CLRunner.prototype.init = function (glr, cfg) {
+
 	if (!cfg) cfg = {};
 	this.cfg = {
-			ignoreCL: cfg.hasOwnProperty('ignoreCL') ? cfg.ignoreCL : false,
-			webworkerLayout: cfg.hasOwnProperty('webworkerLayout') ? cfg.webworkerLayout : false,
-			numWorkers : cfg.hasOwnProperty('numWorkers') ? cfg.numWorkers : 4,
-			minParallelLayoutLevelLength: cfg.hasOwnProperty('minParallelLayoutLevelLength') ? cfg.minParallelLayoutLevelLength : 1000
-		};	
+		ignoreGL: cfg.hasOwnProperty("ignoreGL") ? cfg.ignoreGL : false
+	};	
 	for (i in cfg) this.cfg[i] = cfg[i];
 
 	this.glr = glr;
 
-	if (!this.cfg.ignoreCL) {
-		
-		if(!webcl) {
-			throw new SCException('WebCL does not appear to be supported in your browser');
-		}
-		
-		this.cl = webcl;
-	
-		var platforms = this.cl.getPlatforms();
-		if(platforms.length === 0) {
-			throw new SCException('No platforms available');
-		}
-		var platform = platforms[0];
-	
-		this.devices = platform.getDevices(this.cl.DEVICE_TYPE_GPU);
-		if(this.devices.length === 0) {
-			throw new SCException('No devices available');
-		}
-
-		// FIXME: Remove this once all of our systems get updated to the latest github WebCL rev
-		// If this version of the WebCL platform uses the new CL/GL sharing with extensions use that
-		if(typeof this.cl.getExtension != 'undefined') {
-			var extension = null;
-			extension = this.cl.getExtension('KHR_GL_SHARING');
-			if (extension === null) {
-				throw new SCException('Could not create a shared CL/GL context using the WebCL extension system');
-			}
-			
-			this.context = extension.createContext({platform: platform, devices: this.devices, deviceType: this.cl.DEVICE_TYPE_GPU, sharedContext: null});
-		} else { 	// Otherwise, use the old style CL/GL sharing
-			this.context = this.cl.createContext({platform: platform, devices: this.devices, deviceType: this.cl.DEVICE_TYPE_GPU, sharedContext: null});
-		}
-		
-
-		if(this.context == null) {
-			throw new SCException('Could not create a shared WebCL context');
-		}
-	
-		this.queue = this.context.createCommandQueue(this.devices, null);
-		if(this.queue == null) {
-			throw new SCException('Could not create a WebCL command queue');
-		}	
-
-		// The WebCL buffer created from a WebGL vbo
-		this.clVBO = null;
-	}
-
 	// A map of CLDataWrapper objects for each input field in the grammar
 	this.proxyData = {};
-
 }
-
-
-CLRunner.prototype.readyToLayout = function() {
-	var kernelsLoaded = this.cfg.ignoreCL ? true : (typeof(this.program) !== 'undefined');
-	var dataLoaded = (typeof(this.tree_size) !== 'undefined');
-	return (kernelsLoaded && dataLoaded);
-};
-
-
-//Reflect, for each visit, what fields it will read/write (can overlap)
-//FIXME have compiler emit
-CLRunner.prototype.computeReadWriteSets = function() {
-// => { writes: {self: [ str ], child: [ str ]}, reads: {self: [ str ], child: [ str ]}}
-
-	if (!this.hasOwnProperty('visit_0')) throw new SCException('Did not previously run loadLayoutEngine()');
-  	
-  	var clr = this;
-  	
-  	//======== determine fields
-	var getLastVisitNum = function () {	// => int			
-			var lastVisitNum = 0;
-			while (true) {
-				if (clr["visit_" + (lastVisitNum + 1)]) {
-					lastVisitNum++;
-				} else {
-					return lastVisitNum;
-				}
-			}
-		};
-	
-	var getNodeVisitors = function (visitNum) { // => [ fn ]
-		var res = [];
-		for (var i in clr)
-			if (i.match("visit_[a-z]*_" + visitNum))
-				res.push(clr[i]);
-		return res;
-	};
-	
-	var arrayToSet = function (arr) { // => [ 'a ]
-		var res = [];		
-		arr.forEach(function (v) { if (res.indexOf(v) == -1) res.push(v); });
-		return res;		
-	}
-	
-	var getFldsWrites = function (fn) { // => [ str ]  
-        var fnStr = fn.toString(); 
-        var selfHits = 
-        	[].concat(fnStr.match(
-        	/this\.fld_[a-zA-Z0-9_]*\[index\] =/g))
-        	.filter(function (v) { return v; }) //kill null if no matches
-        	.map(function(v) { return v.slice("this.".length, v.indexOf("[")); });
-        var childHits = 
-        	[].concat(fnStr.match(
-        	/this\.fld_[a-zA-Z0-9_]*\[((current_node)|(this\.GetAbsoluteIndex\(this\.fld_[a-z_]*\[index\], index\)))\] =/g))
-        	.filter(function (v) { return v; }) //kill null if no matches
-        	.map(function(v) { return v.slice("this.".length, v.indexOf("[")); });
-        return {self: arrayToSet(selfHits), child: arrayToSet(childHits)};
-	};
-	var getFldsReads = function (fn) { // => [ str]
-		var lines = 
-			fn.toString()
-				.split("\n")
-				.filter(function (l) { return l.indexOf(" = ") != -1; }) //only asgns
-		var loopLines = lines.filter(function (l) { return l.indexOf(" for ") != -1; });
-		var nonLoopLines = lines.filter(function (l) { return l.indexOf(" for ") == -1; });
-		var nonLoopLinesRhs = 
-				nonLoopLines
-				.map(function (line) { return line.split(" = ")[1]; })
-				.filter(function (l) { //sanity check, FIXME remove
-					if (l.indexOf(" = ") != -1) throw 'double assign!'; 
-					return true; })
-					
-		var selfHits =
-			nonLoopLinesRhs
-				.reduce(function (acc, line) {
-					var matches = 
-						[].concat(line.match(/this\.fld_[a-zA-Z0-9_]*\[index/g))
-						.filter(function (v) { return v; })
-						.map(function (v) { return v.slice("this.".length, v.indexOf("[")); });
-					return acc.concat(matches); }, ["displayname"]);				
-		
-		var childHits = 
-			nonLoopLinesRhs.reduce(function (acc, line) {
-				var matches = 
-					[].concat(line.match(/this\.fld_[a-zA-Z0-9_]*\[((current_node)|(this\.GetAbsol))/g))
-					.filter(function (v) { return v; })
-					.map(function (v) { return v.slice("this.".length, v.indexOf("[")); });
-				return acc.concat(matches); }, []);						
-
-		//loops: idx reads
-		if (loopLines.length > 0) {
-			childHits.push("right_siblings");			
-			selfHits = selfHits.concat(
-				loopLines.map(function (line) {
-					return line.split("=")[3].match("this.fld_[a-zA-Z0-9_]*")[0].slice("this.".length);
-				}));
-		}
-	
-		//child writes: ptr read
-		selfHits = selfHits.concat(										
-			nonLoopLines
-				.map(function (line) { return line.split(" = ")[0]; })
-				.filter(function (l) { return l.indexOf("GetAbsoluteIndex") != -1; })
-				.map(function (l) { return l.slice(l.indexOf("(")+"(this.".length, l.indexOf("index")-1); }));
-				
-		return {self: arrayToSet(selfHits), child: arrayToSet(childHits)};
-	};	
-	//=======
-	
-	var visitFields = [];	
-	var mx = getLastVisitNum();
-	var reducer = function (hits) {
-		return hits
-			.reduce(function (acc, writes) {
-				return {
-					self: arrayToSet(acc.self.concat(writes.self)),
-					child: arrayToSet(acc.child.concat(writes.child)) };
-			}, {self: [], child: []}); };
-	for (var i = 0; i <= mx; i++) {
-		var writes = reducer(getNodeVisitors(i).map(getFldsWrites));
-		var reads = reducer(getNodeVisitors(i).map(getFldsReads));
-		
-		var any = []
-		any = any.concat(reads.child);
-		any = any.concat(writes.child);
-		any = any.concat(reads.self);
-		any = any.concat(writes.self);
-		any = arrayToSet(any);
-		
-		var returnViews = [];		
-		returnViews = returnViews.concat(writes.self);
-		returnViews = returnViews.concat(writes.child);
-		returnViews = arrayToSet(returnViews);
-				
-		visitFields.push({
-			writes: writes, 
-			reads: reads,
-			any: any,
-			returnViews: returnViews});	
-	}
-	
-	return visitFields;
-			  		
-}; // computeReadWriteSets		  		
-			  		
-CLRunner.prototype.makeLayoutWorker = function (engineSource) {
-
-	if (!this.hasOwnProperty('visit_0')) throw new SCException('Did not previously run loadLayoutEngine()');
-
-	var workerFn = function () {
-	
-		var that = this;
-
-		function GetAbsoluteIndex (rel, ref) {
-			if (rel == 0) return 0;
-			if (ref < that.levelLength) { //self row
-				return rel + ref;
-			} else { //child row
-				return rel + ref /* next child: 1 */;
-			}
-		}
-
-	    onmessage = function(m) {
-	    	try {
-	    		//INPUT SCHEMA HERE
-				for (var i in m.data.buffers) that[i] = m.data.buffers[i];
-				that.visitorNum = m.data.visitorNum;
-				that.startOffset = m.data.startOffset;
-				that.endOffset = m.data.endOffset;
-				that.levelLength = m.data.levelLength;
-				that.tree_size = m.data.tree_size;
-
-				//TODO WRITE BUFFERS
-				
-				var fn = this["visit_" + m.data.visitorNum];				
-				for (var i = 0; i < m.data.span; i++) {
-					fn(i, m.data.tree_size);
-				}
-				
-				var transferables = m.data.returnViews.map(function (i) { return that[i].buffer; });
-				
-				var writes = {};
-				m.data.returnViews.forEach(function (fld) { writes[fld] = that[fld]; });
-
-				pm = that.webkitPostMessage || that.postMessage; //HACK				
-				pm({res: 'done', writes: writes}, transferables);
-			} catch (e) {
-				postMessage({err: e.toString()});
-			}        		
-        };
-
-	};
-	
-	var workerStr = engineSource + " ; " + workerFn.toString().slice("function () {".length, -1);
-
-	var workerBlob = window.URL.createObjectURL(new Blob([ workerStr ], {
-		type: "text/javascript"
-	}));
-
-	return workerBlob;
-};
-
-CLRunner.prototype.runKernelRange = function (visitorNum, lvl, nextLvlLen, startIdx, endIdx, cb) {
-	var clr = this;
-	
-	var t0 = new Date().getTime();
-
-	//============== buffers for each field: make new & copy data
-	var buffers = {};
-
-	//1. make buffer for each field: this + next level (if exists & used) 
-	//FIXME precompute
-	var any = this.readWriteSets[visitorNum].any;
-
-	function memcpy(dst, dstOffset, src, srcOffset, length) {
-//		console.log('memcpy', dst.byteLength, dstOffset, src.byteLength, srcOffset, length);
-	  var dstU8 = new Uint8Array(dst, dstOffset, length);
-	  var srcU8 = new Uint8Array(src, srcOffset, length);
-	  dstU8.set(srcU8);
-	};
-	any.forEach(function (i) {
-		var numElts = lvl.length + 
-			((clr.readWriteSets[visitorNum].reads.child.indexOf(i) != -1 
-			  || clr.readWriteSets[visitorNum].writes.child.indexOf(i) != -1) ? 
-				nextLvlLen : 0);
-		var buff = new (clr[i].constructor)(numElts);
-		buffers[i] = buff;
-	});
-		
-	//2. copy data in if needed
-	any.forEach(function (i) {
-		var buff = buffers[i];	
-		if (clr.readWriteSets[visitorNum].reads.self.indexOf(i) != -1) {
-			memcpy(
-				buff.buffer, 0, 
-				clr[i].buffer, clr[i].byteOffset + lvl.start_idx * buff.constructor.BYTES_PER_ELEMENT, 
-				lvl.length * buff.constructor.BYTES_PER_ELEMENT);
-		}
-		if (nextLvlLen && (clr.readWriteSets[visitorNum].reads.child.indexOf(i) != -1)) {
-			memcpy(
-				buff.buffer, lvl.length * buff.constructor.BYTES_PER_ELEMENT,
-				clr[i].buffer, clr[i].byteOffset + (lvl.start_idx + lvl.length) * buff.constructor.BYTES_PER_ELEMENT,
-				nextLvlLen * buff.constructor.BYTES_PER_ELEMENT);
-		}	
-	});
-	
-	//3. transferable objects
-	var transferableObjects = [];
-	for (var i in buffers) transferableObjects.push(buffers[i].buffer);
-	
-	//=====
-	
-	//TODO locality?
-	var w = this.freeLayoutWorkers.pop();
-	if (!w) throw 'no free worker';
-	this.busyLayoutWorkers.push(w);
-
-	w.onmessage = function (m) { 
-		clr.busyLayoutWorkers.splice(clr.busyLayoutWorkers.indexOf(w),1)
-		clr.freeLayoutWorkers.push(w);
-		for (var i in m.data.writes) {
-			var buff = m.data.writes[i];
-			if (clr.readWriteSets[visitorNum].writes.self.indexOf(i) != -1) {
-				memcpy(
-					clr[i].buffer, clr[i].byteOffset + lvl.start_idx * clr[i].constructor.BYTES_PER_ELEMENT, 
-					buff.buffer, 0, 
-					lvl.length * clr[i].constructor.BYTES_PER_ELEMENT);
-			}
-			if (nextLvlLen && clr.readWriteSets[visitorNum].writes.child.indexOf(i) != -1) {
-				memcpy(
-					clr[i].buffer, clr[i].byteOffset + (lvl.start_idx + lvl.length) * clr[i].constructor.BYTES_PER_ELEMENT,
-					buff.buffer, lvl.length * clr[i].constructor.BYTES_PER_ELEMENT,
-					nextLvlLen * clr[i].constructor.BYTES_PER_ELEMENT);
-				//FIXME only copy relevant subset of children
-				//  need to get interval info from parser
-				/// currently obscured due to unique child names
-				if (false && clr[i][lvl.start_idx + lvl.length] != buff[lvl.length]) { throw 'mismatch!'; }
-			}	
-		}
-		cb(m); 
-	};
-	w.postMessage = w.webkitPostMessage || w.postMessage; //HACK
-	w.postMessage({
-			buffers: buffers, 
-			visitorNum: visitorNum,
-			startOffset: startIdx - lvl.start_idx, //relative to level start
-			endOffset: (startIdx - lvl.start_idx) + (endIdx - startIdx), //relative to level start
-			levelLength: lvl.length, 		
-			tree_size: this.tree_size,
-			returnViews: this.readWriteSets[visitorNum].returnViews},
-		transferableObjects);
-};
 
 // Given the Javascript source of a layout engine, evals that source in this context and then
 // finishes preperations of the layout engine
-CLRunner.prototype.loadLayoutEngine = function(engineSource) {
-    eval(engineSource);
-	if (this.cfg.webworkerLayout) {
-		this.readWriteSets = this.computeReadWriteSets();
-		this.layoutWorkerBlob = this.makeLayoutWorker(engineSource);
-		
-		console.log('making layout workers', this.cfg.numWorkers);
-		this.freeLayoutWorkers = [];
-		this.busyLayoutWorkers = [];
-		for (var i = 0; i < this.cfg.numWorkers; i++)
-			this.freeLayoutWorkers.push(new Worker(this.layoutWorkerBlob));
-	}	
-	if (!this.cfg.ignoreCL) {
-		this.buildKernels();
-	}
+CLRunner.prototype.loadLayoutEngine = function(engineSource, cb) {
+    try {
+    	eval(engineSource);
+    } catch (e) {
+    	return cb({msg: 'bad engine source', val: e});
+    }
+    cb();
 };
 
+CLRunner.prototype.runTraversalsAsync = function (cb) {	
+    var clr = this;    
+	var visits = [];
+    var pfx = "_gen_run_visitAsync_";
+    for (var i = 0; clr[pfx + (i + 1)]; i++) {
+        visits.push(pfx + i);
+    }
 
-// Fully lays out the loaded data, asks the GLRunner to allocate a buffer of appropriate size, then
-// writes vertex data for this layout
-CLRunner.prototype.layout = function() {
-	if(!this.readyToLayout()) {
-		console.debug("CLRunner asked to run layout, but it is not ready to layout");
-		return;
-	}
-
-	this.runTraversals();
-	if (!this.cfg.ignoreCL) {
-		this.setVBO(this.glr.reallocateVBO(this.getRenderBufferSize()));
-	}
-	this.runRenderTraversal();
+    return (function loop (step) {        
+        if (step == visits.length) { 
+            return cb.call(clr);
+        } else {
+            var fnName = visits[step];
+            var trav = clr[fnName][0];
+            var visitor = clr[clr[fnName][1]];
+            return trav.call(clr, visitor, null, false, function () { return loop(step + 1); });
+        }
+    }(0));
 };
 
 CLRunner.prototype.layoutAsync = function(cb) {
-	if(!this.readyToLayout()) {
-		console.debug("CLRunner asked to run layout, but it is not ready to layout");
-		return;
-	}
+    var startT = new Date().getTime();
+    this.runTraversalsAsync(function(err) {
+        if (err) return cb(err);
+        
+    	console.debug('prerender layout passes', (new Date().getTime() - startT), 'ms');
 
-	this.runTraversalsAsync(function () {
-		if (!this.cfg.ignoreCL) {
-			//FIXME async
-			this.setVBO(this.glr.reallocateVBO(this.getRenderBufferSize()));
-		}
-		this.runRenderTraversalAsync(cb);	
-	});
+        this.runRenderTraversalAsync(
+        	function (err) { 
+        		if (!err) console.debug('all layout passes', (new Date().getTime() - startT), 'ms');
+        		cb(err); });
+    });
 };
 
-CLRunner.prototype.setVBO = function(glVBO) {
-	if (this.cfg.ignoreCL) throw new SCException('Function only for CL-enabled use');
+/////////////////////////////
+// Parsing
+////////////////////////////
 
-	try {
-		if(this.clVBO != null) {
-			// There seems to be a bug/undocumented feature where this method isn't defined...
-			if(typeof(this.clVBO.release) !== 'undefined') {
-				this.clVBO.release();
-			}
-		}
-		this.clVBO = this.context.createFromGLBuffer(this.cl.MEM_WRITE_ONLY, glVBO);
-	} catch(e) {
-		console.error("Error creating a shared OpenCL buffer from a WebGL buffer: " + e.message);
-	}
-};
-
-
-	
 CLRunner.prototype.treeSize = function (data) {
 	var res = 1;
 	if (data.children) {
@@ -491,8 +135,6 @@ CLRunner.prototype.flattenEdges = function(res, node, nodeCont, absIdx, level, l
 
 CLRunner.prototype.tokens = [];
 CLRunner.prototype.tokenize = function (str) {
-	// var clean = str.toLowerCase(); //TODO coerce?
-
 	var idx = this.tokens.indexOf(str);
 	if (idx != -1) return idx;
 	
@@ -585,60 +227,36 @@ CLRunner.prototype.flatten = function (data, treeSize) {
 // arrays, then allocates the GPU memory, creates proxy objects (for interacting with GPU data,) and
 // and transfers the CPU-side data to the GPU.
 CLRunner.prototype.loadData = function(data, skipProxies) {
-	// We read the tree size from the JSON file
 	this.tree_size = this.treeSize(data);
 	
-	// _gen_allocateHostBuffers takes in an int representing the number of nodes in the tree,
-	// and allocates all the TypedArrays CPU-side
-	this._gen_allocateHostBuffers(this.tree_size); //was superconductor.clr._gen
+	this._gen_allocateHostBuffers(this.tree_size);
 	this._gen_allocateHostProxies(this.tree_size);
 	
-	// Takes the tree-like JSON data, and the size of the tree, and flattens + structures splits the
-	// tree and writes it to the CPU-side TypedArrays. 
+	// Flatten + structure split the tree and writes it to the CPU-side TypedArrays
 	var t0 = (new Date()).getTime();
 	var fd = this.flatten(data, this.tree_size);
 	var t1 = (new Date()).getTime();
-	console.log('flattening', t1 - t0, 'ms');
+	console.debug('flattening', t1 - t0, 'ms');
 	
-	// We copy the number of levels from the flattened data for use when doing GPU traversals
 	this.levels = fd.levels;
 
 	if (!this.cfg.ignoreCL) {
 	
-	
-		console.log('tree size', this.tree_size);
-	
-
-	
-		//FIXME skip as implicit to flatten
-		//this._gen_copyHostBuffers(data, this.tree_size);
+		console.debug('tree size', this.tree_size);
 		
-		// This allocates memory on the GPU
-		this._gen_allocateClBuffers();
-		
-		console.log('cl alloc', this.tree_size);
+		this._gen_allocateClBuffers();	
+		console.debug('cl alloc');
 	
-
-		// This creates the Javascript proxy objects
 		this._gen_allocateProxyObjects();
+		console.debug('proxy alloc');
 	
-		console.log('proxy alloc');
-	
-
-		// This transfers the CPU-side TypedArrays to the GPU
 		var t2 = (new Date()).getTime();
-		this._gen_transferTree();
-		
-
+		this._gen_transferTree();		
 		var t3 = (new Date()).getTime();
-		console.log('GPU transfer time', t3 - t2, 'ms');
+		console.debug('GPU transfer time', t3 - t2, 'ms');
 	
-	} else {
-	
-		// This creates the Javascript proxy objects
-		if (!(skipProxies)) 
-			this._gen_allocateProxyObjects();	
-
+	} else if (!skipProxies) {
+		this._gen_allocateProxyObjects();	
 	}
 };
 
@@ -801,6 +419,20 @@ CLRunner.prototype.inflate = function (spArr, nativeConstructors) {
 //overlap: whether to overlap sending to the GPU or not
 // if not, must copy big GPU buffer later
 CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumWorkers, intoGPU, intoCPU, cb) {	
+
+
+	var returned = false;
+	function succeed (v)  {
+		if (returned) return;
+		returned = true;
+		return cb(null, v);
+	}
+	function fail  (e) {
+		if (returned) return;
+		returned = true;
+		return cb(e || 'parser worked failed');
+	}
+
 	maxNumWorkers = maxNumWorkers ? maxNumWorkers : 4;
 
 	var bufferNames = data.bufferLabels;
@@ -909,10 +541,14 @@ CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumW
                     console.error("worker err", m.error);
                     worker.terminate();
                 }
-                cb.call(worker, m.data);
-                if (q.length > 0) worker.postMessage(toUrl(rootFile, q.shift())); else worker.terminate();
+                try {
+	                cb.call(worker, m.data);
+	                if (q.length > 0) worker.postMessage(toUrl(rootFile, q.shift())); else worker.terminate();
+	            } catch (e) {
+	            	fail(e);
+	            }
             };
-            worker.spawn = function() {
+            worker.spawn = function () {
                 if (q.length > 0) worker.postMessage(toUrl(rootFile, q.shift())); else console.warn("worker init on empty q; slow init?");
             };
             worker.name = count;
@@ -931,28 +567,32 @@ CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumW
     for (var t = 0; t < numLaunch; t++) {
         parsers.push(parser(q, file, function(chunk) {
         
-        	messagePassTime += new Date().getTime() - chunk.postTime;
-        	
-			var t0 = new Date().getTime();
-			if (intoGPU) {
-				that.queue.enqueueWriteBuffer( //FIXME make non-blocking or, if allowable, do in worker
-					that['cl_' + chunk.nfo.bufferLabel], true, chunk.start * chunk.dense.BYTES_PER_ELEMENT, 
-					chunk.dense.byteLength, chunk.dense);
-			} 
-			if (intoCPU) {
-				var dense = that[chunk.nfo.bufferLabel];
-				dense.set(chunk.dense, chunk.start);
-			}			
-			var endTime = new Date().getTime();
-			memCopyTime += (endTime - t0);
-            
-            ready++;
-            if (ready == data.summary.length) {
-            	console.log('memcpy time (' + (intoGPU ? 'GPU' : 'no GPU' ) + ',' + (intoCPU? 'CPU' : 'no CPU') + ')', memCopyTime, 'ms');
-            	console.log('messagePassTime time (may include memcpy time)', messagePassTime, 'ms');
-            	console.log(parsers.length, 'all worker launch-to-reduce time', endTime - launchTime, 'ms');
-                cb(null, "done");
-            }
+        	try {
+	        	messagePassTime += new Date().getTime() - chunk.postTime;
+	        	
+				var t0 = new Date().getTime();
+				if (intoGPU) {
+					that.queue.enqueueWriteBuffer( //FIXME make non-blocking or, if allowable, do in worker
+						that['cl_' + chunk.nfo.bufferLabel], true, chunk.start * chunk.dense.BYTES_PER_ELEMENT, 
+						chunk.dense.byteLength, chunk.dense);
+				} 
+				if (intoCPU) {
+					var dense = that[chunk.nfo.bufferLabel];
+					dense.set(chunk.dense, chunk.start);
+				}			
+				var endTime = new Date().getTime();
+				memCopyTime += (endTime - t0);
+	            
+	            ready++;
+	            if (ready == data.summary.length) {
+	            	console.debug('memcpy time (' + (intoGPU ? 'GPU' : 'no GPU' ) + ',' + (intoCPU? 'CPU' : 'no CPU') + ')', memCopyTime, 'ms');
+	            	console.debug('messagePassTime time (may include memcpy time)', messagePassTime, 'ms');
+	            	console.debug(parsers.length, 'all worker launch-to-reduce time', endTime - launchTime, 'ms');
+	            	succeed("done");
+	            }
+	        } catch (e) {
+	        	fail(e);
+	        }
         }));
     }
 	for (var p = 0; p < parsers.length; p++) parsers[p].spawn();
@@ -978,13 +618,11 @@ CLRunner.prototype.loadDataFlatFinish = function (doTransfer) {
 	this._gen_allocateProxyObjects();	
 	var t1 = new Date().getTime();
 	if (doTransfer) this._gen_transferTree();
-    console.log("overhead:", new Date().getTime() - t0, "ms (gpu transfer sub-time:", new Date().getTime() - t1, "ms)");
+    console.debug("overhead:", new Date().getTime() - t0, "ms (gpu transfer sub-time:", new Date().getTime() - t1, "ms)");
 }
 
 //Similar to loadData except fetch pre-flattened buffers (incl. tree size + tree levels info)
 CLRunner.prototype.loadDataFlat = function (data) {
-	if (this.cfg.ignoreCL) throw new SCException('Function only for CL-enabled use');
-
 	function getBufferNames(obj) {
 		var res = [];
 		for (var i in obj)
@@ -1018,7 +656,7 @@ CLRunner.prototype.loadDataFlatMt = function(digestFile, digestData, optNumMaxWo
 	var data = digestData;
     var bufferNames = data.bufferLabels;
     
-    if (bufferNames.length == 0) throw new SCException("received no buffers");
+    if (!data.bufferLabels || bufferNames.length == 0) throw new SCException("received no buffers");
     if (!data.tree_size) throw new SCException("no tree size");
     if (!data.levels) throw new SCException("no tree level info");
     if (!data.tokens) throw new SCException("no tree token info");
@@ -1036,222 +674,96 @@ CLRunner.prototype.loadDataFlatMt = function(digestFile, digestData, optNumMaxWo
 	});
 };
 
-CLRunner.prototype.buildKernels = function() {
-	if (this.cfg.ignoreCL) throw new SCException('Function only for CL-enabled use');
 
-	var kernels = "";
+//assume gl/clVBO realloc was already called by normal layout passes
+CLRunner.prototype.runRenderTraversalAsync = function (cb) {
+    try {        
+        var clr = this;
+        var lastVisitNum = 0;
+        var pfx = "_gen_run_visitAsync_";
+        for (;this[pfx + (lastVisitNum + 1)]; lastVisitNum++) ;
+        var renderTraversal = pfx + lastVisitNum;
+    	var fnPair = this[renderTraversal];
+    	var travFn = fnPair[0];
+    	var visitFn = clr[fnPair[1]];
 
-	// Build the kernel up from the arrays of static OpenCL code (headers) and visualization-
-	// specific OpenCL code (source). These need to be put into arrays of substrings because
-	// there's a limit on the size of string literals in Javascript source.
-	for(var i = 0; i < this.kernelHeaders.length; i++) {
-		kernels += this.kernelHeaders[i];
-	}
+    	//clean canvas and update vbo as needed
+        this.glr.canvas.width = this.glr.canvas.width;
+        this.glr.startRender(); //set context
+        
+        var preT = new Date().getTime();        
+        travFn.call(clr, visitFn, clr.jsvbo ? clr.jsvbo : null, true,
+        	function (err) {
+        		if (err) return cb(err);
+        		console.debug("render pass", new Date().getTime() - preT, "ms");
+	            try {
+	                return cb();
+	            } catch (e) {
+	                return cb({msg: 'cl render post err', v: e});
+	            }
+        	});
+    } catch (e) {
+        return cb({msg: 'pre render err', v: e})
+    }
+};
 
-	for(var i = 0; i < this.kernelSource.length; i++) {
-		kernels += this.kernelSource[i];
-	}
+CLRunner.prototype.traverseAsync = function(direction, kernel, vbo, isRendering, cb) {
 
-	this.program = this.context.createProgram(kernels);
-	try {
-		this.program.build(this.devices);
-	} catch(e) {
-		console.error("Error loading WebCL kernels: " + e.message);
-		console.error("Inputs:", {headers: this.kernelHeaders, source: this.kernelSource});
-		console.error("Build status: " + this.program.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_STATUS));
-		// console.error("Build log: " + this.program.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_LOG));
-		window.clSource = kernels;
-		console.error("Source:\n" + kernels);
-		return null;
-	}
-	this._gen_getKernels();
+    if (direction != "topDown" && direction != "bottomUp") {
+    	return cb({msg: "unknown direction", val: direction});
+    }
+
+    //TODO remove; set glr in case multiple glrs (needed for js_vbo_color...)
+    if (vbo) window.glr = this.glr;
+
+    this[direction == "topDown" ? 'topDownTraversal' : 'bottomUpTraversal'](kernel, vbo);
+    cb();
+
+};
+
+CLRunner.prototype.topDownTraversalAsync = function(kernel, vbo, isRendering, cb) {
+    this.traverseAsync("topDown", kernel, vbo, isRendering, cb);
+};
+
+CLRunner.prototype.bottomUpTraversalAsync = function(kernel, vbo, isRendering, cb) {
+    this.traverseAsync("bottomUp", kernel, vbo, isRendering, cb);
 };
 
 
-CLRunner.prototype.runTraversals = function() {
-	if (this.cfg.ignoreCL) throw new SCException('Function only for CL-enabled use');
-
-	try {
-		this._gen_runTraversals();
-	} catch(e) {
-		console.error("Error running OpenCL tree traversals: " + e.message);
-	}
-};
-
-
-CLRunner.prototype.runRenderTraversal = function() {
-	// Find the render pass, which will be the last visit pass which exists (HACKY AS SHIT)
-	var renderTraversal = '_gen_run_visit_0';
-	for(var i = 1; this['_gen_run_visit_' + i]; i++) {
-		renderTraversal = '_gen_run_visit_' + i;
-	}
-
-	if (this.cfg.ignoreCL) {
-		this[renderTraversal]();
-	} else {
- 
-		try {
-			this.queue.enqueueAcquireGLObjects([this.clVBO]);
-			this[renderTraversal](this.clVBO);
-			this.queue.enqueueReleaseGLObjects([this.clVBO]);
-			this.queue.finish();
-		} catch(e) {
-			console.error("Error running OpenCL render traversal: " + e.message);
-			console.error(e);
-		}	
-	}
-};
-
-
-CLRunner.prototype.runRenderTraversalAsync = function(cb) {
-	// Find the render pass, which will be the last visit pass which exists (HACKY AS SHIT)
-	var renderTraversal = '_gen_run_visit_0';
-	for(var i = 1; this['_gen_run_visit_' + i]; i++) {
-		renderTraversal = '_gen_run_visit_' + i;
-	}
-	
-	if (this.cfg.ignoreCL) {
-		this[renderTraversal](null, cb);
-	} else {
-		//FIXME async
-		try {
-			this.queue.enqueueAcquireGLObjects([this.clVBO]);	
-			this[renderTraversal](this.clVBO);	
-			this.queue.enqueueReleaseGLObjects([this.clVBO]);
-
-			this.queue.finish();
-			cb();
-		} catch(e) {
-			console.error("Error running OpenCL render traversal: " + e.message);
-			console.error(e);
-		}
-	}
-}
-
-
-CLRunner.prototype.traverseAsync = function(direction, kernel, cb) {
-
-	if (direction != "topDown" && direction != "bottomUp") throw "unknown direction";
-
+CLRunner.prototype.topDownTraversal = function(kernel, vbo) {
 	var s0 = new Date().getTime();	
-	
-	var finish = function () {
-		console.log('multicore', direction, new Date().getTime() - s0, 'ms');
-		cb(); 
-	};
-	
-	if (this.cfg.ignoreCL && this.cfg.webworkerLayout) {
-		var clr = this;
-		var getVisitNum = function (fn) {	// => int			
-			for (var num = 0; true; num++)
-				if (clr["visit_" + num] == fn) return num;
-		};
-		
-		var seqLvl = function (lvl) {
-			var startIdx = lvl.start_idx;
-			var endIdx = startIdx + lvl.length;
-			for (var idx = startIdx; idx < endIdx; idx++) {
-				kernel.call(clr, idx, clr.tree_size, 
-				clr.float_buffer_1, clr.int_buffer_1, clr.grammartokens_buffer_1, clr.nodeindex_buffer_1);
-			}				
-		}
-				
-		var visitNum = getVisitNum(kernel);
-		if (this.hasOwnProperty("visit_" + (visitNum + 1))) {
-			function runLevel (lvl) {
-
-				var chunksReady = 0;
-				var workerDone = function () { 
-					if (++chunksReady == chunks) {
-						var more = 
-							direction == "topDown" ? (lvl + 1 < clr.levels.length)
-							: (lvl - 1 >= 0);					
-						if (more) {
-							chunksReady = 0; //reset
-							runLevel(lvl + (direction == "topDown" ? 1 : -1));
-						} else finish();
-					}
-				};
-				
-				if (clr.levels[lvl].length > clr.cfg.minParallelLayoutLevelLength) {
-					var startIdx = clr.levels[lvl].start_idx;
-					var endIdx = startIdx + clr.levels[lvl].length;				
-					var chunk = Math.round(clr.levels[lvl].length / clr.cfg.numWorkers) + 1
-
-					var chunks = 0;
-					for (var next = startIdx; next < endIdx; next += chunk) chunks++;
-					chunksReady = 0;					
-					for (var next = startIdx; next < endIdx; next += chunk) {
-						clr.runKernelRange(
-							visitNum, 
-							clr.levels[lvl], (clr.levels.length > lvl + 1) ? clr.levels[lvl+1].length : 0, 
-							next, Math.min(endIdx, next + chunk), 
-							workerDone);											
-					}
-				} else { 
-					seqLvl(clr.levels[lvl]); 
-					//finish
-					chunks = 1; 
-					workerDone();
-				}
-				
-			};
-			runLevel(direction == "topDown" ? 0 : (this.levels.length - 1));
-		} else { 
-			//render pass needs globals
-			if (direction == "topDown") {
-				for (var i = 0; i < this.levels.length; i++) 
-					seqLvl(this.levels[i]); 
-			} else {
-				for (var i = this.levels.length - 1; i >= 0; i--) 
-					seqLvl(this.levels[i]); 
-			}
-			finish();
-		}
-	} else {
-		if (direction == "topDown") this.topDownTraversal(kernel);
-		else this.bottomUpTraversal(kernel);
-		finish();
-	}
-};
-
-CLRunner.prototype.topDownTraversalAsync = function(kernel, cb) {
-	this.traverseAsync("topDown",kernel, cb);	
-};
-
-CLRunner.prototype.bottomUpTraversalAsync = function(kernel, cb) {
-	this.traverseAsync("bottomUp", kernel, cb);	
-};
-
-
-CLRunner.prototype.topDownTraversal = function(kernel) {
-	var s0 = new Date().getTime();	
-	if (this.cfg.ignoreCL && this.cfg.webworkerLayout) {
-		throw 'Multicore traversals require async invocation';
-	} else if (this.cfg.ignoreCL) {
+	if (this.cfg.ignoreCL) {
 		for (var i = 0; i < this.levels.length; i++) {
 			var startIdx = this.levels[i].start_idx;
 			var endIdx = startIdx + this.levels[i].length;
 			for (var idx = startIdx; idx < endIdx; idx++) {
 				kernel.call(this, idx, this.tree_size, 
-				this.float_buffer_1, this.int_buffer_1, this.grammartokens_buffer_1, this.nodeindex_buffer_1);
+				this.float_buffer_1, this.int_buffer_1, this.grammartokens_buffer_1, this.nodeindex_buffer_1, vbo);
 			}
 		}
 	} else {
-		var types = WebCLKernelArgumentTypes;
-		for(var i = 0; i < this.levels.length; i++) {
-			kernel.setArg(0, this.levels[i]["start_idx"], types.UINT);
-			var globalWorkSize = new Int32Array(1);
-			globalWorkSize[0] = this.levels[i]["length"];
-			this.queue.enqueueNDRangeKernel(kernel, null, globalWorkSize, null);
-			this.queue.finish();
+		if (typeof webcl.enableExtension == "function") {
+			for (var i = 0; i < this.levels.length; i++) {
+				kernel.setArg(0, new Uint32Array( [this.levels[i]["start_idx"]] ));
+				var globalWorkSize = new Int32Array( [this.levels[i]["length"]] );
+				this.queue.enqueueNDRangeKernel(kernel, 1, [], globalWorkSize, []);
+				this.queue.finish();
+			}
+		} else {
+			var types = WebCLKernelArgumentTypes;
+			for (var i = 0; i < this.levels.length; i++) {
+				kernel.setArg(0, this.levels[i]["start_idx"], types.UINT);
+				var globalWorkSize = new Int32Array( [this.levels[i]["length"]] );
+				this.queue.enqueueNDRangeKernel(kernel, null, globalWorkSize, null);
+				this.queue.finish();
+			}
 		}
 	}
-	console.log(this.cfg.ignoreCL ? 'CPU' : 'GPU', 'topDown pass', new Date().getTime() - s0, 'ms');
+	console.debug(this.cfg.ignoreCL ? 'CPU' : 'GPU', 'topDown pass', new Date().getTime() - s0, 'ms');
 };
 
 
-CLRunner.prototype.bottomUpTraversal = function(kernel) {
+CLRunner.prototype.bottomUpTraversal = function(kernel, vbo) {
     var s0 = new Date().getTime();
 	if (this.cfg.ignoreCL) {
 		for (var i = this.levels.length - 1; i >= 0; i--) {
@@ -1259,21 +771,28 @@ CLRunner.prototype.bottomUpTraversal = function(kernel) {
 			var endIdx = startIdx + this.levels[i].length;
 			for (var idx = startIdx; idx < endIdx; idx++) {
 				kernel.call(this, idx, this.tree_size, 
-				this.float_buffer_1, this.int_buffer_1, this.grammartokens_buffer_1, this.nodeindex_buffer_1);
+				this.float_buffer_1, this.int_buffer_1, this.grammartokens_buffer_1, this.nodeindex_buffer_1, vbo);
 			}
 		}
 	} else {
-		var types = WebCLKernelArgumentTypes;
-		for(var i = this.levels.length - 1; i >= 0; i--) {
-			kernel.setArg(0, this.levels[i]["start_idx"], types.UINT);
-			var globalWorkSize = new Int32Array(1);
-			globalWorkSize[0] = this.levels[i]["length"];
-			this.queue.enqueueNDRangeKernel(kernel, null, globalWorkSize, null);
-			this.queue.finish();
-		}	
+		if (typeof webcl.enableExtension == "function") {
+			for (var i = this.levels.length - 1; i >= 0; i--) {
+				kernel.setArg(0, new Uint32Array( [this.levels[i]["start_idx"]] ));
+				var globalWorkSize = new Int32Array( [this.levels[i]["length"]] );				
+				this.queue.enqueueNDRangeKernel(kernel, 1, [], globalWorkSize, []);
+				this.queue.finish();
+			}				
+		} else {
+			var types = WebCLKernelArgumentTypes;
+			for (var i = this.levels.length - 1; i >= 0; i--) {
+				kernel.setArg(0, this.levels[i]["start_idx"], types.UINT);
+				var globalWorkSize = new Int32Array( [this.levels[i]["length"]] );
+				this.queue.enqueueNDRangeKernel(kernel, null, globalWorkSize, null);
+				this.queue.finish();
+			}				
+		}
  	}
-	console.log(this.cfg.ignoreCL ? 'CPU' : 'GPU', 'bottomUp pass', new Date().getTime() - s0, 'ms');
-
+	console.debug(this.cfg.ignoreCL ? 'CPU' : 'GPU', 'bottomUp pass', new Date().getTime() - s0, 'ms');
 };
 
 
@@ -1766,7 +1285,7 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
 	
 	///////////////
 
-    console.log("loading selector engine (GPU)");
+    console.debug("loading selector engine (GPU)");
     var ast = parse(sels);
 	var selsTok = tokenize(ast);
 	var hashes = hash(selsTok);
@@ -1777,101 +1296,6 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
     return res;
 };
 //================
-
-CLRunner.prototype.setSelectors = function (selectors) {
-	if (this.cfg.ignoreCL) throw new SCException('Function only for CL-enabled use');
-	
-	var startT = new Date().getTime();
-	
-    var srcName = "seEngine" + Math.round(Math.random() * 1000000); //TODO remove (helps with stale instr cache platform bug)
-	var src = this.selectorEngine(selectors, this.tokens).kernelMaker(srcName);
-//    console.log(src);
-	
-	var headers = "";
-	headers += "typedef unsigned int GrammarTokens;\n";		
-	headers += "typedef unsigned int NodeIndex;\n";		
-	headers += this.offsets;//tokens: "enum zzz {abc=4, asdf, fdas};\n";
-	var kernelSrc = headers + "  " + src;
-
-	try {				
-		this.programSelectors = this.context.createProgram(kernelSrc);	
-		this.programSelectors.build(this.devices[0]);
-		this.selKernel = this.programSelectors.createKernel(srcName);
-	} catch (e) {
-		console.error("Error loading WebCL selectors: " + e.message);
-		console.error("Inputs:", {
-			fullSource: kernelSrc,
-			selSource: src
-		});
-		console.error("Build status: " + this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_STATUS));
-		console.error(kernelSrc);
-		console.error("Build log: " + this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_LOG));
-		throw {error: e};
-	}			
-	
-	console.log("Selector compile time:", new Date().getTime() - startT, 'ms');
-};
-
-CLRunner.prototype.runSelectors = function () {
-
-	var startT = new Date().getTime();
-
-	if (this.cfg.ignoreCL) throw new SCException('Function only for CL-enabled use');
-
-	var kernel = this.selKernel;
-	if (!kernel) throw 'no selectors; call setSelectors';
-
-	this._gen_setKernelArguments(kernel);
-	
-	if (!this.cl_selectors_buffer) { //FIXME remove this debugging buffer (entry per node)
-		this.selectors_buffer = new Int32Array(this.grammartokens_buffer_1.length);
-		this.cl_selectors_buffer = this.context.createBuffer(this.cl.MEM_READ_WRITE, this.selectors_buffer.byteLength);
-	}	
-	kernel.setArg(6, this.cl_selectors_buffer); //FIXME remove hardcoding
-	
-	var globalWorkSize = new Int32Array(1);
-	globalWorkSize[0] = this.tree_size;
-	
-	var runStartT = new Date().getTime();
-
-
-	try {
-		this.queue.enqueueNDRangeKernel(kernel, null, globalWorkSize, null);
-		this.queue.finish();
-	} catch (e) {
-		console.error("Error running WebCL selectors: " + e.message);
-		//console.error("Inputs:", {fullSource: kernelSrc, selSource: src });
-		console.error("Build status: " + this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_STATUS));
-		console.error("Build log: " + this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_LOG));
-		throw {error: e};
-	}  
-
-	//FIXME remove (debugging)	
-	try {
-		this.queue.enqueueReadBuffer(this.cl_selectors_buffer, true, 0, this.selectors_buffer.byteLength, this.selectors_buffer);
-		var count = 0;
-		for (var i = 0; i < this.selectors_buffer.length; i++) count += this.selectors_buffer[i];
-		console.log("applied", count, "instances of CSS properties");
-	} catch (e) {
-		console.error("Error checking run of WebCL selectors: " + e.message);
-		//console.error("Inputs:", {fullSource: kernelSrc, selSource: src });
-		console.error("Build status: " + this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_STATUS));
-		console.error("Build log: ", this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_LOG));
-		throw {error: e};
-	}
-    
-    var endT = new Date().getTime();
-    console.log("Selector create instance time:", runStartT - startT, "ms, Selector compute time", endT - runStartT, 'ms');    
-};
-
-CLRunner.prototype.setAndRunSelectors = function (selectors) {
-	if (this.cfg.ignoreCL) throw new SCException('Function only for CL-enabled use');
-	var startT = new Date().getTime();
-	this.setSelectors(selectors);
-	this.runSelectors();
-	console.log("Total selectors time", new Date().getTime() - startT, 'ms');
-};
-		
 		
 try {
 	exports.CLRunner = CLRunner;

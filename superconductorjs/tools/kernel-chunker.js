@@ -56,7 +56,7 @@ for(var i = 0; i < inputFiles.length; i++) {
 
 var subStrings = [];
 for(var cursor = 0; cursor < inputContents.length; cursor += ARGS.l) {
-	subStrings.push(inputContents.substring(cursor, cursor + ARGS.l));
+	subStrings.push(inputContents.substring(cursor, cursor + ARGS.l).replace(/"/g,'\\"'));
 }
 
 var output = ARGS.n + " = " + JSON.stringify(subStrings) + ";\n";

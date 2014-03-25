@@ -2,16 +2,19 @@
 // Paramaters:
 //	visualization: the URL to the visualization engine
 //	canvas: the DOM element of the canvas object to render the visualization in
-function Superconductor(visualization, canvas, cfg) {
+function Superconductor(visualization, canvas, cfg, cb) {
+	this.init(visualization, canvas, cfg, cb);	
+}
+
+//Use initialization method rather than constructor to facilitate monkey-patched backends
+Superconductor.prototype.init = function (visualization, canvas, cfg, cb) {
 
 	if (!cfg) cfg = {};
 	this.cfg = {
-			ignoreCL: cfg.hasOwnProperty('ignoreCL') ? cfg.ignoreCL : false,
-			webworkerLayout: cfg.hasOwnProperty('webworkerLayout') ? cfg.webworkerLayout : false,
-			numWorkers : cfg.hasOwnProperty('numWorkers') ? cfg.numWorkers : 4
+			ignoreGL: cfg.hasOwnProperty('ignoreGL') ? cfg.ignoreGL : false,
+        	antialias: cfg.hasOwnProperty("antialias") ? cfg.antialias : true			
 		};
 	for (i in cfg) this.cfg[i] = cfg[i];
-
 
 	this.glr = new GLRunner(canvas, this.cfg); 
  	try {
@@ -21,24 +24,19 @@ function Superconductor(visualization, canvas, cfg) {
 		if(e.line && e.sourceURL) {
 			console.error('[Superconductor]', 'At location ' + e.sourceURL + ':' + e.line);
 		}
-		console.error('[Superconductor] Exception:', e);
-		
-		throw e;
+		console.error('[Superconductor] Exception:', e);		
+		return cb(e || 'could not create clrunner');
 	}
 	
-	this.loadVisualization(visualization);
-
 	// A map of objects for the fields in the visualized data that can be used to get/set values
 	// This in only defined after loadData() is called.
 	this.data = null;
+
+	var sc = this;
+	this.loadVisualization(visualization, function (err) {
+		(cb || function (err) {if (err) console.error('sc construction err', err); })(err, sc);
+	});
 }
-
-
-// Returns a bool indicating whether Superconductor is a state where it is able to start the
-// visualization. This is false when, for example, data hasn't been loaded into the visualization.
-Superconductor.prototype.readyToStart = function() {
-	return (this.glr.readyToRender() && this.clr.readyToLayout());
-};
 
 
 // Loads JSON non-flat tree data from the remote url and loads it into the visualization,
@@ -48,45 +46,26 @@ Superconductor.prototype.loadData = function(url, callback) {
 
 	var that = this;
 	var startTime = new Date().getTime();
-	
-	this.loadWithAjax(url, function(responseText) {
 
-			function flatten (data) {
-				window.data = data;
-				
-				var jsonTime = new Date().getTime();
-				console.log('fetch + JSON time', jsonTime - startTime, 'ms');	
-		
-				that.clr.loadData(window.data);
-				console.log('flattening + overhead time', (new Date().getTime()) - jsonTime, 'ms');
-				
-				that.data = that.clr.proxyData;
-				console.log('total time', new Date().getTime() - startTime, 'ms');	
-		
-				callback(data);
+    this.downloadJSON(url, function (err, data) {
+        if (err) return callback(err);
+        if (!data) return callback({msg: 'no data'});
 
-			}
+        try {
+    		var jsonTime = new Date().getTime();
+    		console.debug('fetch + JSON time', jsonTime - startTime, 'ms');	
 
-			if(responseText === null) {
-				console.error('Empty response');
-				return;
-			}
+    		that.clr.loadData(data);
+    		console.debug('flattening + overhead time', (new Date().getTime()) - jsonTime, 'ms');
+    		
+    		that.data = that.clr.proxyData;
+    		console.debug('total time', new Date().getTime() - startTime, 'ms');	
 
-			var obj;
-			try {
-				obj = JSON.parse(responseText);
-			} catch (e) {
-				console.error('JSON parse err (trying eval instead):', e);				
-				try {
-					eval.call(that.clr, responseText);
-					obj = data;
-				} catch (e) {
-					console.error('eval failed', e);
-					throw e;
-				}
-			}
-			flatten(obj);
-		}, true);
+    		return callback(null);
+        } catch (e) {
+            return callback(e || {msg: 'failed loadData'});
+        }
+    });
 };
 
 // Loads flat JSON tree data from the remote url and loads it into the visualization,
@@ -96,12 +75,15 @@ Superconductor.prototype.loadDataFlat = function(url, callback) {
 
 	var that = this;
 	var startTime = new Date().getTime();
-	that.loadScript(url, function(){
-		console.log('fetch + flat JSON time', new Date().getTime() - startTime, 'ms');	
-		that.clr.loadDataFlat(window.data);
+	this.downloadJSON(url, function(err, data) {
+        if (err) return callback(err);
+        if (!data) return callback({msg: 'no data'});
+
+		console.debug('fetch + flat JSON time', new Date().getTime() - startTime, 'ms');	
+		that.clr.loadDataFlat(data);
 		that.data = that.clr.proxyData;
-		console.log('total time', new Date().getTime() - startTime, 'ms');	
-		callback();
+		console.debug('total time', new Date().getTime() - startTime, 'ms');	
+		return callback(that.data ? null : 'could not find data');
 	});
 };
 
@@ -112,16 +94,23 @@ Superconductor.prototype.loadDataFlatMt = function(url, callback, optNumMaxWorke
 	var intoCPU = this.cfg.ignoreCL;    
 	console.debug("Beginning data loading (from URL)...", url);
     var that = this;
-    var startTime = new Date().getTime();
-    that.loadScript(url, function() {
-        that.clr.loadDataFlatMt(url, window.data, optNumMaxWorkers, 
-        	intoGPU === false ? false : true, 
-        	intoCPU === true ? true : false, 
-        	function () {
-				that.data = that.clr.proxyData;
-				console.log("total time", new Date().getTime() - startTime, "ms");
-				callback();        
-        });
+    var startTime = new Date().getTime();    
+    this.downloadJSON(url, function (err, data) {
+        if (err) return callback(err);
+        if (!data) return callback({msg: 'no data'});
+
+        try {
+            that.clr.loadDataFlatMt(url, data, optNumMaxWorkers, 
+            	intoGPU === false ? false : true, 
+            	intoCPU === true ? true : false, 
+            	function () {
+    				that.data = that.clr.proxyData;
+    				console.debug("total time", new Date().getTime() - startTime, "ms");
+    				callback(that.data ? null : 'could not find data');        
+            });
+        } catch (e) {
+            callback(e || {msg: 'malformed digest'});
+        }
     });
 };
 
@@ -129,12 +118,16 @@ Superconductor.prototype.loadDataFlatMt = function(url, callback, optNumMaxWorke
 //Same as loadData except acts on a JSON tree already in memory
 //use async interface to allow non-blocking workers in the future
 Superconductor.prototype.loadDataObj = function (json, callback) {
-	console.debug("Beginning data loading (from in-memory JSON) ...", json);
+	console.debug("Beginning data loading (from in-memory JSON) ...");
 	var that = this;
 	setTimeout(function () {
-		that.clr.loadData(json);
-		that.data = that.clr.proxyData;
-		callback();
+		try {
+			that.clr.loadData(json);
+			that.data = that.clr.proxyData;
+			callback(that.data ? null : 'could not find data');
+		} catch (e) {
+			callback(e);
+		}
 	}, 0);
 };
 
@@ -142,66 +135,83 @@ Superconductor.prototype.loadDataObj = function (json, callback) {
 // Starts up visualization. Should not be called directly; will be called when Superconductor has
 // sufficient data to begin.
 Superconductor.prototype.startVisualization = function() {
-	if(!this.readyToStart()) {
-		console.debug("Superconductor asked to start visualization, but it is not in a state where it can do so");
-		return;
-	}
-
 	this.layoutAndRender();
-
 	this.setupInteraction();
 };
 
 
 // Calculates the layout of the data and renders it
+// NOTE: potentially non-blocking
 Superconductor.prototype.layoutAndRender = function() {
-	if (this.cfg.ignoreCL) {
-        this.glr.resetCanvas();
-		this.clr._gen_runTraversals();
-		this.clr.runRenderTraversal();
-	} else {
-		var startT = new Date().getTime();
-		this.clr.layout();
-		var startRenderT = new Date().getTime();
-		console.log("Layout", startRenderT - startT, 'ms');
-		this.glr.renderFrame();
-		var endT = new Date().getTime();;
-		console.log("Render", endT - startRenderT, 'ms');
-		console.log("TOTAL", endT - startT, 'ms');	
-	}
-
+	this.layoutAndRenderAsync(function(){});
 };
 
-// Calculates the layout of the data and renders it
-Superconductor.prototype.outstandingRender = false;
 Superconductor.prototype.layoutAndRenderAsync = function(cb) {
 
-	var sc = this;
-    if (this.outstandingRender) 
-    	return setTimeout(function (cb) { sc.layoutAndRenderAsync(cb); }, 10, cb);
+    var sc = this;
 
-	this.outstandingRender = true;
-	function finish () { sc.outstandingRender = false; cb(); }
+    if (!sc.layoutAndRenderAsync_q) {
+        sc.layoutAndRenderAsync_q = {
+            currentEpoch: [],            
+            nextEpoch: [],
+            log: []
+        };
+    }
 
+    if (sc.layoutAndRenderAsync_q.currentEpoch.length) {
+        sc.layoutAndRenderAsync_q.nextEpoch.push(cb);
+        console.warn('outstanding render, will retry layoutAndRenderAsync later');
+        return;
+    } else {
+        sc.layoutAndRenderAsync_q.currentEpoch.push(cb);
+    }
 
-	if (this.cfg.ignoreCL) {
-        this.glr.resetCanvas();
-        var clr = this.clr;
-		this.clr._gen_runTraversalsAsync(function () {
-			clr.runRenderTraversalAsync(finish);
-		});		
-	} else {
-		var startT = new Date().getTime();
-		this.clr.layoutAsync(function () {
-			var startRenderT = new Date().getTime();
-			console.log("Layout", startRenderT - startT, 'ms');
-			this.glr.renderFrame(); //FIXME make async
-			var endT = new Date().getTime();;
-			console.log("Render", endT - startRenderT, 'ms');
-			console.log("TOTAL", endT - startT, 'ms');
-			finish();			
-		});
-	}
+    //layout, call currentEpoch CBs, move next into current, repeat as necessary
+    function loop () {
+
+        console.log('layout event');
+
+        var startT = new Date().getTime();  
+        sc.clr.layoutAsync(function (err) {
+            if (err) {
+                console.error('SC internal error', err);
+            }
+            try {
+                if (!err && !sc.cfg.ignoreGL) {
+                    var preRenderT = new Date().getTime();
+                    sc.clr.glr.renderFrame();
+                    console.debug("paint time", (new Date().getTime() - preRenderT), 'ms');
+                }
+                var durT = (new Date().getTime() - startT);
+                console.debug('layoutAndRenderAsync: ', durT, 'ms');
+            } catch (e) {
+                err = e || 'render error';
+            }
+            
+            var log = sc.layoutAndRenderAsync_q.log;
+            if (log.length > 20) log.shift();
+            log.push(durT);
+            var sum = 0; for (var i = 0; i < log.length; i++) sum += log[i];
+            log.sort();
+            console.debug('Running average', sum/log.length, 'ms', 
+                'median', log[Math.round(log.length / 2)]);
+            
+            sc.layoutAndRenderAsync_q.currentEpoch.forEach(function (cb) {
+                try {
+                    cb(err);
+                } catch (e) {
+                    console.error('layout frame callback error', e);
+                }
+            });
+
+            sc.layoutAndRenderAsync_q.currentEpoch = sc.layoutAndRenderAsync_q.nextEpoch;
+            sc.layoutAndRenderAsync_q.nextEpoch = [];
+            if (sc.layoutAndRenderAsync_q.currentEpoch.length) {
+                setTimeout(loop, 1);
+            }
+        });
+    }
+    loop();
 
 };
  
@@ -209,34 +219,41 @@ Superconductor.prototype.layoutAndRenderAsync = function(cb) {
 
 // Load the remote Javascript file at url and eval it. If the optional argument callback is 
 // provided, the request will be fetched asychronously and callback will be called when done.
-Superconductor.prototype.loadVisualization = function(url) {
+Superconductor.prototype.loadVisualization = function(url, cb) {
 	var that = this;
+	cb = cb || function () {};
 
-	this.loadWithAjax(url, function(responseText) {
-			if(responseText === null) {
-				return;
-			}
-
-			that.clr.loadLayoutEngine(responseText);
+	this.loadWithAjax(url, function(err, responseText) {
+			if (err) return cb(err);
+			that.clr.loadLayoutEngine(responseText, cb);
 		}, false);
 };
 
 
-// Load the remote Javascript file at url and eval it. If the optional argument callback is 
-// provided, the request will be fetched asychronously and callback will be called when done.
-Superconductor.prototype.loadScript = function(url, callback) {
-	var async = (typeof(callback) === 'function') ? true : false;
-	this.loadWithAjax(url, function(responseText) {
-			if(responseText === null) {
-				return;
-			}
 
-			eval.call(this.clr, responseText);
-
-			if(typeof(callback) === 'function') {
-				callback();
-			}
-		}, async);
+// Load remote JSON and pass to callback node-style
+// url * (err * json -> ()) -> ()
+Superconductor.prototype.downloadJSON = function (url, cb) {
+	var xhr = new XMLHttpRequest();
+	xhr.open('get', url, true);
+	xhr.responseType = 'json';
+	xhr.onload = function() {
+        var obj = xhr.response;
+        if (typeof(xhr.response) == 'string') {
+            try {
+                console.warn('warning: client does not support xhr json');
+                obj = JSON.parse(xhr.response);
+                if (!obj) throw {msg: 'invalid json string', val: xhr.response};
+            } catch (e) {
+                return cb(e || 'could not parse json');
+            }
+        }
+        cb(xhr.status == 200 ? null : {
+            msg: "bad ajax status",
+            val: xhr.status
+        }, obj);
+	};
+	xhr.send();
 };
 
 
@@ -254,12 +271,12 @@ Superconductor.prototype.loadWithAjax = function(url, callback, async) {
 
 		// An error was encountered with the request, so call the callback with responseText = null
 		if(httpRequest.status != 200) {
-			callback(null);
+			callback({msg: 'bad status', val: httpRequest.status});
 			return;
 		}
 
 		// If no errors, just call callback normally
-		callback(httpRequest.responseText);
+		callback(null, httpRequest.responseText);
 	};
 
 	if(typeof(async) !== 'undefined' && async) {

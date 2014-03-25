@@ -26,6 +26,8 @@ var exec = require('child_process').exec;
 var Seq = require('seq');
 
 var clr = require('./CLRunner.js');
+console.debug = console.log;
+
 
 function chainRead(file,ret,prop) {
 	return function () {
@@ -84,11 +86,8 @@ exports.compress = function (jsonFilePath, kbindingsFilePath, mode, opts, output
 					try {
 			  			ret.treeJSON = JSON.parse(ret.treeStr);
 			  		} catch (e) {
-			  			console.log('cannot parse, try via JSONP for data');
-			  			delete data;
-			  			eval(ret.treeStr);
-			  			ret.treeJSON = data;
-			  			delete data;
+			  			console.log('cannot parse JSON', e);
+			  			throw e;
 			  		}
 			  	} else {
 			  		ret.treeJSON = jsonFilePath;
@@ -213,7 +212,7 @@ exports.compress = function (jsonFilePath, kbindingsFilePath, mode, opts, output
 					}			
 				} else {
 					var t0 = (new Date()).getTime();			
-					var treeFlatJSON = "data = " + JSON.stringify(ret.flatJSON) + ";"; //untyped...
+					var treeFlatJSON = JSON.stringify(ret.flatJSON); //untyped...
 					console.log('stringify',(new Date()).getTime() - t0, 'ms');
 					console.log('writing', outputFileJSON);
 					fs.writeFile(outputFileJSON, treeFlatJSON, this);
@@ -226,7 +225,7 @@ exports.compress = function (jsonFilePath, kbindingsFilePath, mode, opts, output
 					for (var lblIdx in ret.bufferLabels) delete out[ret.bufferLabels[lblIdx]];
 					out.summary = ret.summary;
 					console.log('writing', outputFileJSON, 'num files: ', 1 + ret.summary.length);
-					fs.writeFile(outputFileJSON, "this.data = " + JSON.stringify(out) + ";", this);
+					fs.writeFile(outputFileJSON, JSON.stringify(out), this);
 				} else this();
 			})
 			.seq(function () {

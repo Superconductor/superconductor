@@ -522,7 +522,7 @@ sequenceClassesPartialH(O, Prev, ScheduleSoFar, Schedule, I, N) :- % step
   plus(I,1,NI),
   sequenceClassesPartialH(O, Done, Order, Schedule, NI, N)))
   ;
-  (N = NI, Schedule = ScheduleSoFar).
+  (Schedule = ScheduleSoFar).
 
 sequenceClassesPartial(O, Schedule, N) :- % start with sources
   grammarOrder(O), sources(S), sequenceClassesPartialH(O, S, [], Schedule, 0, N).
