@@ -45,12 +45,6 @@
     <target name="init">
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${dist.dir}"/>
-
-        <exec executable="hg">
-            <arg value="id"/>
-            <arg value="-n"/>
-            <redirector outputproperty="revision"/>
-        </exec>
         <tstamp>
             <format property="Now" pattern="MMMMM dd yyyy HH:mm" />
         </tstamp>

@@ -1,0 +1,2 @@
+swipl.home=/usr/local/Cellar/swi-prolog/6.6.4/libexec/lib/swipl-6.6.4/
+swipl.runtime=/usr/local/Cellar/swi-prolog/6.6.4/libexec/lib/swipl-6.6.4/lib/x86_64-darwin13.1.0/

@@ -69,7 +69,7 @@ exec 3>&1 4>&2
 FTLOUTPUT=$({ ./runFtlWebCLfast \"$EXPANDED\" \"$TMPDIR\" 2>&4 | grep -v -F 'BUILD SUCCESSFUL' 1>&3;} 4>&1) # 3>/dev/null (redirects stdout of ant to /dev/null)
 exec 3>&- 4>&-
 
-if [ -n "$FTLOUTPUT" ]; then echo -e "\n\e[1;31mError compiling FTL file\e[0m" >&2; exit 1; fi
+if [ -n "$FTLOUTPUT" ]; then echo -e "\n\e[1;31mError compiling FTL file\e[0m" $FTLOUTPUT >&2; exit 1; fi
 # echo "Running ./runFtlWebCLfast $EXPANDED $TMPDIR"
 # ./runFtlWebCLfast $EXPANDED $TMPDIR
 
@@ -78,17 +78,16 @@ echo
 
 
 echo -e "\e[33m########################################"
-echo "#  Building JavaScript visualization   #"
+echo "#  Building JavaScript and WebCL visualization   #"
 echo -e "########################################\e[0m"
 
 cd "$JSDIR"
 
-GEN_PATH=$TMPDIR make all2
-if [ "$?" -ne 0 ]; then echo -e "\n\e[1;31mError compiling JavaScript visualization file\e[0m" >&2; exit 1; fi
+GEN_PATH=$TMPDIR EXTRA_BACKENDS=$EXTRA_BACKENDS make all2
+if [ "$?" -ne 0 ]; then echo -e "\n\e[1;31mError compiling JavaScript visualization file (phase 1)\e[0m" >&2; exit 1; fi
 
 echo
 echo
- 
 
 
 echo -e "\e[33m########################################"
