@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class WebCLGenerator extends OpenCLGenerator {
-	
+
 	public void genClassToIFace (StringBuilder contents, ArrayList<AGEval.Class> classes){
 		contents.append("this.classToIFace = function (classStr) {\n");
 		contents.append("\tswitch(classStr.toUpperCase()) {\n");
@@ -26,13 +26,13 @@ public class WebCLGenerator extends OpenCLGenerator {
 			contents.append("\t\t\treturn \"" +c.getInterface().getName().toLowerCase() +"\";\n");
 			contents.append("\t\t\tbreak;\n");
 		}
-		contents.append("\t}\n");		
+		contents.append("\t}\n");
 		contents.append("};\n\n\n");
 	}
-	
+
 	public void genClassToTokens (StringBuilder contents, HashMap<String, ArrayList<String>> types){
 		HashMap<String, Integer> tokens = FlatCppGenerator.getTokens(types);
-		
+
 		contents.append("this.classToToken = function (classStr) {\n");
 		contents.append("\tswitch(classStr.toUpperCase()) {\n");
 		for (ArrayList<String> vs : types.values()){
@@ -41,20 +41,20 @@ public class WebCLGenerator extends OpenCLGenerator {
 				contents.append("\t\t\tbreak;\n");
 			}
 		}
-		
+
 		contents.append("\t\tdefault:\n");
 		contents.append("\t\t\tconsole.error(\"unknown class tag \" +classStr);\n");
 		contents.append("\t\t\tthrow 'Superconductor data flattening exn';\n");
 		contents.append("\t}\n");
 		contents.append("};\n\n\n");
-	
+
 	}
-	
+
 	public void genInputs (StringBuilder contents, ArrayList<AGEval.Class> classes, ArrayList<IFace> interfaces) {
 		HashSet<String> names = new HashSet<String>();
-		for (AGEval.Class c : classes) 
+		for (AGEval.Class c : classes)
 			names.addAll(c.getPrivFields().keySet());
-		for (AGEval.IFace i : interfaces) 
+		for (AGEval.IFace i : interfaces)
 			names.addAll(i.getPubFields().keySet());
 
 		int i = 0;
@@ -66,11 +66,11 @@ public class WebCLGenerator extends OpenCLGenerator {
 			contents.append(n);
 			contents.append("\"");
 			i++;
-		}				
+		}
 		contents.append("\t];\n\n\n");
-		
+
 	}
-	
+
 	public String genFlattening (ALEParser ast) {
 		StringBuilder contents = new StringBuilder();
 		genClassToTokens(contents, ast.types);
@@ -78,8 +78,8 @@ public class WebCLGenerator extends OpenCLGenerator {
 		genInputs(contents, ast.classes, ast.interfaces);
 		return contents.toString();
 	}
-	
-	
+
+
 	public String preVisits(AGEvaluator aleg, Schedule sched) {
 		StringBuilder contents = new StringBuilder();
 
@@ -92,19 +92,19 @@ public class WebCLGenerator extends OpenCLGenerator {
 		contents.append("#include \"" + buffer_info_filename + "\"\n");
 		contents.append("#include \"sssmacros_ocl.h\"\n");
 		contents.append("\n");
-*/		
+*/
 		contents.append("/**\n");
 		contents.append(" * @file traversals.cl\n");
 		contents.append(" * @brief OpenCL code to run layout solver traversals.\n");
 		contents.append(" */\n\n");
-		
+
 		contents.append(visitDispatchersDeclaration(aleg, sched));
 
 		return contents.toString();
 	}
 	private void generateSetKernelArgumentsFunction (StringBuilder contents) {
 		contents.append("this._gen_setKernelArguments = function(kernel) {\n");
-        contents.append("if (typeof webcl.enableExtension == \"function\") {\n");
+        contents.append("if (!this.cfg.nodeCL && typeof webcl.enableExtension == \"function\") {\n");
         contents.append("\tkernel.setArg(0, new Uint32Array([0]));\t// start_idx (default to 0)\n");
         contents.append("\tkernel.setArg(1, new Uint32Array([this.tree_size]));\n");
         contents.append("} else {\n");
@@ -117,10 +117,10 @@ public class WebCLGenerator extends OpenCLGenerator {
 		for (OpenCLFieldsHelper.CLBuffer buffer : fields.getOclBuffers()) {
 			contents.append("\tkernel.setArg(" + i + ", this.cl_" + buffer.getBuffer_name() + ");\n"); //int => cl_int_buffer_1
 			i++;
-		}	
+		}
 		contents.append("};\n\n\n");
 	}
-	
+
 	private void genAllocateClBuffers(StringBuilder contents) {
 		contents.append("this._gen_allocateClBuffers = function() {\n");
 		for (OpenCLFieldsHelper.CLBuffer buffer : fields.getOclBuffers()) {
@@ -128,10 +128,10 @@ public class WebCLGenerator extends OpenCLGenerator {
 			contents.append(" = this.context.createBuffer(this.cl.MEM_READ_WRITE, this.");
 			contents.append(buffer.getBuffer_name());
 			contents.append(".byteLength);\n");
-		}	
+		}
 		contents.append("};\n\n\n");
 	}
-	
+
 	private void genTransferTree(StringBuilder contents) {
 		contents.append("this._gen_transferTree = function() {\n");
 		for (OpenCLFieldsHelper.CLBuffer buffer : fields.getOclBuffers()) {
@@ -142,10 +142,10 @@ public class WebCLGenerator extends OpenCLGenerator {
 			contents.append(".byteLength, this.");
 			contents.append( buffer.getBuffer_name());
 			contents.append(");\n");
-		}	
+		}
 		contents.append("};\n\n\n");
 	}
-	
+
 	private void genRetrieveTree(StringBuilder contents) {
 		contents.append("this._gen_retrieveTree = function() {\n");
 		for (OpenCLFieldsHelper.CLBuffer buffer : fields.getOclBuffers()) {
@@ -156,10 +156,10 @@ public class WebCLGenerator extends OpenCLGenerator {
 			contents.append(".byteLength, this.");
 			contents.append( buffer.getBuffer_name());
 			contents.append(");\n");
-		}	
+		}
 		contents.append("};\n\n\n");
 	}
-	
+
 	private void genGetRenderBufferSize(StringBuilder contents){
 		contents.append("this.getRenderBufferSize = function() {\n");
 //		contents.append("\tvar retrieved_value = new Int32Array(1);\n\n");
@@ -179,8 +179,8 @@ public class WebCLGenerator extends OpenCLGenerator {
 
 		contents.append("};\n\n");
 	}
-	
-	
+
+
 	private void genProxy (StringBuilder contents, Vector<OpenCLFieldsHelper.Field> sortedFields){
 		contents.append("// Creates proxy object to wrap every field in the tree. Both host and cl buffers must be allocated\n");
 		contents.append("// before calling this function.\n");
@@ -189,7 +189,7 @@ public class WebCLGenerator extends OpenCLGenerator {
 		for (OpenCLFieldsHelper.Field field : sortedFields) {
 			if(field.getClBufferName() == null) {
 				continue;
-			}			
+			}
 			contents.append("\tthis.proxyData.");
 			contents.append(field.getClName());
 			contents.append(" = new CLDataWrapper(this, this.");
@@ -199,23 +199,23 @@ public class WebCLGenerator extends OpenCLGenerator {
 			contents.append(");\n");
 		}
 		contents.append("};\n\n");
-		
+
 	}
-	
+
 	Vector<OpenCLFieldsHelper.Field> sortFields (HashSet<OpenCLFieldsHelper.Field>fields){
 		Vector<OpenCLFieldsHelper.Field> sortedFields = new Vector<OpenCLFieldsHelper.Field>(fields);
 		Collections.sort(sortedFields);
 		return sortedFields;
 	}
-	
 
-	
+
+
 	private void genBuffersFields (StringBuilder contents, Vector<OpenCLFieldsHelper.Field> sortedFields ) {
-		
+
 		for (OpenCLFieldsHelper.Field field : sortedFields) {
 			if(field.getClBufferName() == null) {
 				continue;
-			}			
+			}
 			contents.append("\tthis.");
 			contents.append(field.getClName());
 			contents.append(" = this.");
@@ -225,20 +225,20 @@ public class WebCLGenerator extends OpenCLGenerator {
 			contents.append(field.getClBufferPosition() + ") + treeSize);\n");
 		}
 	}
-	
+
 	private void genCopyBuffers(StringBuilder contents){
-		
+
 		for (OpenCLFieldsHelper.CLBuffer buffer : fields.getOclBuffers()) {
 			contents.append("\tfor(var i = 0; i < data."+buffer.getBuffer_name()+".length; i++) {\n");
 			contents.append("\t\tthis." + buffer.getBuffer_name()+"[i] = data." + buffer.getBuffer_name()+"[i];\n");
 			contents.append("\t}\n\n");
-		}			
+		}
 	}
-	
+
 	private String generateBufferInfo(Vector<OpenCLFieldsHelper.Field> sortedFields) {
 		StringBuilder contents = new StringBuilder();
-		
-		
+
+
 		contents.append("// Defines all the typed array buffers which will store data locally before\n");
 		contents.append("// sending it to the CL device, then populates them with data\n");
 		contents.append("this._gen_allocateHostBuffers = function(treeSize) {\n");
@@ -255,33 +255,33 @@ public class WebCLGenerator extends OpenCLGenerator {
 			contents.append(buffer.getBuffer_name().toLowerCase());
 			contents.append(" = new ");
 			String t = buffer.getPrimitiveBuffer_type();
-			contents.append((t.charAt(0) +"").toString().toUpperCase() + t.substring(1));
-			contents.append("32Array(this.");
+			String typeName = (t.charAt(0) +"").toString().toUpperCase() + t.substring(1);
+			contents.append("Double".equals(typeName) ? "Float64Array(this." : (typeName + "32Array(this."));
 			contents.append(name);
 			contents.append("_SIZE * treeSize);\n");
-		}		
+		}
 		contents.append("};\n\n");
 		contents.append("this._gen_allocateHostProxies = function (treeSize) {\n");
-		genBuffersFields(contents, sortedFields);		
+		genBuffersFields(contents, sortedFields);
 		contents.append("};\n\n\n");
-		
+
 		contents.append("this._gen_copyHostBuffers = function (data, treeSize){\n");
-		genCopyBuffers(contents);		
+		genCopyBuffers(contents);
 		contents.append("};\n\n\n");
-		
+
 		genProxy(contents, sortedFields);
 		genGetRenderBufferSize(contents);
-		
+
 		return contents.toString();
-	
+
 	}
-	
-	
+
+
 	public void generateParseFiles(ALEParser ast, Schedule sched, String output_dir, boolean verbose, String ale_actions)
 			throws InvalidGrammarException {
-		
-		super.generateParseFiles(ast, sched, output_dir, verbose, ale_actions);		
-		
+
+		super.generateParseFiles(ast, sched, output_dir, verbose, ale_actions);
+
 		//FIXME bad pattern: writes in super and then overwrites here
 		try {
 			AGEvaluatorSwipl.writeFile(output_dir + File.separator + aleactions_filename, generateAleHeader(ale_actions, false));
@@ -290,15 +290,15 @@ public class WebCLGenerator extends OpenCLGenerator {
 		} catch (IOException e1) {
 			System.err.println("!!! FATAL ERROR !!! Could not write parse files into directory " + output_dir);
 		}
-		
+
 		if(verbose) {
 			System.out.println("=== Ale Actions ===\n" + generateAleHeader(ale_actions, true));
 			System.out.println("=== Buffer Info ===\n" + generateBufferInfo(false));
-		}		
+		}
 	}
-	
+
 	static final String webcl_kernel_bindings_filename = "kbindings.js";
-	
+
 	// Write the source code gathered by the Generator into whatever
 		// backend-specific files they need to go in.
 		// TODO: Just write out visitDispatched argument rather than calling visitDispatchers() in postVisits()
@@ -308,7 +308,7 @@ public class WebCLGenerator extends OpenCLGenerator {
 				AGEvaluator aleg) throws IOException, InvalidGrammarException {
 			if (write) {
 				//Javascript stuff
-				
+
 				// Write out CLRunner's visitor header
 				AGEvaluatorSwipl.writeFile(outputDir + File.separator + clrunner_visit_header_filename,
 						super.generateVisitHeader(sched));
@@ -337,7 +337,7 @@ public class WebCLGenerator extends OpenCLGenerator {
 			}
 			return "(no OpenCL out)";
 		}
-	
+
 	public String printCurrentPipelineBuild (Hashtable<Variable, Term> binding) throws InvalidGrammarException {
 		StringBuilder contents = new StringBuilder();
 		contents.append("this._gen_getKernels = function() {\n");
@@ -348,20 +348,20 @@ public class WebCLGenerator extends OpenCLGenerator {
 			contents.append(" = this.program.createKernel(\"visit_");
 			contents.append(pass);
 			contents.append("\");\n");
-			pass++;			
-		}		
+			pass++;
+		}
 		contents.append("};\n\n\n");
-		
+
 		genAllocateClBuffers(contents);
 		genTransferTree(contents);
 		genRetrieveTree(contents);
 		generateSetKernelArgumentsFunction(contents);
 
-		
+
 
 		int lastPass = binding.get("P").toTermArray().length - 1;
 
-		
+
 		contents.append("this._gen_runTraversals = function() {\n");
 		pass = 0;
 		for (Term visit : binding.get("P").toTermArray()) {
@@ -369,23 +369,23 @@ public class WebCLGenerator extends OpenCLGenerator {
 			contents.append("\tthis._gen_run_visit_");
 			contents.append(pass);
 			contents.append("();\n");
-			pass++;			
-		}		
+			pass++;
+		}
 		contents.append("};\n\n\n");
-		
-		
+
+
 		pass = 0;
 		for (Term visit : binding.get("P").toTermArray()) {
 			contents.append("this._gen_run_visit_");
 			contents.append(pass);
-			
-			contents.append(pass == lastPass ? " = function(clVBO) {\n" : " = function() {\n");			
-			
+
+			contents.append(pass == lastPass ? " = function(clVBO) {\n" : " = function() {\n");
+
 			String stencil = visit.arg(2).arg(1).toString();
 			contents.append("\tthis._gen_setKernelArguments(this._gen_kernel_visit_");
 			contents.append(pass);
 			contents.append(");\n");
-			
+
 			if (pass == lastPass) {
 				contents.append("\tthis._gen_kernel_visit_");
 				contents.append(lastPass);
@@ -393,8 +393,8 @@ public class WebCLGenerator extends OpenCLGenerator {
 				contents.append(2 + fields.getOclBuffers().size()); //FIXME should return 2+4=6 for russian election
 				contents.append(", clVBO);\n");
 			}
-			
-			
+
+
 			String trav;
 			if (stencil.equals("tdLtrU")) {
 				throw new InvalidGrammarException("Cannot codegen recursive trav for WebCL");
@@ -404,33 +404,33 @@ public class WebCLGenerator extends OpenCLGenerator {
 				throw new InvalidGrammarException("Cannot codegen nested trav for WebCL");
 			}
 			else throw new InvalidGrammarException("Unknown stencil type: " + stencil);
-			
+
 			contents.append("\tthis.");
 			contents.append(trav);
 			contents.append("Traversal(this._gen_kernel_visit_");
 			contents.append(pass);
 			contents.append(");\n");
 			contents.append("};\n\n\n");
-			pass++;			
-		}			
-		
+			pass++;
+		}
+
 		return contents.toString();
 	}
-	
-	
+
+
 	public String genOffsets (ALEParser ast){
 		StringBuilder contents = new StringBuilder();
-		
+
 		contents.append("\nthis.offsets = \"");
-		
+
 		contents.append(FlatCppGenerator.generateUnionvariants(ast, false).replaceAll("\n", "\\\\n"));
 		contents.append(generateBufferInfo(false).replaceAll("\n", "\\\\n"));
-		
+
 		contents.append("\";\n");
-		
-		return contents.toString();	
+
+		return contents.toString();
 	}
-	
+
 	// Bootstrap the Generator to use this backend
 	public static void synthesizeWebCL(String alePath, String outputDir, String resourceDir, boolean verbose,
 			boolean isFixedChildOrder, boolean useFirstParallel, boolean isExhaustive, int maxLen) throws Exception {
@@ -450,9 +450,9 @@ public class WebCLGenerator extends OpenCLGenerator {
 		else
 			g.synthesizeAll(alePath, outputDir, resourceDir, verbose, isFixedChildOrder, isExhaustive, maxLen, false);
 	}
-	
 
-	
+
+
 	public static void main(String[] args) throws NumberFormatException, Exception {
 		if (args.length == 7) {
 			synthesizeWebCL(args[1], args[2], args[0], false, new Boolean(args[3]).booleanValue(),

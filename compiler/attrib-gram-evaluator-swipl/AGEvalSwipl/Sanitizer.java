@@ -20,9 +20,9 @@ public class Sanitizer {
 	public boolean anyFailed = false;
 	public final boolean verbose;
 	public final Set<String> whitelist;
-	
+
 	private final HashSet<String> tokens = new HashSet<String>();
-	
+
 	//FIXME check for attacks where class/attr names are reserved
 	// (should not be an issue if only used as symbols rather than invoked operators)
 	public void allowTokens (ALEParser ast) {
@@ -36,25 +36,25 @@ public class Sanitizer {
 			tokens.add(i.getName().toLowerCase());
 			for (String attr : ast.extendedClasses.get(i).extendedVertices.keySet())
 				tokens.add(attr.toLowerCase());
-		}		
+		}
 	}
 	public void clearTokens () {
 		tokens.clear();
 	}
-	
+
 	public Sanitizer (boolean verbose_) {
 		verbose = verbose_;
 		whitelist = new HashSet<String>();
 		/* safe prolog primitives */
 		whitelist.addAll(Arrays.asList("=", ",", "[]", ".", "\\+", "->")); //operators
 		whitelist.addAll(Arrays.asList("member", "subset", "setof", "findall", "append", "filter", "succ", "superset", "is_set", "intersection")); //standard prolog
-		whitelist.addAll(Arrays.asList( //algorithms.tokens + algorithmsFixed.tokens				
+		whitelist.addAll(Arrays.asList( //algorithms.tokens + algorithmsFixed.tokens
 				/* algorithmsFixed.tokens */
 				"self",
 				"td",
 				"bu",
 				"tdLtrU",
-				"buSubInorder",				
+				"buSubInorder",
 				"interface",
 				"interfaceAttribute",
 				"class",
@@ -143,14 +143,14 @@ public class Sanitizer {
 				"unreadyAtNthChildSub"
 				));
 	}
-	
+
 	 String recoverQuery(Term c) throws InvalidGrammarException {
 		String res = "";
-		if (c.isAtom()) {			
+		if (c.isAtom()) {
 			res += "<atom>";
 			if (!whitelist.contains(c.name()) && !tokens.contains(c.name())) {
 				System.err.println("Tokens: " + tokens);
-				throw new InvalidGrammarException("Schedule sanitization failed; could not match atom '"+ c.name() + "' in whitelist (term '" + c.toString() + "')");	
+				throw new InvalidGrammarException("Schedule sanitization failed; could not match atom '"+ c.name() + "' in whitelist (term '" + c.toString() + "')");
 			}
 		} else  if (c.isCompound()) {
 			res += "<compound '" + c.name()+"'>(";
@@ -164,6 +164,8 @@ public class Sanitizer {
 			res += ")";
 		} else if (c.isFloat()) {
 			res += "<float>";
+		/*} else if (c.isDouble()) {
+			res += "<double>";*/
 		} else if (c.isInteger()) {
 			res += "<int>";
 		} else if (c.isVariable()) {
@@ -171,7 +173,7 @@ public class Sanitizer {
 		} else {
 			throw new InvalidGrammarException("Schedule sanitization failed; could not parse Prolog schedule term " + c.toString());
 		}
-		return res;	
+		return res;
 	}
 	public String simpleQuery(String qStr) throws InvalidGrammarException {
 		Query q = new Query(qStr);
@@ -224,8 +226,8 @@ public class Sanitizer {
 		s.testQuery("P=[(_, td, _, _, _), (_, bu, _, _, _), (_, td, _, _, _), (_, bu, _, _, _), (_, tdLtrU, _, _, _)]", true);
 		s.testQuery("P=random(1)", false);
 		s.testQuery("P=random/2(2)", false);
-		s.testQuery("P=[random(1)]", false);		
-		System.err.println("Ran all schedule sanitization tests, " + (s.anyFailed ? "some failed" : "no failures")); 
-		
+		s.testQuery("P=[random(1)]", false);
+		System.err.println("Ran all schedule sanitization tests, " + (s.anyFailed ? "some failed" : "no failures"));
+
 	}
 }

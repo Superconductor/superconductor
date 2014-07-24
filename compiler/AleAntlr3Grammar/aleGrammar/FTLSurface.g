@@ -1,16 +1,16 @@
 lexer grammar FTLSurface;
 /*
-@lexer::header { 
+@lexer::header {
   package aleGrammar;
 }
 */
-HEXCOLOR 
+HEXCOLOR
 	:	 '#' HEX_DIGIT HEX_DIGIT HEX_DIGIT
 	| 	 '#' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
 	| 	 '#' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
 	| 	 '#' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
 	;
-	
+
 STAR    : '*';
 LTE :   '<=';
 LT  :   '<';
@@ -48,12 +48,14 @@ PHANTOM :	 'phantom';
 BOOL_KEYWORD	:	'bool';
 STRING_KEYWORD	:	'string';
 INT_KEYWORD	:	'int';
-FLOAT_KEYWORD	:	 'float';	
+FLOAT_KEYWORD	:	 'float';
+DOUBLE_KEYWORD    : 'double';
 COLOR_KEYWORD	:	'color';
 PX_KEYWORD	:	'px';
 TAGGEDINT_KEYWORD : 'taggedInt';
 TAGGEDFLOAT_KEYWORD : 'taggedFloat';
-TIME_KEYWORD: 'time';	
+TAGGEDDOUBLE_KEYWORD   : 'taggedDouble';
+TIME_KEYWORD: 'time';
 INT :	'0'..'9'+ ;
 FLOAT
     :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT? 'f'?

@@ -18,7 +18,7 @@ import FTLSurface;
   import java.util.Map;
   import java.util.ArrayList;
   import java.util.HashSet;
-  
+
   import AGEval.*;
   import aleGrammar.GenSym;
 }
@@ -28,7 +28,7 @@ import FTLSurface;
   public final List<String> errors = new java.util.LinkedList<String>();
   public void displayRecognitionError(String[] tokenNames,
                                         RecognitionException e) {
-    String err = getErrorHeader(e) + " " + getErrorMessage(e, tokenNames);                                        
+    String err = getErrorHeader(e) + " " + getErrorMessage(e, tokenNames);
     System.err.println(err);
     errors.add(err);
   }
@@ -43,7 +43,7 @@ import FTLSurface;
     }
     return res;
   }
-  
+
   public FTLExpandTraitsParser parseStr (String str) {
      return new FTLExpandTraitsParser(new CommonTokenStream(new FTLExpandTraitsLexer(new ANTLRStringStream(str))));
   }
@@ -68,55 +68,55 @@ root:
 
 scheduleConstraints :	 SCHEDULE LBRACE STRING? RBRACE;
 typedef : TYPE IDRAW EQ IDRAW (PIPE IDRAW )* SEMICOLON;
-	
+
 iface:	IFACE IDRAW LBRACE ifaceField* RBRACE ;
 
 ///////////////////////////////////////////////////////////////////////////
-//hide trait call and mix them into body 
+//hide trait call and mix them into body
 ///////////////////////////////////////////////////////////////////////////
 
 classTrait
 	: TRT
-	IDRAW 
-	LBRACE 
-	contents { 
+	IDRAW
+	LBRACE
+	contents {
 	    if (traits.get($IDRAW.text) != null) {
 	        System.err.println("Multiple copies of trait " + $IDRAW.text);
-	        throw new RecognitionException();	    
+	        throw new RecognitionException();
 	    }
 	    traits.put($IDRAW.text, $contents.text);
 	}
-	RBRACE 	 
+	RBRACE
 	;
 
 contents : (  children | header | phantom | body )*;
-	
+
 clss :
 {
     Boolean hasTraits = false;
     String trts = "";
 }
-	CLSS c=IDRAW (LPAREN 
+	CLSS c=IDRAW (LPAREN
 	    (t0=IDRAW
-	    { 
-	        hasTraits = true; 
+	    {
+	        hasTraits = true;
 	        trts += "/* " + $t0.text + "*/ " + pullTrait($c.text, $t0.text);
-	    } 
+	    }
 	    (COMMA ti=IDRAW
-	    {  trts += "/* " + $ti.text + "*/ " + pullTrait($c.text, $ti.text); }   
+	    {  trts += "/* " + $ti.text + "*/ " + pullTrait($c.text, $ti.text); }
 	    )*
 	    )?
-	    RPAREN)? COLON i=IDRAW 
-	LBRACE (originalBody+=header 
+	    RPAREN)? COLON i=IDRAW
+	LBRACE (originalBody+=header
         | originalBody+=children
-        | originalBody+=phantom 
+        | originalBody+=phantom
         | originalBody+=body
-	    )* RBRACE	
+	    )* RBRACE
 	-> {!hasTraits}?
 	    CLSS $c COMMENT["/* class had no traits to expand */"] COLON $i
 	    LBRACE $originalBody* RBRACE
 	-> CLSS $c COMMENT["/* expanded traits: " + $t0.text + ", etc. */"] COLON $i
-	LBRACE 
+	LBRACE
 	    $originalBody+
 	    COMMENT["/* traits */"]
 	    { parseStr(trts).contents().getTree() }
@@ -126,7 +126,7 @@ clss :
 ///////////////////////////////////////////////////////////////////////////
 //the rest is normal
 ///////////////////////////////////////////////////////////////////////////
-	
+
 
 header: ATTRIBUTES LBRACE ( | (classField (SEMICOLON+ classField)*)) (|SEMICOLON) RBRACE;
 children: CHILDREN LBRACE ( | (child (SEMICOLON+ child)*)) (|SEMICOLON) RBRACE;
@@ -149,10 +149,10 @@ classField
 	: INPUT id COLON maybeType  (EQ literal)?
 	| INPUT id COLON QUESTION IDRAW(EQ IDRAW)?
 	| INPUT id COLON IDRAW(EQ IDRAW)?
-	| VAR IDRAW COLON type 
+	| VAR IDRAW COLON type
 	| VAR IDRAW COLON IDRAW
 	;
-	
+
 topStmt
 	 : cond
 	 | constraint SEMICOLON
@@ -162,20 +162,20 @@ topStmt
 loop : LOOP id LBRACE  (cond | constraint | SEMICOLON)* RBRACE;
 
 cond
-	: IF LPAREN	
-	  expr RPAREN LBRACE 
+	: IF LPAREN
+	  expr RPAREN LBRACE
 	  (cond | constraint | SEMICOLON)*
-	  (RBRACE ELSE IF 
-	    LPAREN expr RPAREN LBRACE 
-	    (cond | constraint | SEMICOLON)*	    
-	  )*
-	  RBRACE ELSE LBRACE 
+	  (RBRACE ELSE IF
+	    LPAREN expr RPAREN LBRACE
 	    (cond | constraint | SEMICOLON)*
-	  RBRACE	  
+	  )*
+	  RBRACE ELSE LBRACE
+	    (cond | constraint | SEMICOLON)*
+	  RBRACE
 	;
 
-constraint 
-    : lhs ASSIGN expr 
+constraint
+    : lhs ASSIGN expr
     | lhs ASSIGN FOLD expr DOTDOT expr
     ;
 
@@ -189,21 +189,21 @@ addExpr: multExpr ((PLUS|MINUS) multExpr	)* ;
 multExpr: signExpr ((STAR|DIV|MOD) signExpr)*;
 signExpr: (PLUS | MINUS|  EXCLAMATION )* callExpr;
 callExpr
-	: IDRAW LPAREN  (expr (COMMA expr)*)? RPAREN 
+	: IDRAW LPAREN  (expr (COMMA expr)*)? RPAREN
 	| primitiveExpr
-	;	
+	;
 primitiveExpr
 	: literal
-	| rhs 
+	| rhs
 	| LPAREN expr RPAREN
 	;
-	
-lhs 
+
+lhs
 	: id
 	| id DOT id
 	;
 
-	
+
 rhs
     : id
     | id DOT id
@@ -211,19 +211,19 @@ rhs
 	| suffix DOT id
 	;
 
-suffix 	: '$i' | '$$' | '$-'; 
+suffix 	: '$i' | '$$' | '$-';
 
-id 
+id
 	: IDRAW
 	| type
 	;
 
 maybeType
-	: QUESTION type 
-	| type 
+	: QUESTION type
+	| type
 	;
-	 
-type:	BOOL_KEYWORD | INT_KEYWORD | FLOAT_KEYWORD | COLOR_KEYWORD | STRING_KEYWORD | PX_KEYWORD | TAGGEDINT_KEYWORD | TAGGEDFLOAT_KEYWORD;
+
+type:	BOOL_KEYWORD | INT_KEYWORD | FLOAT_KEYWORD | DOUBLE_KEYWORD | COLOR_KEYWORD | STRING_KEYWORD | PX_KEYWORD | TAGGEDINT_KEYWORD | TAGGEDFLOAT_KEYWORD | TAGGEDDOUBLE_KEYWORD;
 
 literal	: bl | INT | FLOAT | STRING | HEXCOLOR | LBRACE INT COMMA (INT|FLOAT) RBRACE;
 

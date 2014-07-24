@@ -27,13 +27,14 @@ public class CppGenerator extends BackendBase  implements Backend {
 
 	public String replaceTypeVals(String body, ALEParser ast) { return body; }
 
-	
+
 		//TODO FIXME
 	public static String typeStringToCppType (String type) {
 		String lType = type.toLowerCase();
 		if (lType.equals("color")) return "int";
 		if (lType.equals("px")) return "int";
 		if (lType.equals("float")) return "float";
+		if (lType.equals("double")) return "double";
 		if (lType.equals("bool")) return "bool";
 		if (lType.equals("int")) return "int";
 		if (lType.equals("string")) return "const char *";
@@ -41,31 +42,32 @@ public class CppGenerator extends BackendBase  implements Backend {
 		if (lType.equals("const char *")) return "const char *";
 		if (lType.equals("taggedint")) return "Tagged<int>";
 		if (lType.equals("taggedfloat")) return "Tagged<float>";
+		if (lType.equals("taggeddouble")) return "Tagged<double>";
 		return "int"; //"ExtraDataHandler::" + type;
 	}
-	
+
 	public String nestedTernary(ALEParser.Case c, String lhsRaw, AGEval.Class cls, ALEParser ast) throws InvalidGrammarException {
-		  String res = ""; 
-		  if (!c.isElse) {		
+		  String res = "";
+		  if (!c.isElse) {
 			  res += bindExpr(c.openBody, c.indexedVariables, cls, false, false, toAcc(lhsRaw, cls), ast);
 			  res += " ? ";
 		  } else {
 			  res += " : ";
 		  }
-		  
+
 		  for (ALEParser.Assignment asgn : c.assignments) {
 			  if (asgn._sink.equals(lhsRaw)) {
 				  res += "(" + bindExpr(asgn._indexedBody, asgn._variables, cls, false, false, toAcc(lhsRaw, cls), ast) + ")";
 			  }
 		  }
-		  
+
 		  for (ALEParser.Cond cnd : c.conditionals) {
 			  res += nestedTernary(cnd, lhsRaw, cls, ast);
 		  }
-		  
+
 		  return res;
 		}
-	
+
 	//navigate cases until got assignment
 	public String nestedTernary(ALEParser.Cond c, String lhsRaw, AGEval.Class cls, ALEParser ast) throws InvalidGrammarException {
 		String res = "(";
@@ -74,13 +76,13 @@ public class CppGenerator extends BackendBase  implements Backend {
 		res += nestedTernary(c.elseCase, lhsRaw, cls, ast);
 		return res + ")";
 	}
-	
+
 	public void addNestedConditionals (Schedule sched, HashMap<String, String> exprToCall, HashMap<String, String> exprPrinter) throws InvalidGrammarException {
-	    if (sched._ast.condsTop == null) return;		  
+	    if (sched._ast.condsTop == null) return;
 		for (AGEval.Class cls : sched._aleg.classes) {
 			if (sched._ast.condsTop.containsKey(cls)) {
 			    for (ALEParser.Cond cnd  : sched._ast.condsTop.get(cls)) {
-			      HashSet<String> nonReductSinks = new HashSet<String>();			  
+			      HashSet<String> nonReductSinks = new HashSet<String>();
 			      HashSet<String> reductSinks = new HashSet<String>();
 		    	  Generator.gatherVariables(cnd, nonReductSinks, reductSinks);
 			      HashSet<String> sinks = new HashSet<String>();
@@ -95,10 +97,10 @@ public class CppGenerator extends BackendBase  implements Backend {
 			        			  System.err.println("  option: " + opt);
 			        		  }
 			        		  throw new InvalidGrammarException("could not find enclosing loop");
-			        	  }			        	  
-			        	  
+			        	  }
+
 			        	  boolean inLoop = !"".equals(sched._ast.extendedClasses.get(cls).idToLoop.get(lhs));
-			        	  if (!inLoop) { 			        	  
+			        	  if (!inLoop) {
 			        		  String fname = cls.getName().toLowerCase() + "_" + lhs;
 			        		  String assign = lhsToAddress(lhsRaw, cls, sched._ast) + " = ";
 			        		  String ternary = nestedTernary(cnd, lhsRaw, cls, sched._ast);
@@ -108,27 +110,27 @@ public class CppGenerator extends BackendBase  implements Backend {
 			        		  boolean isParentAttrib = !lhsRaw.contains("@") || lhsRaw.split("@")[0].equals("self");
 			        		  String whoInit = cls.getName().toLowerCase() + "_" + lhsRaw.toLowerCase().replace("@", "_") + "_init";
 
-			        		  String initLhs = isParentAttrib ? 
-			        				  lhsToAddress(lhsRaw, cls, sched._ast) 
+			        		  String initLhs = isParentAttrib ?
+			        				  lhsToAddress(lhsRaw, cls, sched._ast)
 			        				  //: (Vertex.typeToString(Generator.lookupAttribute(lhsRaw, cls).myValueType) + " " + lhs.replace("@","_") + "_last");
 			        				  : (typeStringToCppType(Generator.extendedGet(sched._ast, cls, lhsRaw).strType) + " " + lhs.replace("@","_") + "_last");
 
 		 			          String dupeLhs = isParentAttrib ? "" : (lhs.replace("@","_") + "_last");
 
 			        		  exprToCall.put(
-			        				  whoInit, 
+			        				  whoInit,
 			        				  initLhs + " = " + nestedTernaryLoopInit(sched.reductions, cnd, lhsRaw, cls, sched._ast));
 			        		  exprPrinter.put(whoInit, "");
-			        		  String whoStep = cls.getName().toLowerCase() + "_" + lhsRaw.toLowerCase().replace("@", "_") + "_step"; 
+			        		  String whoStep = cls.getName().toLowerCase() + "_" + lhsRaw.toLowerCase().replace("@", "_") + "_step";
 			        		  exprToCall.put(
-			        				  whoStep, 
-			        				  lhsToAddress(lhsRaw, cls, sched._ast) 
+			        				  whoStep,
+			        				  lhsToAddress(lhsRaw, cls, sched._ast)
 			        				  + " = " + nestedTernaryLoopStep(sched.reductions, cnd, lhsRaw, cls, sched._ast));
 			        		  exprPrinter.put(whoStep, "");
 			        		  if (!isParentAttrib) {
 			        			  exprToCall.put(whoStep, exprToCall.get(whoStep) +
 			        					  ";\n" + dupeLhs + " = " + lhsToAddress(lhsRaw, cls, sched._ast));
-			        			  exprPrinter.put(whoStep, exprPrinter.get(whoStep) + ""); 		
+			        			  exprPrinter.put(whoStep, exprPrinter.get(whoStep) + "");
 			        		  }
 
 			        	  }
@@ -137,13 +139,13 @@ public class CppGenerator extends BackendBase  implements Backend {
 			}
 		}
 	}
-	
+
 
 
 	public void addToplevels (AGEvaluator aleg, Schedule sched, Reductions reducts, HashMap<String, String> exprToCall, HashMap<String, String> exprPrinter) throws InvalidGrammarException {
 		for (AGEval.Class cls : aleg.classes) {
 			for (Function f : cls.getFunctions()) {
-				String call = 
+				String call =
 					lhsToAddress(f.myDest, cls, sched._ast) + " = " +
 					f.getName().replace(cls.getName().toLowerCase()+"_", cls.getName().toLowerCase()+"_toplevel_") + "(";
 				String printArgs = "";
@@ -152,19 +154,19 @@ public class CppGenerator extends BackendBase  implements Backend {
 					if (isFirst) isFirst = false;
 					else call += ", ";
 					call += lhsToAddress(src, cls, sched._ast);
-					printArgs += "";//"#ifdef DEBUGY\n  cout << \"           " + src.toString() + ": \" << " + DataGenerator.lhsToAddress(src, cls) + " << endl;\n#endif //DEBUGY\n"; 
+					printArgs += "";//"#ifdef DEBUGY\n  cout << \"           " + src.toString() + ": \" << " + DataGenerator.lhsToAddress(src, cls) + " << endl;\n#endif //DEBUGY\n";
 				}
 				call += ")";
 				//System.err.println("<+++ (" + f.getName() + "), " + call);
 				//System.err.println("Adding nonloop top: " + f.getName());
 				exprToCall.put(f.getName(), call);
-				
+
 				String printer = "";
 				printer += "";//"#ifdef DEBUGY\n  cout << \"      "  + f.getName() + ": \" << " + DataGenerator.lhsToAddress(f.myDest, cls) + " << endl;\n#endif //DEBUGY\n";
 				exprPrinter.put(f.getName(), printer + printArgs);
-			}				
-		}	
-		
+			}
+		}
+
 		for (ALEParser.Assignment asgn : sched._ast.assignments) {
 			if (!"".equals(asgn.loopVar)) {
 				AGEval.Class cls = asgn._class;
@@ -177,69 +179,69 @@ public class CppGenerator extends BackendBase  implements Backend {
 		        boolean isParentAttrib = !lhsRaw.contains("@") || lhsRaw.split("@")[0].equals("self");
 		        String whoInit = cls.getName().toLowerCase() + "_" + lhsRaw.toLowerCase().replace("@", "_") + "_init";
 		        //String lhsInit = CppGenerator.lhsToAddress(isParentAttrib ? lhsRaw : (lhsRaw.replace("@", "_")+"_last"), cls);
-		        
-		        String initLhs = isParentAttrib ? 
-		        		lhsToAddress(lhsRaw, cls, sched._ast) 
+
+		        String initLhs = isParentAttrib ?
+		        		lhsToAddress(lhsRaw, cls, sched._ast)
 		        		: (typeStringToCppType(Generator.extendedGet(sched._ast, cls, lhsRaw).strType) + " " + lhs.replace("@","_") + "_last");
-		        		
+
 		        String dupeLhs = isParentAttrib ? "" : (lhs.replace("@","_") + "_last");
-		        		
+
 	            exprToCall.put(
-	            		whoInit, 
+	            		whoInit,
 	            		initLhs + " = " + asgnLoopExpr(cls, reducts, asgn, lhsRaw, true, sched._ast));
 	            exprPrinter.put(whoInit, "");
-		        String whoStep = cls.getName().toLowerCase() + "_" + lhsRaw.toLowerCase().replace("@", "_") + "_step"; 
+		        String whoStep = cls.getName().toLowerCase() + "_" + lhsRaw.toLowerCase().replace("@", "_") + "_step";
 	            exprToCall.put(
-	            		whoStep, 
-	            		lhsToAddress(lhsRaw, cls, sched._ast) 
+	            		whoStep,
+	            		lhsToAddress(lhsRaw, cls, sched._ast)
 	            			+ " = " + asgnLoopExpr(cls, reducts, asgn, lhsRaw, false, sched._ast));
-	            exprPrinter.put(whoStep, ""); 		
+	            exprPrinter.put(whoStep, "");
 	            if (!isParentAttrib) {
 	            	exprToCall.put(whoStep, exprToCall.get(whoStep) +
 	            			";\n" + dupeLhs + " = " + lhsToAddress(lhsRaw, cls, sched._ast));
-		            exprPrinter.put(whoStep, exprPrinter.get(whoStep) + ""); 		
+		            exprPrinter.put(whoStep, exprPrinter.get(whoStep) + "");
 	            }
 			}
 		}
 	}
-	
+
 	//============
-	
+
 	public String toAcc(String lhsRaw, AGEval.Class c) {
 		String lhs = lhsRaw.toLowerCase();
 		if (!lhs.contains("@")) return lhs + "_last";
 		if (lhs.contains("self@")) return lhs.split("@")[1] + "_last";
 		return lhs.replace("@", "_") + "_last";
 	}
-	
+
 	public String bindExpr(String openBody, HashMap<String,String> indexedVariables, AGEval.Class cls, boolean allowStep, boolean replaceStep, String acc, ALEParser ast) throws InvalidGrammarException {
 		String res = openBody;
 		for (Entry<String, String> e : indexedVariables.entrySet()) {
 			if (!allowStep && (e.getKey().equals("$acc") || e.getKey().contains("$i"))) {
-				throw new InvalidGrammarException("reduction variables ($ identifiers) must be in loop steps, error binding expression " 
+				throw new InvalidGrammarException("reduction variables ($ identifiers) must be in loop steps, error binding expression "
 						+ openBody + " with " + e.getKey() + " == " + e.getValue());
 			}
 			if ("$acc".equals(e.getKey())) {
 				if (replaceStep) {
 					//init
-					throw new InvalidGrammarException("$acc must be in loop steps, error binding expression " 
+					throw new InvalidGrammarException("$acc must be in loop steps, error binding expression "
 							+ openBody + " with " + e.getKey() + " == " + e.getValue());
 				} else {
 					//step
-					res = res.replaceAll(e.getValue() + " ", 
+					res = res.replaceAll(e.getValue() + " ",
 							acc.replace("$", "\\$") + " ");
-					res = res.replaceAll(e.getValue() + "$", acc.replace("$", "\\$")  + " ");					  
+					res = res.replaceAll(e.getValue() + "$", acc.replace("$", "\\$")  + " ");
 				}
-			} else if (e.getKey().contains("$i")) {		
+			} else if (e.getKey().contains("$i")) {
 				if (replaceStep) {
-					//FIXME init $i => final 
+					//FIXME init $i => final
 					res = res.replaceAll(e.getValue() + " ", lhsToAddress(e.getKey(), cls, ast).replace("$", "\\$")  + " ");
 					res = res.replaceAll(e.getValue() + "$", lhsToAddress(e.getKey(), cls, ast).replace("$", "\\$")  + " ");
 					//FIXME data structure generation must provide (in case using more lax check than just isReduct...)
 				} else {
 					//step $i => child
 					res = res.replaceAll(e.getValue() + " ", lhsToAddress(e.getKey(), cls, ast).replace("$", "\\$")  + " ");
-					res = res.replaceAll(e.getValue() + "$", lhsToAddress(e.getKey(), cls, ast).replace("$", "\\$")  + " ");					  
+					res = res.replaceAll(e.getValue() + "$", lhsToAddress(e.getKey(), cls, ast).replace("$", "\\$")  + " ");
 				}
 			} else {
 				res = res.replaceAll(e.getValue() + " ", lhsToAddress(e.getKey(), cls, ast).replace("$", "\\$")  + " ");
@@ -252,27 +254,27 @@ public class CppGenerator extends BackendBase  implements Backend {
 	//---
 
 	public String nestedTernaryLoopStep(Reductions reducts, ALEParser.Case c, String lhsRaw, AGEval.Class cls, ALEParser ast) throws InvalidGrammarException {
-	  String res = ""; 
-	  if (!c.isElse) {		
+	  String res = "";
+	  if (!c.isElse) {
 		  res += bindExpr(c.openBody, c.indexedVariables, cls, true, false, toAcc(lhsRaw, cls), ast);
 		  res += " ? ";
 	  } else {
 		  res += " : ";
 	  }
-	  
+
 	  for (ALEParser.Assignment asgn : c.assignments) {
 		  if (asgn._sink.equals(lhsRaw)) {
 			  res += asgnLoopExpr(cls, reducts, asgn, lhsRaw, false, ast);
 		  }
 	  }
-	  
+
 	  for (ALEParser.Cond cnd : c.conditionals) {
 		  res += nestedTernaryLoopStep(reducts, cnd, lhsRaw, cls, ast);
 	  }
-	  
+
 	  return res;
 	}
-	
+
 	public String nestedTernaryLoopStep(Reductions reducts, ALEParser.Cond c, String lhsRaw, AGEval.Class cls, ALEParser ast) throws InvalidGrammarException {
 		String res = "(";
 		res += nestedTernaryLoopStep(reducts, c.testCase, lhsRaw, cls, ast);
@@ -280,31 +282,31 @@ public class CppGenerator extends BackendBase  implements Backend {
 		res += nestedTernaryLoopStep(reducts, c.elseCase, lhsRaw, cls, ast);
 		return res + ")";
 	}
-	
-	//---
-	
 
-	//	
+	//---
+
+
+	//
 	public void checkInitable(Reductions reducts, AGEval.Class cls, HashMap<String,String> variables, String lhsRaw) throws InvalidGrammarException {
 		System.err.println("checkInitable..");
 /*
 		  for (String rawV : variables.keySet()) {
-			  if ("$acc".equals(rawV) 					  
+			  if ("$acc".equals(rawV)
 				  || (rawV.contains("$i") && !reducts.sinks.get(cls).contains(rawV.replace("$i", "")))) { //FIXME fixedpoint calc for better latter
-				  throw new InvalidGrammarException("non-reduction assignment to " + cls.getName() + "::" + lhsRaw 
-						  + " potentially used as a last value ($$), with unscheduble initialization dependency on " + rawV);							  
+				  throw new InvalidGrammarException("non-reduction assignment to " + cls.getName() + "::" + lhsRaw
+						  + " potentially used as a last value ($$), with unscheduble initialization dependency on " + rawV);
 			  }
 		  }
 */
 	}
-	
+
 	public String asgnLoopExpr (AGEval.Class cls, Reductions reducts, ALEParser.Assignment asgn, String lhsRaw, boolean isInit, ALEParser ast) throws InvalidGrammarException {
 		String res = "";
 		if (asgn.isReduction) {
-			res += "(" + 
+			res += "(" +
 				bindExpr(
-					isInit ? asgn.startBody : asgn.stepBody, 
-					isInit ? asgn.startVariables : asgn.stepVariables, 
+					isInit ? asgn.startBody : asgn.stepBody,
+					isInit ? asgn.startVariables : asgn.stepVariables,
 					cls, true, isInit, toAcc(lhsRaw, cls), ast) + ")";
 		} else {
 			if (reducts.accessedAsLast.get(cls).contains(lhsRaw.toLowerCase())) {
@@ -312,32 +314,32 @@ public class CppGenerator extends BackendBase  implements Backend {
 			}
 			res += "(" + bindExpr(asgn._indexedBody, asgn._variables, cls, true, isInit, toAcc(lhsRaw, cls), ast) + ")";
 		}
-		
+
 		return res;
 	}
 	public String nestedTernaryLoopInit(Reductions reducts, ALEParser.Case c, String lhsRaw, AGEval.Class cls, ALEParser ast) throws InvalidGrammarException {
-	  String res = ""; 
-	  if (!c.isElse) {		
+	  String res = "";
+	  if (!c.isElse) {
 		  checkInitable(reducts, cls, c.indexedVariables, lhsRaw);
-		  res += bindExpr(c.openBody, c.indexedVariables, cls, true, true, toAcc(lhsRaw, cls), ast); 
+		  res += bindExpr(c.openBody, c.indexedVariables, cls, true, true, toAcc(lhsRaw, cls), ast);
 		  res += " ? ";
 	  } else {
 		  res += " : ";
 	  }
-	  
+
 	  for (ALEParser.Assignment asgn : c.assignments) {
 		  if (asgn._sink.equals(lhsRaw)) {
 			  res += asgnLoopExpr(cls, reducts, asgn, lhsRaw, true, ast);
 		  }
 	  }
-	  
+
 	  for (ALEParser.Cond cnd : c.conditionals) {
 		  res += nestedTernaryLoopInit(reducts, cnd, lhsRaw, cls, ast);
 	  }
-	  
+
 	  return res;
 	}
-	
+
 	public String nestedTernaryLoopInit(Reductions reducts, ALEParser.Cond c, String lhsRaw, AGEval.Class cls, ALEParser ast) throws InvalidGrammarException {
 		String res = "(";
 		res += nestedTernaryLoopInit(reducts, c.testCase, lhsRaw, cls, ast);
@@ -345,44 +347,44 @@ public class CppGenerator extends BackendBase  implements Backend {
 		res += nestedTernaryLoopInit(reducts, c.elseCase, lhsRaw, cls, ast);
 		return res + ")";
 	}
-	
+
 	//-----
-	
-	
-	
-	
-	
+
+
+
+
+
 	//============
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
+
+
+
+
+
+
 	public String visitDispatcher(int visit, AGEvaluator aleg, HashSet<AGEval.Class>buIns, HashSet<AGEval.Class>bus) {
 		HashSet<AGEval.Class> inIns = getInIns(aleg, bus, buIns);
-		
-		String res = 
+
+		String res =
 			"bool visit_"+ visit + " (bool isGlobalCall, VISITPARAMS) {\n" +
 			"  switch (s.data.parseData.display) {\n";
 		for (AGEval.Class cls : aleg.classes) {
 			res += "    case ExtraDataHandler::TOK_" + cls.getName().toUpperCase() + ":\n";
-		
+
 			if (buIns != null && buIns.contains(cls)) { /* is inorder and may have bu parent: will be called 2x, need to dynamically filter out global variant*/
-				res += 
-				"        if (isGlobalCall && (SPARENT != NULL) && isInorder(SPARENT, " + visit + ")) return true;\n";				
+				res +=
+				"        if (isGlobalCall && (SPARENT != NULL) && isInorder(SPARENT, " + visit + ")) return true;\n";
 			} else if (buIns != null && inIns.contains(cls))	{
-				res += 
-				"        if (isGlobalCall && (SPARENT != NULL) ) return true;\n";									
+				res +=
+				"        if (isGlobalCall && (SPARENT != NULL) ) return true;\n";
 			}
-			res += 
+			res +=
 				"      return visit_" + cls.getName().toLowerCase() + "_" + visit + "(VISITARGS(s, root, SPARENT));\n";
 		}
 		res += "  }\n";
@@ -394,18 +396,18 @@ public class CppGenerator extends BackendBase  implements Backend {
 		for (int i = 0; i < visits; i++) res += visitDispatcher(i, aleg, buSubInorderBuIns.get(i), buSubInorderBus.get(i));
 		return res;
 	}
-	
+
 	/*
   private static String getFieldByTag(AGEvaluator aleg, String prop, String type) {
 	String res = "";
-	res += 
+	res +=
 		type + " get_dynamic_field_" + prop + "(SNode *n) {\n" +
 		"  switch (n->data.computeData.tag) {\n";
 	for (AGEval.Class cls : aleg.classes) {
 		if (cls.getPrivAttributes().containsKey(prop) || cls.getPubAttributes().containsKey(prop)) {
 			res += "    case aletags::TAG_" + cls.getName().toUpperCase() + ":\n" +
 			  "      n->data.computeData.classData.ExtraSub" + cls.getName() + "." + prop + ";\n" +
-			  "      break;\n";				
+			  "      break;\n";
 		}
 	}
 	res +=
@@ -414,12 +416,12 @@ public class CppGenerator extends BackendBase  implements Backend {
 		"      exit(1);\n" +
 		"  }\n" +
 		"}\n";
-	return res;  
-  }  
-	
+	return res;
+  }
+
   private static String getFieldsByTag(AGEvaluator aleg) throws InvalidGrammarException {
 	  String res = "";
-	  HashMap<String, String> fields = new HashMap<String, String>();	 
+	  HashMap<String, String> fields = new HashMap<String, String>();
 	  for (AGEval.Class cls : aleg.classes) {
 		  for (String attr : cls.getPubAttributes().keySet()) {
 			  String type = Vertex.typeToString(cls.getPubAttributes().get(attr));
@@ -427,20 +429,20 @@ public class CppGenerator extends BackendBase  implements Backend {
 				  if (!fields.get(attr).equals(type)) throw new InvalidGrammarException("For now, require all same name attributes to be of same type");
 				  continue;
 			  }
-			  fields.put(attr, type);			  
+			  fields.put(attr, type);
 		  }
 	  }
-	  
+
 	  for (String attr : fields.keySet()) {
 		  String type = fields.get(attr);
 		  res += getFieldByTag(aleg, attr, type);
 	  }
-	  
+
 	  return res;
   }
     */
 
-	
+
   public String lhsToAddress (String lhs, Class cls, ALEParser ast) throws InvalidGrammarException {
 	  	boolean isParent;
 	  	boolean isParseData;
@@ -449,7 +451,7 @@ public class CppGenerator extends BackendBase  implements Backend {
 	  	if (lhs.split("@").length == 2) {
 	  		child = lhs.split("@")[0];
 	  		isParent = child.equals("self");
-	  		prop = lhs.split("@")[1];	  		
+	  		prop = lhs.split("@")[1];
 //	  		if (prop.contains("$") && child.equals("self")) {
 //	  			System.err.println("CppGen: Cannot use intra-reduction accessors (self$$, ...), caught on use " + child + " in " + lhs);
 //	  			//throw new InvalidGrammarException("Cannot use intra-reduction accessors (self$$, ...), caught on use " + child + " in " + lhs);
@@ -459,12 +461,12 @@ public class CppGenerator extends BackendBase  implements Backend {
 	  		isParent = true;
 	  		prop = lhs;
 	  	}
-	  	String propClean = prop.toLowerCase();	  		  	
+	  	String propClean = prop.toLowerCase();
 	  	try {
 	  		if (propClean.contains("_init") || propClean.contains("_last")) { //loop vars
 	  			isParseData = false;
 	  		} else {
-		  		ExtendedVertex v = Generator.extendedGet(ast, cls, lhs.replace("$$", "").replace("$i", "").replace("$-", ""));		  		
+		  		ExtendedVertex v = Generator.extendedGet(ast, cls, lhs.replace("$$", "").replace("$i", "").replace("$-", ""));
 		  		if (v.isInput) throw new InvalidGrammarException("Accessing parse data as lhs: " + cls.getName() + "::" + lhs);
 		  		else isParseData = false;
 	  		}
@@ -477,9 +479,9 @@ public class CppGenerator extends BackendBase  implements Backend {
 	  		return base + "." + (isParseData ? "fld_" : "") + prop.toLowerCase();
 	  	} else if (Generator.childrenContains(ast.extendedClasses.get(cls).multiChildren.keySet(), child)) {
 	  		if (isParseData) return "loopChild->data.parseData.genData.extraParse" + cls.getChildByName(child).getName() + ".fld_" + propClean;
-	  		else return "loopChild->data.computeData.classData.Sub" + cls.getChildByName(child) + "." + propClean;	  		
+	  		else return "loopChild->data.computeData.classData.Sub" + cls.getChildByName(child) + "." + propClean;
 	  	} else {
-	  		String base = 
+	  		String base =
 	  			"#if defined(VERYSMALLTREEPOINTERS)\n" +
 		  		"(&s + s.distanceToLeftmostChild + computeData.classData.Sub" + cls.getName() + ".child_" + child + ")\n" +
 	  			"#elif defined(SMALLTREEPOINTERS)\n" +
@@ -487,15 +489,15 @@ public class CppGenerator extends BackendBase  implements Backend {
 	  			"#else\n" +
 		  		"(computeData.classData.Sub" + cls.getName() + ".child_" + child + ")\n" +
 	  			"#endif // ptrs\n";
-	  		if (isParseData) 
+	  		if (isParseData)
 	  			return base + "->data.parseData.genData.extraParse" + cls.getChildByName(child).getName() + ".fld_" + propClean;
-	  		else 
+	  		else
 	  			return base + "->data.computeData.classData.Sub" + cls.getChildByName(child) + "." + propClean;
 	  	}
-	  	
-	  
+
+
   }
-	
+
 public static String assignAliases(AGEval.Class c, ALEParser ast) {
 	if (c.getChildMappings() == null) throw new NullPointerException();
 	if (ast.extendedClasses == null) throw new NullPointerException();
@@ -511,37 +513,37 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 		throw new NullPointerException();
 	}
 	  int numSingle = c.getChildMappings().size() - ast.extendedClasses.get(c).multiChildren.keySet().size();
-	
+
 	  String res = "static void assignAliases_" + c.getName() + " (VISITPARAMS) {\n";
-	  
+
 	  if (numSingle == 0 && ast.extendedClasses.get(c).multiChildren.keySet().size() == 0) return res + "}\n";
-	  
+
 	  for (String n : ast.extendedClasses.get(c).multiChildren.keySet())
 		  res += "  s.data.computeData.classData.Sub" + c.getName() + ".child_" + n.toLowerCase() + "_count = 0;\n";
-	  	  
-	  res += 
+
+	  res +=
 		  "#if defined(SMALLTREEPOINTERS) || defined(VERYSMALLTREEPOINTERS)\n" +
 		  "  PTRBACKINGTYPE __assignAliasesOffset = 0;\n"+//s.distanceToLeftmostChild;\n" +
 		  "#endif //small / vsmall ptrs\n" +
 		  "#ifdef DEBUGY\n  int found = 0;\n#endif //DEBUGY\n" +
 		  "  SFORLOOP(child, s) {\n" +
 		  "    switch(child->data.parseData.refname) {\n";
-	  for (String n : c.getChildMappings().keySet()) { //skip multichildren maps (instead dyn lookup) 		  
+	  for (String n : c.getChildMappings().keySet()) { //skip multichildren maps (instead dyn lookup)
 		  if (ast.extendedClasses.get(c).multiChildren.containsKey(n)) {
-			  res += 
+			  res +=
 				  "      case ExtraDataHandler::TOK_" + n.toUpperCase() + ":\n" +
 				  "        s.data.computeData.classData.Sub" + c.getName() + ".child_"+ n.toLowerCase() + "_count++;\n" +
 				  "#if defined(DEBUGY)\n" +
 				  "        cout << \"  found " + n + " alias\" << endl;\n" +
-				  "#endif //DEBUGY\n" +			  				  
+				  "#endif //DEBUGY\n" +
 				  "#if defined(DEBUGY) && defined(VERYSMALLTREEPOINTERS)\n" +
 				  "        if (child != (&s + s.distanceToLeftmostChild + __assignAliasesOffset)) {\n" +
 				  "          cout << \"failed pointer compression/decompression \" << endl; exit(1); \n" +
 				  "        }\n" +
-				  "#endif //DEBUGY && VS\n" +			  
+				  "#endif //DEBUGY && VS\n" +
 				  "        break; \n";
 		  } else {
-			  res += 
+			  res +=
 				  "      case ExtraDataHandler::TOK_" + n.toUpperCase() + ":\n" +
 				  "#if defined(VERYSMALLTREEPOINTERS)\n" +
 				  "        s.data.computeData.classData.Sub" + c.getName() + ".child_"+ n + " = __assignAliasesOffset;\n" +
@@ -552,17 +554,17 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 				  "#endif //ptrs\n" +
 				  "#if defined(DEBUGY)\n" +
 				  "        found++;\n" +
-				  "#endif //DEBUGY\n" +			  
+				  "#endif //DEBUGY\n" +
 				  "#if defined(DEBUGY) && defined(VERYSMALLTREEPOINTERS)\n" +
 				  "        if (child != (&s + s.distanceToLeftmostChild + __assignAliasesOffset)) {\n" +
 				  "          cout << \"failed pointer compression/decompression \" << endl; exit(1); \n" +
 				  "        }\n" +
 				  "        cout << \"  found multi " + n + " alias\" << endl;\n" +
-				  "#endif //DEBUGY\n" +			  
+				  "#endif //DEBUGY\n" +
 				  "        break; \n";
 		  }
 	  }
-	  
+
 	  String multiChecks;
 	  /*
 	  if (ast.extendedClasses.get(c).multiChildren.size() > 0) {
@@ -570,12 +572,12 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 			  "#ifdef DEBUGY\n" +
 			  "        switch(child->data.parseData.displayname) {\n";
 		  for (String iface : ast.extendedClasses.get(c).multiChildren.keySet())
-			  multiChecks += 
+			  multiChecks +=
 				  "          case ExtraDataHandler::TOK_" + iface.toUpperCase() + ":\n" +
-				  "            break;\n";			  
+				  "            break;\n";
 		  multiChecks +=
 			  "          default: \n" +
-			  "            cout << \"unknown refname/display type in " + c.getName() + 
+			  "            cout << \"unknown refname/display type in " + c.getName() +
 			  ": \" << child->data.parseData.refname << \"/\" << child->data.parseData.displayname << endl;\n" +
 			  "            exit(1);\n" +
 			  "        }\n" +
@@ -583,16 +585,16 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 
 	  } else {
 	  */
-		  multiChecks = 		  
+		  multiChecks =
 			  "#ifdef DEBUGY\n" +
 			  "        cout << \"unknown refname type in " + c.getName() + ": \" << child->data.parseData.refname << endl;\n" +
 			  "        exit(1);\n" +
-			  "#endif //DEBUGY\n";		  
+			  "#endif //DEBUGY\n";
 	  //}
 
 	  res +=
 		  "      default: \n" +
-		  multiChecks + 
+		  multiChecks +
 		  "        break;\n" +
 		  "    }\n" +
 		  "#if defined(SMALLTREEPOINTERS) || defined(VERYSMALLTREEPOINTERS)\n" +
@@ -618,7 +620,7 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 	  for (Entry<String, ExtendedVertex> v : ei.extendedVertices.entrySet())  {
 		  if (!v.getValue().isInput) pubs.add(v.getKey());
 	  }
-	  String[] sortedPubs = {}; 
+	  String[] sortedPubs = {};
 	  sortedPubs = pubs.toArray(sortedPubs);
 	  Arrays.sort(sortedPubs);
 	  int counter = 0;
@@ -629,7 +631,7 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 			  res += "  " + typeStringToCppType(ei.extendedVertices.get(prop).strType) + " " + prop + ";\n";
 			  counter++;
 		  }
-		  if (!ei.positionedVariables.containsValue(n)) {					  
+		  if (!ei.positionedVariables.containsValue(n)) {
 			  //FIXME type lookup for extended types
 			  res += "  " + typeStringToCppType(ei.extendedVertices.get(n).strType.replace("color", "int"))  + " " + n.toLowerCase() + ";\n";
 			  counter++;
@@ -637,29 +639,29 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 	  }
 	  return res;
   }
-  
+
   public static String interfaceHeader (AGEval.IFace i, HashMap<AGEval.IFace, ALEParser.ExtendedClass> extendedClasses) {
 	  String res = "struct ExtraSub" + i.getName() + " {\n";
-	  res += genInterfaceHeaderFields(i, extendedClasses); 
-	  res += "};\n";	  
+	  res += genInterfaceHeaderFields(i, extendedClasses);
+	  res += "};\n";
 	  return res;
   }
-  
+
   public static String classHeader (AGEval.Class c, HashMap<AGEval.IFace, ALEParser.ExtendedClass> extendedClasses, Schedule sched) throws InvalidGrammarException {
 	  //ALEParser.ExtendedClass ei = extendedClasses.get(c.getInterface());
 	  String res = "struct ExtraSub" + c.getName() + " {\n";
-	  res += genInterfaceHeaderFields(c.getInterface(), extendedClasses); 
+	  res += genInterfaceHeaderFields(c.getInterface(), extendedClasses);
 	  for (String n : c.getChildMappings().keySet()) {
-		  if (extendedClasses.get(c).multiChildren.containsKey(n)) res += "  PTRBACKINGTYPE child_" + n.toLowerCase() + "_count;\n"; 
+		  if (extendedClasses.get(c).multiChildren.containsKey(n)) res += "  PTRBACKINGTYPE child_" + n.toLowerCase() + "_count;\n";
 		  else res += "  PTRBACKINGTYPE child_" + n.toLowerCase() + ";\n";
 	  }
 	  for (String n : c.getPrivAttributes().keySet())
 		  res += "  " + typeStringToCppType(Vertex.typeToString(c.getPrivAttributes().get(n))) + " " + n.toLowerCase() + ";\n";
 
-	  
+
 	  for (String sink : sched.reductions.sinks.get(c)) {
 		  String type = typeStringToCppType(Generator.extendedGet(sched._ast, c, sink).strType);
-		  
+
 		  if (!sink.contains("@") || sink.contains("self@")) {
 			  String propClean = AGEvaluatorSwipl.attribName(sink).toLowerCase();
 			  res += "  " + type + " " + propClean + "_init;\n";
@@ -672,15 +674,15 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 	  }
 	  /*
 	  for (String f : reducts) {
-	      if (!f.contains("@") || f.contains("self@")) continue;		
+	      if (!f.contains("@") || f.contains("self@")) continue;
 	  	  res += "  " + Vertex.typeToString(Generator.lookupAttribute(f, c).myValueType) + " " + f.replace("@", "_") + "_last;\n";
 	  }
 	  */
 	  //res += assignAliases(c);
-	  res += "};\n";	  
+	  res += "};\n";
 	  return res;
   }
-  
+
   public static String classesHeader(ALEParser ast, int numVisits, Schedule sched) throws InvalidGrammarException {
 
 	  String res = "";
@@ -688,8 +690,8 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 	  for (AGEval.IFace i : ast.interfaces) res += interfaceHeader(i, ast.extendedClasses);
 
 	  String union = "union ExtraAny {\n";
-	  for (AGEval.Class c : ast.classes) 
-		  union += "  ExtraSub" + c.getName() + " Sub" + c.getName() + ";\n";		  
+	  for (AGEval.Class c : ast.classes)
+		  union += "  ExtraSub" + c.getName() + " Sub" + c.getName() + ";\n";
 	  for (AGEval.IFace i : ast.interfaces)
 		  union += "  ExtraSub" + i.getName() + " Sub" + i.getName() + ";\n";
 
@@ -703,7 +705,7 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 		  else tags += ", ";
 		  tags += "TOK_" + c.getName().toUpperCase();
 	  }
-	  tags += " };\n";	  
+	  tags += " };\n";
 	  String getters = getFieldsByTag(aleg);
 	   */
 
@@ -712,7 +714,7 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 		  visitHeaders += "bool visit_" + i + "(bool isGlobalCall, VISITPARAMS);\n";
 
 	  String body = res + union + /*tags + getters + */ visitHeaders;
-	  String pre = 
+	  String pre =
 			  "#ifndef VISITORS_H\n" +
 					  "#define VISITORS_H\n" +
 					  "#include \"constants.h\"\n" +
@@ -730,17 +732,17 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 	  String res = "#ifdef DEBUGY\n  tbb::tick_count::interval_t interval;\n";
 	  //int step = 0;
 	  for (int step = 0; step <= schedule2.binding.get("P").toTermArray().length; step++) {
-		  res += "tbb::tick_count t" + step + ";\n";		  
+		  res += "tbb::tick_count t" + step + ";\n";
 	  }
 	  //res += "\ntbb::tick_count t" + step + ";\n"; //last
 	  res += "t0 = tbb::tick_count::now();\n#endif //DEBUGY\n\n";
 
 	  int pass = 0;
-	  int lockC = 0;	
+	  int lockC = 0;
 	  for (Term visit : schedule2.binding.get("P").toTermArray()) {
 		  String traversal = (lockC + 1) % 2 == 0 ? "false" : "true";
 
-		  res += 
+		  res +=
 				  "#if defined(DEBUGY) && defined(BLOCKPARALLELTREE)\n" +
 						  "  cout << \"batch " + pass + ": \" << endl;\n" +
 						  "  resetOrdering(browser->rstree.second.second.second);\n" +
@@ -748,7 +750,7 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 
 		  String stencil = visit.arg(2).arg(1).toString();
 		  if (stencil.equals("tdLtrU")) {
-			  res += "  visit_" + pass + "(true, VISITARGS(*root, *root, NULL));\n"; 
+			  res += "  visit_" + pass + "(true, VISITARGS(*root, *root, NULL));\n";
 		  } else if (stencil.equals("td")) {
 			  res +=
 					  "#if defined(TBBBLOCKPARALLELTREE) || defined(TBBBLOCKPARALLELTREEOPT) || defined(TBBBLOCKPARALLELTREECONT)\n" +
@@ -757,10 +759,10 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 							  "  parallelInheritFTL<inheritVisitBlockFlat<visit_" + pass + ", " + traversal + ">, visit_" + pass + ">(root, sb, numBlocks);\n" +
 							  "#else\n" +
 							  "  p.batch(v" + pass + ");\n" +
-							  "#endif\n";			
+							  "#endif\n";
 			  lockC++;
 		  } else if (stencil.equals("bu")) {
-			  res += 
+			  res +=
 					  "#if defined(TBBBLOCKPARALLELTREE) || defined(TBBBLOCKPARALLELTREEOPT) || defined(TBBBLOCKPARALLELTREECONT)\n" +
 							  "  synthesizeVisitBlock<visit_" + pass + ", true>(root, sb);\n" +
 							  "#elif defined(TBBGRAPHSOLVER)\n" +
@@ -770,7 +772,7 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 							  "#endif\n";
 			  lockC++;
 		  } else if (stencil.equals("buSubInorder")) {
-			  res += 
+			  res +=
 					  "#if defined(TBBBLOCKPARALLELTREE) || defined(TBBBLOCKPARALLELTREEOPT) || defined(TBBBLOCKPARALLELTREECONT)\n" +
 							  "  synthesizeVisitBlock<visit_" + pass + ", true>(root, sb);\n" +
 							  "#elif defined(TBBGRAPHSOLVER)\n" +
@@ -784,16 +786,16 @@ public static String assignAliases(AGEval.Class c, ALEParser ast) {
 		  }
 		  res += "#ifdef DEBUGY\n  cout << \"  (batch done.)\" << endl;\n#endif //DEBUGY\n";
 		  pass++;
-		  res += 
-				  "#ifdef DEBUGY\nt" + pass + " = tbb::tick_count::now();\n#endif //DEBUGY\n";			
+		  res +=
+				  "#ifdef DEBUGY\nt" + pass + " = tbb::tick_count::now();\n#endif //DEBUGY\n";
 	  }
 	  res += "\n";
-	  res += "#ifdef DEBUGY\ndouble sum = 0;\n";	  
+	  res += "#ifdef DEBUGY\ndouble sum = 0;\n";
 	  for (int step = 0; step <= schedule2.binding.get("P").toTermArray().length; step++) {
-		  res += 
+		  res +=
 				  "interval = t" + (step+1) + " - t" + step + ";\n" +
 						  "printf(\"Visit, " + step + ", %g\\n\", interval.seconds());\n" +
-						  "sum += interval.seconds();\n";		
+						  "sum += interval.seconds();\n";
 	  }
 	  res += "printf(\"Final, %g\\n\", sum);\n#endif //DEBUGY\n";
 	  return res;
@@ -803,25 +805,25 @@ public static String printCurrentPipelineDelayedBatch (Schedule schedule2) throw
 	String res = "#ifdef DEBUGY\ntbb::tick_count::interval_t interval;\n";
 	//int step = 0;
 	for (int step = 0; step <= schedule2.binding.get("P").toTermArray().length; step++) {
-		res += "tbb::tick_count t" + step + ";\n";		
+		res += "tbb::tick_count t" + step + ";\n";
 	}
 	//res += "\ntbb::tick_count t" + step + ";\n"; //last
 	res += "t0 = tbb::tick_count::now();\n#endif //DEBUGY\n\n";
-	
+
 	int pass = 0;
-	int lockC = 0;	
+	int lockC = 0;
 	for (Term visit : schedule2.binding.get("P").toTermArray()) {
 		String traversal = (lockC + 1) % 2 == 0 ? "false" : "true";
 
-		res += 
+		res +=
 			"#if defined(DEBUGY) && defined(BLOCKPARALLELTREE)\n" +
 			"  cout << \"batch " + pass + ": \" << endl;\n" +
 			"  resetOrdering(browser->rstree.second.second.second);\n" +
 			"#endif //DEBUGY\n";
-		
+
 		String stencil = visit.arg(2).arg(1).toString();
 		if (stencil.equals("tdLtrU")) {
-			res += "  visit_" + pass + "(true, VISITARGS(*root, *root, NULL));\n"; 
+			res += "  visit_" + pass + "(true, VISITARGS(*root, *root, NULL));\n";
 		} else if (stencil.equals("td")) {
 			res +=
 				"#if defined(TBBBLOCKPARALLELTREE) || defined(TBBBLOCKPARALLELTREEOPT) || defined(TBBBLOCKPARALLELTREECONT)\n" +
@@ -830,10 +832,10 @@ public static String printCurrentPipelineDelayedBatch (Schedule schedule2) throw
 				"  parallelInheritFTL<inheritVisitBlockFlat<visit_" + pass + ", " + traversal + ">, visit_" + pass + ">(root, sb, numBlocks);\n" +
 				"#else\n" +
 				"  p.batchP(v" + pass + ");\n" +
-				"#endif\n";			
+				"#endif\n";
 			lockC++;
 		} else if (stencil.equals("bu")) {
-			res += 
+			res +=
 				"#if defined(TBBBLOCKPARALLELTREE) || defined(TBBBLOCKPARALLELTREEOPT) || defined(TBBBLOCKPARALLELTREECONT)\n" +
 				"  synthesizeVisitBlock<visit_" + pass + ", true>(root, sb);\n" +
 				"#elif defined(TBBGRAPHSOLVER)\n" +
@@ -843,7 +845,7 @@ public static String printCurrentPipelineDelayedBatch (Schedule schedule2) throw
 				"#endif\n";
 			lockC++;
 		} else if (stencil.equals("buSubInorder")) {
-			res += 
+			res +=
 					"#if defined(TBBBLOCKPARALLELTREE) || defined(TBBBLOCKPARALLELTREEOPT) || defined(TBBBLOCKPARALLELTREECONT)\n" +
 					"  synthesizeVisitBlock<visit_" + pass + ", true>(root, sb);\n" +
 					"#elif defined(TBBGRAPHSOLVER)\n" +
@@ -857,14 +859,14 @@ public static String printCurrentPipelineDelayedBatch (Schedule schedule2) throw
 		}
 		res += "#ifdef DEBUGY\n  cout << \"  (batch done.)\" << endl;\n#endif //DEBUGY\n";
 		pass++;
-		res += 
-			"#ifdef DEBUGY\nt" + pass + " = tbb::tick_count::now();\n#endif // DEBUGY\n";			
+		res +=
+			"#ifdef DEBUGY\nt" + pass + " = tbb::tick_count::now();\n#endif // DEBUGY\n";
 	}
 	res += "\n";
 	res += "#ifdef DEBUGY\ndouble sum = 0;\n";
-	
+
 	for (int step = 0; step < schedule2.binding.get("P").toTermArray().length; step++) {
-		res += 
+		res +=
 			"interval = t" + (step+1) + " - t" + step + ";\n" +
 			"printf(\"Visit, " + step + ", %g\\n\", interval.seconds());\n" +
 		    "sum += interval.seconds();\n";
@@ -889,7 +891,7 @@ public String printCurrentPipelineHeaders (Hashtable<Variable, Term> binding) th
 			res += "  //no setup for inorder visit " + pass + "\n";
 		} else if (stencil.equals("td")) {
 			System.out.println("Pass " + pass + ": td");
-			res += 
+			res +=
 				"#ifdef PTHREADWSBLOCKS\n" +
 				"  WSPipelineInherit<visit_" + pass + ", " + traversal + "> *v" + pass + ";\n" +
 				"#elif defined(BLOCKPARALLELTREE) && defined(PTHREADBLOCKS)\n" +
@@ -908,7 +910,7 @@ public String printCurrentPipelineHeaders (Hashtable<Variable, Term> binding) th
 			lockC++;
 		} else if (stencil.equals("bu")) {
 			System.out.println("Pass " + pass + ": bu");
-			res += 
+			res +=
 				"#ifdef PTHREADWSBLOCKS\n" +
 				"  WSPipelineSynthesize<visit_" + pass + ", " + traversal + "> *v" + pass + ";\n" +
 				"#elif defined(BLOCKPARALLELTREE) && defined(PTHREADBLOCKS)\n" +
@@ -927,7 +929,7 @@ public String printCurrentPipelineHeaders (Hashtable<Variable, Term> binding) th
 			lockC++;
 		} else if (stencil.equals("buSubInorder")) {
 			System.out.println("Pass " + pass + ": buSubInorder");
-			res += 
+			res +=
 				"#ifdef PTHREADWSBLOCKS\n" +
 				"  WSPipelineSynthesize<visit_" + pass + ", " + traversal + "> *v" + pass + ";\n" +
 				"#elif defined(BLOCKPARALLELTREE) && defined(PTHREADBLOCKS)\n" +
@@ -948,9 +950,9 @@ public String printCurrentPipelineHeaders (Hashtable<Variable, Term> binding) th
 			throw new InvalidGrammarException("Unknown stencil type: " + stencil);
 		}
 		pass++;
-		
-	}			
-	return res;		
+
+	}
+	return res;
 }
 
 public String printCurrentPipelineBuild (Hashtable<Variable, Term> binding) throws InvalidGrammarException {
@@ -968,7 +970,7 @@ public String printCurrentPipelineBuild (Hashtable<Variable, Term> binding) thro
 			res += "  //no setup for inorder visit " + pass + "\n";
 		} else if (stencil.equals("td")) {
 			System.out.println("Pass " + pass + ": td");
-			res += 
+			res +=
 				"#ifdef PTHREADWSBLOCKS\n" +
 				"  WSPipelineInherit<visit_" + pass + ", " + traversal + "> v" + pass + "(root, sb, steals);\n" +
 				"#elif defined(BLOCKPARALLELTREE) && defined(PTHREADBLOCKS)\n" +
@@ -987,7 +989,7 @@ public String printCurrentPipelineBuild (Hashtable<Variable, Term> binding) thro
 			lockC++;
 		} else if (stencil.equals("bu")) {
 			System.out.println("Pass " + pass + ": bu");
-			res += 
+			res +=
 				"#ifdef PTHREADWSBLOCKS\n" +
 				"  WSPipelineSynthesize<visit_" + pass + ", " + traversal + "> v" + pass + "(root, sb, steals);\n" +
 				"#elif defined(BLOCKPARALLELTREE) && defined(PTHREADBLOCKS)\n" +
@@ -1006,7 +1008,7 @@ public String printCurrentPipelineBuild (Hashtable<Variable, Term> binding) thro
 			lockC++;
 		} else if (stencil.equals("buSubInorder")) {
 			System.out.println("Pass " + pass + ": buSubInorder");
-			res += 
+			res +=
 				"#ifdef PTHREADWSBLOCKS\n" +
 				"  WSPipelineSynthesize<visit_" + pass + ", " + traversal + "> v" + pass + "(root, sb, steals);\n" +
 				"#elif defined(BLOCKPARALLELTREE) && defined(PTHREADBLOCKS)\n" +
@@ -1026,9 +1028,9 @@ public String printCurrentPipelineBuild (Hashtable<Variable, Term> binding) thro
 		} else {
 			throw new InvalidGrammarException("Unknown stencil type: " + stencil);
 		}
-		pass++;		
-		
-	}			
+		pass++;
+
+	}
 	return res;
 }
 
@@ -1047,7 +1049,7 @@ public String printCurrentPipelineDelayedBuild (Hashtable<Variable, Term> bindin
 			res += "  //no setup for inorder visit " + pass + "\n";
 		} else if (stencil.equals("td")) {
 			System.out.println("Pass " + pass + ": td");
-			res += 
+			res +=
 				"#ifdef PTHREADWSBLOCKS\n" +
 				"  v" + pass + " = new WSPipelineInherit<visit_" + pass + ", " + traversal + ">(root, sb, steals);\n" +
 				"#elif defined(BLOCKPARALLELTREE) && defined(PTHREADBLOCKS)\n" +
@@ -1066,7 +1068,7 @@ public String printCurrentPipelineDelayedBuild (Hashtable<Variable, Term> bindin
 			lockC++;
 		} else if (stencil.equals("bu")) {
 			System.out.println("Pass " + pass + ": bu");
-			res += 
+			res +=
 				"#ifdef PTHREADWSBLOCKS\n" +
 				"  v" + pass + " = new WSPipelineSynthesize<visit_" + pass + ", " + traversal + ">(root, sb, steals);\n" +
 				"#elif defined(BLOCKPARALLELTREE) && defined(PTHREADBLOCKS)\n" +
@@ -1085,7 +1087,7 @@ public String printCurrentPipelineDelayedBuild (Hashtable<Variable, Term> bindin
 			lockC++;
 		} else if (stencil.equals("buSubInorder")) {
 			System.out.println("Pass " + pass + ": buSubInorder");
-			res += 
+			res +=
 				"#ifdef PTHREADWSBLOCKS\n" +
 				"  v" + pass + " = new WSPipelineSynthesize<visit_" + pass + ", " + traversal + ">(root, sb, steals);\n" +
 				"#elif defined(BLOCKPARALLELTREE) && defined(PTHREADBLOCKS)\n" +
@@ -1106,8 +1108,8 @@ public String printCurrentPipelineDelayedBuild (Hashtable<Variable, Term> bindin
 			throw new InvalidGrammarException("Unknown stencil type: " + stencil);
 		}
 		pass++;
-		
-	}			
+
+	}
 	return res;
 }
 
@@ -1115,18 +1117,18 @@ public String printCurrentPipelineDelayedBuild (Hashtable<Variable, Term> bindin
 // Visitors generator methods
 ///////////////////////////////////////////////////////////////////////////////
 
-  
+
 public void generateParseFiles(ALEParser ast, Schedule sched, String browserPath, boolean verbose, String functionHeadersRaw) throws InvalidGrammarException {
 	//grammar.generateFiles(outputDir, verbose);
 	//CSS parser
-	
+
     final String fileName = "extradatahandler";
     final String exprName = "aleactions";
-    
+
     String functionHeaders =
     	"#include \"ftlstdlib.h\"\n" +
     	"#include \"" + fileName + ".h\"\n" + functionHeadersRaw;
-    	
+
     try {
     	FileWriter headerWriter = new FileWriter(new File(browserPath + File.separator + fileName +".h"));
     	headerWriter.write(CppParserGenerator.header(ast));
@@ -1150,7 +1152,7 @@ public void generateParseFiles(ALEParser ast, Schedule sched, String browserPath
     	System.out.println("Failure to generate parser body: " + e.toString());
     	System.exit(1);
     }
-    
+
     try {
     	FileWriter propWriter = new FileWriter(new File (browserPath + File.separator + fileName + ".properties"));
     	propWriter.write(CppParserGenerator.properties(ast.classes, ast.interfaces));
@@ -1160,13 +1162,13 @@ public void generateParseFiles(ALEParser ast, Schedule sched, String browserPath
     	}
     } catch (IOException e) {
     	System.out.println("Failure to generate parser properties file: " + e.toString());
-    	System.exit(1);        	
+    	System.exit(1);
     }
 
-    
+
     System.out.println("Generated parser extensions at " + browserPath + File.separator  + fileName + ".(h, cpp, properties)");
 //ALEG
-    
+
     try {
     	FileWriter exprWriter = new FileWriter(new File (browserPath + File.separator + exprName + ".h"));
     	exprWriter.write(functionHeaders);
@@ -1176,58 +1178,58 @@ public void generateParseFiles(ALEParser ast, Schedule sched, String browserPath
     	}
     } catch (IOException e) {
     	System.out.println("Failure to generate expression (semantic actions) file: " + e.toString());
-    	System.exit(1);        	
+    	System.exit(1);
     }
-    
+
     System.out.println("Generated expression semantic actions at " + browserPath + File.separator + exprName + ".h");
 }
 
 public String preVisits (AGEvaluator aleg, Schedule sched) {
 	String visitPre =
 		"#include \"constants.h\"\n" +
-		"#ifdef EXTRA_DATA\n\n" + 
-        "#include \"predefinedactions.h\"\n" +			
+		"#ifdef EXTRA_DATA\n\n" +
+        "#include \"predefinedactions.h\"\n" +
 		"#include \"visitors.h\"\n" +
 		"#include \"extradatahandler.h\"\n" +
 		"#include \"aleactions.h\"\n" +
 		"#include \"sss.h\"\n" +
-		"#include \"sssmacros.h\"\n\n"; 
-	
+		"#include \"sssmacros.h\"\n\n";
+
 	String visitHelpers = "";
 	for (AGEval.Class c : aleg.classes)
 		visitHelpers += CppGenerator.assignAliases(c, sched._ast);
 
-	
-	visitHelpers += 
+
+	visitHelpers +=
 		"bool isInorder(SNode *node, int pass) {\n" +
 		"  switch (pass) {\n";
 	for (int i = 0; i < sched.buSubInorderBuIn.size(); i++) {
 		visitHelpers  += "    case " + i + ":\n";
 		HashSet<AGEval.Class>bus = sched.buSubInorderBus.get(i);
 		if (bus == null) {
-			visitHelpers += "#ifdef DEBUGY\n  cout << \" Did not expect inorder call for pass " + i + " \" << endl;\n#endif //DEBUGY\n";	
+			visitHelpers += "#ifdef DEBUGY\n  cout << \" Did not expect inorder call for pass " + i + " \" << endl;\n#endif //DEBUGY\n";
 		} else {
 			HashSet<AGEval.Class> ios = new HashSet<AGEval.Class>(aleg.classes);
 			ios.removeAll(bus);
-			visitHelpers  += "      switch (node->data.parseData.display) {\n";				
+			visitHelpers  += "      switch (node->data.parseData.display) {\n";
 			for (AGEval.Class cls : ios)
-				visitHelpers  += "        case ExtraDataHandler::TOK_" + cls.getName().toUpperCase() +": return true; \n";				
+				visitHelpers  += "        case ExtraDataHandler::TOK_" + cls.getName().toUpperCase() +": return true; \n";
 			visitHelpers  += "        default: return false;\n";
 			visitHelpers  += "      }\n";
 		}
 	}
 	visitHelpers  += "    default: \n";
-	visitHelpers += "#ifdef DEBUGY\n    cout << \" Unknown pass \" << pass << endl;\n#endif //DEBUGY\n";	
+	visitHelpers += "#ifdef DEBUGY\n    cout << \" Unknown pass \" << pass << endl;\n#endif //DEBUGY\n";
 	visitHelpers += "    return false;\n";
 	visitHelpers  += "  }\n";
 	visitHelpers  += "}\n";
 
-	
-	return visitPre + visitHelpers; 
+
+	return visitPre + visitHelpers;
 }
 
 public String postVisits (AGEvaluator aleg, Schedule sched) {
-	return visitDispatchers(sched.numVisits(), aleg, sched.buSubInorderBuIn, sched.buSubInorderBus) + "\n#endif //EXTRA_DATA\n";	
+	return visitDispatchers(sched.numVisits(), aleg, sched.buSubInorderBuIn, sched.buSubInorderBus) + "\n#endif //EXTRA_DATA\n";
 }
 
 public static String visitorFile ="visitors";
@@ -1239,7 +1241,7 @@ public static String pipelineFile = "sequence";
 
 
 @Override
-public String rhsToVal(String lhs, Class cls, ALEParser ast) throws InvalidGrammarException {	
+public String rhsToVal(String lhs, Class cls, ALEParser ast) throws InvalidGrammarException {
 	boolean isParent;
 	boolean isParseData;
 	String child;
@@ -1247,27 +1249,27 @@ public String rhsToVal(String lhs, Class cls, ALEParser ast) throws InvalidGramm
 	if (lhs.split("@").length == 2) {
 		child = lhs.split("@")[0];
 		isParent = child.equals("self");
-		prop = lhs.split("@")[1];	  		
+		prop = lhs.split("@")[1];
 //		if (prop.contains("$") && child.equals("self")) {
 //			System.err.println("CppGen: Cannot use intra-reduction accessors (self$$, ...), caught on use " + child + " in " + lhs);
 //			//throw new InvalidGrammarException("Cannot use intra-reduction accessors (self$$, ...), caught on use " + child + " in " + lhs);
 //		}
 	} else {
-  		if (ast.types.get("displayType").contains(lhs.toLowerCase())) return "ExtraDataHandler::TOK_" + lhs.toUpperCase();  		
+  		if (ast.types.get("displayType").contains(lhs.toLowerCase())) return "ExtraDataHandler::TOK_" + lhs.toUpperCase();
 		child = "self";
 		isParent = true;
 		prop = lhs;
 	}
-	
+
 	String cleanProp = prop.replace("$-", "").replace("$$", "").replace("$i", "").toLowerCase();
-	
+
 	try {
 		//String checkProp = prop.replace("$i", "");
 		ExtendedVertex v = Generator.extendedGet(ast, cls, lhs.replace("$-", "").replace("$$", "").replace("$i", ""));
   		isParseData = v.isInput;
   	} catch (InvalidGrammarException e) {
   		isParseData = false;
-//  		String checkProp = prop.replace("$i", "");		
+//  		String checkProp = prop.replace("$i", "");
 //  		System.err.println("failed rhs parse data on " + lhs + " (checkProp: " + checkProp + ")");
   	} catch (NullPointerException e) {
   		System.err.println("rhsToVal null pointer on " + cls.getName() + "::" + lhs);
@@ -1277,28 +1279,28 @@ public String rhsToVal(String lhs, Class cls, ALEParser ast) throws InvalidGramm
 
   	if (prop.contains("$$")) {
   		if (isParent) {
-	  		return "computeData.classData.Sub" + cls.getName() + "." + cleanProp;		  			
+	  		return "computeData.classData.Sub" + cls.getName() + "." + cleanProp;
   		} else if (Generator.childrenContains(ast.extendedClasses.get(cls).multiChildren.keySet(), child)) {
-	  		return "computeData.classData.Sub" + cls.getName() + "." + child.toLowerCase() + "_" + cleanProp + "_last";		  			
+	  		return "computeData.classData.Sub" + cls.getName() + "." + child.toLowerCase() + "_" + cleanProp + "_last";
   		} else {
-  			throw new InvalidGrammarException("Cannot access $$ attrib of a non-multi child / self reduction: " + lhs);	
+  			throw new InvalidGrammarException("Cannot access $$ attrib of a non-multi child / self reduction: " + lhs);
   		}
   	} else if (prop.contains("$i")) {
   		//throw new InvalidGrammarException("$i not handled in C++ backend yet");
   		//System.err.println("$i not handled in C++ backend yet");
   		if (isParent) {
   			throw new InvalidGrammarException("Cannot access $i of self attrib: " + lhs);
-  			//return "computeData.classData.Sub" + cls.getName() + "." + cleanProp; 		
+  			//return "computeData.classData.Sub" + cls.getName() + "." + cleanProp;
   		} else if (Generator.childrenContains(ast.extendedClasses.get(cls).multiChildren.keySet(), child)) {
-  			if (isParseData) {  				
+  			if (isParseData) {
   				if (cleanProp.equals("display")) return "loopChild->data.parseData.display";
   				else return "loopChild->data.parseData.genData.extraParse" + cls.getChildByName(child).getName() + ".fld_" + cleanProp;
-  			} 
-  			else return "loopChild->data.computeData.classData.Sub" + cls.getChildByName(child) + "." + cleanProp;  			
+  			}
+  			else return "loopChild->data.computeData.classData.Sub" + cls.getChildByName(child) + "." + cleanProp;
   		} else {
   			throw new InvalidGrammarException("Cannot access $i attrib of a non-multi child: " + lhs);
-  			//return "parseFloat(getChildByRefName(node,\"" + child + "\").getAttribute(\"" + cleanProp + "\"))";	
-  		}		  		
+  			//return "parseFloat(getChildByRefName(node,\"" + child + "\").getAttribute(\"" + cleanProp + "\"))";
+  		}
   	} else if (prop.contains("$-")) {
   		if (isParent) {
   			//by definition, cannot be parse data (for now..)
@@ -1320,16 +1322,16 @@ public String rhsToVal(String lhs, Class cls, ALEParser ast) throws InvalidGramm
   		}
   	} else {
   		if (isParent) {
-  			if (isParseData && cleanProp.equals("display")) return "parseData.display"; 
+  			if (isParseData && cleanProp.equals("display")) return "parseData.display";
   			else if (isParseData) return "parseData.genData.extraParse" + cls.getName() + "." + (isParseData ? "fld_" : "") + cleanProp;
   			else return  "computeData.classData.Sub" + cls.getName() + "." + (isParseData ? "fld_" : "") + cleanProp;
-  			
+
   		} else if (ast.extendedClasses.get(cls).multiChildren.containsKey(child)) {
 //  			throw new InvalidGrammarException("Cannot read multichild attrib without indexer ($-, ...): " + lhs);
   			//FIXME currently allowed because logging might read back on "loop ... { ... child.x := ... }"
   			if (isParseData && cleanProp.equals("display")) return "loopChild->data.parseData.display";
   			if (isParseData) return "loopChild->data.parseData.genData.extraParse" + cls.getChildByName(child).getName() + ".fld_" + cleanProp;
-  			else return "loopChild->data.computeData.classData.Sub" + cls.getChildByName(child) + "." + cleanProp;  			
+  			else return "loopChild->data.computeData.classData.Sub" + cls.getChildByName(child) + "." + cleanProp;
 		} else {
 			String base =
 				"\n#if defined(VERYSMALLTREEPOINTERS)\n" +
@@ -1339,7 +1341,7 @@ public String rhsToVal(String lhs, Class cls, ALEParser ast) throws InvalidGramm
 	  			"#else\n" +
 		  		"(computeData.classData.Sub" + cls.getName() + ".child_" + child + ")\n" +
 	  			"#endif // ptrs\n";
-			
+
   			if (isParseData && cleanProp.equals("display")) return base + "->data.parseData.display";
   			else if (isParseData) return base + "->data.parseData.genData.extraParse" + cls.getChildByName(child).getName() + ".fld_" + cleanProp;
 			else return base + "->data.computeData.classData.Sub" + cls.getChildByName(child) + "." + cleanProp;
@@ -1354,7 +1356,7 @@ public String logStmt(int indentSrc, int indentOut, String msg, String rhs) {
 	for (int i = 0; i < indentSrc; i++) res += " ";
 	String space = "";
 	for (int i = 0; i < indentOut; i++) space += " ";
-	res += "cout << \"" + space +  msg + ": \" << " + rhs + " << endl;\n"; 
+	res += "cout << \"" + space +  msg + ": \" << " + rhs + " << endl;\n";
 	return res + "#endif //DEBUGY\n";
 }
 public String logStmtVar(int indentSrc, int indentOut, String msg, ALEParser ast, AGEval.Class cls, String rhs, String rhsAddress) throws InvalidGrammarException {
@@ -1375,7 +1377,7 @@ public String logStmtVar(int indentSrc, int indentOut, String msg, ALEParser ast
 			 indent + "  cout << \"" + space + msg + ": NULL\" << endl;\n" +
 			 indent + "} else {\n" +
 			 indent + "  cout << \"" + space +  msg + ": \" << " + rhsAddress + " << endl;\n" +
-			 indent + "}\n";		 		
+			 indent + "}\n";
 	} else res += "cout << \"" + space +  msg + ": \" << " + rhsAddress + " << endl;\n";
 	return res + "#endif //DEBUGY\n";
 }
@@ -1383,26 +1385,26 @@ public String logStmtVar(int indentSrc, int indentOut, String msg, ALEParser ast
 public String functionHeader (ALEParser.Assignment assign, ALEParser ast) throws InvalidGrammarException {
 	String fName = assign._class.getName().toLowerCase() + "_" + assign._sink.replace('.','_').replace('@','_');
 	String params = "(";
-	
+
 	boolean isFirst = true;
 	for (String arg : assign._variables.keySet()) {
-		if (!isFirst) { 
+		if (!isFirst) {
 			params += ", ";
 		}
 		else isFirst = false;
 		String rawT = typeStringToCppType(Generator.extendedGet(ast, assign._class, arg).strType);
-		ALEParser.ExtendedVertex ev = Generator.lookupAttributeExtended(arg, assign._class, ast);		
-		params += (ev != null && ev.isMaybeType ? ("maybeT<" + rawT + ">") : rawT) + " " + assign._variables.get(arg);				
+		ALEParser.ExtendedVertex ev = Generator.lookupAttributeExtended(arg, assign._class, ast);
+		params += (ev != null && ev.isMaybeType ? ("maybeT<" + rawT + ">") : rawT) + " " + assign._variables.get(arg);
 	}
-	
+
 	params += ")";
-	
+
 	return "static " + typeStringToCppType(Generator.extendedGet(ast, assign._class, assign._sink).strType) +
 		" " + fName + " " + params + " { return " + assign._indexedBody + "; }\n";
 }
 
 public String openChildLoop(AGEval.Class parent_class, String loopVar, ALEParser ast) {
-	return "  SFORLOOPALIAS(loopChild, s, ExtraDataHandler::TOK_" + loopVar.toUpperCase() + ", step) {\n";	  
+	return "  SFORLOOPALIAS(loopChild, s, ExtraDataHandler::TOK_" + loopVar.toUpperCase() + ", step) {\n";
 }
 
 
@@ -1411,7 +1413,7 @@ public String closeChildLoop() {
 }
 
 public String openLastChild(AGEval.Class cls, String loopVar) {
-	return "    if (step == s.data.computeData.classData.Sub" + cls.getName() + ".child_" + loopVar.toLowerCase() + "_count) {\n"; 
+	return "    if (step == s.data.computeData.classData.Sub" + cls.getName() + ".child_" + loopVar.toLowerCase() + "_count) {\n";
 }
 
 public String closeLastChild() {
@@ -1420,8 +1422,8 @@ public String closeLastChild() {
 		"    }\n";
 }
 
-public String childrenRecur	(Class cls, String childName, int visitNum, ALEParser ast) {	
-	return 
+public String childrenRecur	(Class cls, String childName, int visitNum, ALEParser ast) {
+	return
 		//"  SFORLOOP(child, s) {\n" +
 		//"    visit_" + visitNum + "(VISITARGS(*child, root, &s)); //recur\n" +
 		//"  } SFORLOOPEND(child, s);\n";
@@ -1429,8 +1431,8 @@ public String childrenRecur	(Class cls, String childName, int visitNum, ALEParse
 }
 
 public String childRecur(AGEval.Class cls, String childName, int visitNum) {
-	
-	String childLoc = 
+
+	String childLoc =
 		"{\n\n#if defined(VERYSMALLTREEPOINTERS)\n" +
   		"SNode *child" + visitNum + " = (&s + s.distanceToLeftmostChild + computeData.classData.Sub" + cls.getName() + ".child_" + childName + ");\n" +
 			"#elif defined(SMALLTREEPOINTERS)\n" +
@@ -1440,17 +1442,17 @@ public String childRecur(AGEval.Class cls, String childName, int visitNum) {
 			"#endif // ptrs\n";
 	return childLoc + "visit_" + visitNum + "(false, VISITARGS(*child" + visitNum + ", root, &s)); //recur\n}\n";
 	//String childLoc = "*(&s + s.distanceToLeftmostChild + computeData.classData.Sub" + cls.getName() + ".child_" + childName + ")";
-	//return "visit_" + visitNum + "(VISITARGS(" + childLoc + ", root, &s)); //recur\n";					
+	//return "visit_" + visitNum + "(VISITARGS(" + childLoc + ", root, &s)); //recur\n";
 }
 
 public String visitHeader(Class cls, int visitNum, ALEParser ast) throws InvalidGrammarException {
 	String res = "";
-	
-	String preamble = 
+
+	String preamble =
 		"  EXTRA_DATA_PARSE &parseData = s.data.parseData; \n" +
 		"  EXTRA_DATA_COMPUTE &computeData = s.data.computeData;\n" +
 		"  \n";
-	
+
 	String classPreamble = "#ifdef DEBUGY\n  cout << \"  "  + visitNum + " visit (" + cls.getName() + ")\" << endl;\n#endif //DEBUGY\n";
 	//String classPreamble = "#ifdef DEBUGY\n  cout << \"  visit " + cls.getName() + " id: \" << s.data.parseData.id << endl;\n#endif DEBUGY //DEBUGGY\n";
 	res += "bool visit_" + cls.getName().toLowerCase() + "_" + visitNum + "(VISITPARAMS) {\n" + classPreamble + preamble;
@@ -1469,8 +1471,8 @@ public String visitHeader(Class cls, int visitNum, ALEParser ast) throws Invalid
 				}
 			}
 			*/
-	}		
-	
+	}
+
 	return res;
 }
 
@@ -1493,7 +1495,7 @@ public static void synthesizeCpp(String alePath, String outputDir, String resour
 	System.err.println("  Chain loops: " + AGEvaluatorSwipl.chainLoops);
 	if (useFirstParallel)
 		generator.synthesize(alePath, outputDir, resourceDir, verbose, isFixedChildOrder, isExhaustive, maxLen, false);
-	else 
+	else
 		generator.synthesizeAll(alePath, outputDir, resourceDir, verbose, isFixedChildOrder, isExhaustive, maxLen, false);
 }
 
@@ -1502,7 +1504,7 @@ public static void main(String[] args) throws Exception {
 	if (args.length == 7) {
 		synthesizeCpp(args[1], args[2], args[0], false, new Boolean(args[3]).booleanValue(), new Boolean(args[4]).booleanValue(), new Boolean(args[5]).booleanValue(), new Integer(args[6]).intValue(),
 				AGEvaluatorSwipl.chainLoops ? new AbstractGenerator(new CppGenerator()) : new Generator(new CppGenerator()));
-	} else {	
+	} else {
 		System.err.println("Arg 0: resource dir (where to fine algorithm.pl");
 		System.err.println("Arg 1: grammar path");
 		System.err.println("Arg 2: output path");
@@ -1523,7 +1525,7 @@ public String output(String baseName, String visitOut, String visitDispatches, S
 	if (write) {
 		AGEvaluatorSwipl.writeFile(outputDir + File.separator + visitorFile + ".cpp", visitOut);
 		AGEvaluatorSwipl.writeFile(outputDir + File.separator + visitorFile + ".h", CppGenerator.classesHeader(ast, sched.numVisits(), sched));
-		
+
 		//construct and call immediately
 		AGEvaluatorSwipl.writeFile(outputDir + File.separator + pipelineFile + ".cpp.construct", printCurrentPipelineBuild(sched.binding));
 		AGEvaluatorSwipl.writeFile(outputDir + File.separator + pipelineFile + ".cpp.call", printCurrentPipelineBatch(sched));
@@ -1532,12 +1534,12 @@ public String output(String baseName, String visitOut, String visitDispatches, S
 		AGEvaluatorSwipl.writeFile(outputDir + File.separator + pipelineFile + ".cpp.headers", printCurrentPipelineHeaders(sched.binding));
 		AGEvaluatorSwipl.writeFile(outputDir + File.separator + pipelineFile + ".cpp.delayedConstruct", printCurrentPipelineDelayedBuild(sched.binding));
 		AGEvaluatorSwipl.writeFile(outputDir + File.separator + pipelineFile + ".cpp.delayedCall", printCurrentPipelineDelayedBatch(sched));
-		
+
 	}
 	if (verbose) {
 		//System.out.println("=== PIPELINE: === \n" + schedule2.printCurrentPipelineBuild());
 		System.out.println("=== HELPERS: === \n" + CppGenerator.classesHeader(ast, sched.numVisits(), sched));
-		System.out.println("=== VISITS ===: \n" + visitOut);			
+		System.out.println("=== VISITS ===: \n" + visitOut);
 	}
 	return "(no CPP out)"; //TODO
 }

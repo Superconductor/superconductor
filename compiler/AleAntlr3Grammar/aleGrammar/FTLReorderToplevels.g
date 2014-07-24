@@ -17,7 +17,7 @@ import FTLSurface;
   import java.util.ArrayList;
   import java.util.HashSet;
   import java.util.LinkedList;
-  
+
   import AGEval.*;
   import aleGrammar.GenSym;
 }
@@ -29,7 +29,7 @@ import FTLSurface;
   public final List<String> errors = new java.util.LinkedList<String>();
   public void displayRecognitionError(String[] tokenNames,
                                         RecognitionException e) {
-    String err = getErrorHeader(e) + " " + getErrorMessage(e, tokenNames);                                        
+    String err = getErrorHeader(e) + " " + getErrorMessage(e, tokenNames);
     System.err.println(err);
     errors.add(err);
   }
@@ -52,27 +52,27 @@ root:
 
 scheduleConstraints :	 SCHEDULE LBRACE STRING? RBRACE;
 typedef : TYPE IDRAW EQ IDRAW  (PIPE IDRAW  )* SEMICOLON;
-	
+
 iface: IFACE IDRAW LBRACE ifaceField* RBRACE ;
 
 clss :
-	CLSS IDRAW x=(LPAREN (IDRAW (COMMA IDRAW)*)? RPAREN)? COLON IDRAW 
+	CLSS IDRAW x=(LPAREN (IDRAW (COMMA IDRAW)*)? RPAREN)? COLON IDRAW
 	LBRACE clsContents RBRACE;
 
 clsContents:
     (header | children | phantom | body)*
     -> (header+)? (children+)? (phantom+)? (body+)?
     ;
-    
+
 classTrait
-	: TRT IDRAW 
-	LBRACE 
+	: TRT IDRAW
+	LBRACE
 	  (  (ATTRIBUTES LBRACE (SEMICOLON | classField)* RBRACE)
-	   | (CHILDREN LBRACE  (SEMICOLON | child )* RBRACE) 
+	   | (CHILDREN LBRACE  (SEMICOLON | child )* RBRACE)
 	   | (ACTIONS LBRACE (SEMICOLON | topStmt)* RBRACE )
 	   | (PHANTOM LBRACE (SEMICOLON | lhs )* RBRACE)
 	  )*
-	 RBRACE 	 
+	 RBRACE
 	;
 
 
@@ -97,8 +97,8 @@ classField
 	: INPUT id COLON maybeType  (EQ literal)?
 	| INPUT id COLON QUESTION IDRAW (EQ IDRAW)?
 	| INPUT id COLON IDRAW (EQ IDRAW)?
-	| VAR IDRAW COLON type 
-	| VAR IDRAW COLON IDRAW 
+	| VAR IDRAW COLON type
+	| VAR IDRAW COLON IDRAW
 	;
 
 
@@ -111,20 +111,20 @@ topStmt
 loop : LOOP id LBRACE  (cond | constraint | SEMICOLON)* RBRACE;
 
 cond
-	: IF LPAREN	
-	  expr RPAREN LBRACE 
+	: IF LPAREN
+	  expr RPAREN LBRACE
 	  (cond | constraint | SEMICOLON)*
-	  (RBRACE ELSE IF 
-	    LPAREN expr RPAREN LBRACE 
-	    (cond | constraint | SEMICOLON)*	    
-	  )*
-	  RBRACE ELSE LBRACE 
+	  (RBRACE ELSE IF
+	    LPAREN expr RPAREN LBRACE
 	    (cond | constraint | SEMICOLON)*
-	  RBRACE	  
+	  )*
+	  RBRACE ELSE LBRACE
+	    (cond | constraint | SEMICOLON)*
+	  RBRACE
 	;
 
-constraint 
-    : lhs ASSIGN expr 
+constraint
+    : lhs ASSIGN expr
     | lhs ASSIGN FOLD expr DOTDOT expr
     ;
 
@@ -138,21 +138,21 @@ addExpr: multExpr ((PLUS|MINUS) multExpr	)* ;
 multExpr: signExpr ((STAR|DIV|MOD) signExpr)*;
 signExpr: (PLUS | MINUS|  EXCLAMATION )* callExpr;
 callExpr
-	: IDRAW LPAREN  (expr (COMMA expr)*)? RPAREN 
+	: IDRAW LPAREN  (expr (COMMA expr)*)? RPAREN
 	| primitiveExpr
-	;	
+	;
 primitiveExpr
 	: literal
-	| rhs 
+	| rhs
 	| LPAREN expr RPAREN
 	;
-	
-lhs 
+
+lhs
 	: id
 	| id DOT id
 	;
 
-	
+
 rhs
     : id
     | id DOT id
@@ -160,19 +160,19 @@ rhs
 	| suffix DOT id
 	;
 
-suffix 	: '$i' | '$$' | '$-'; 
+suffix 	: '$i' | '$$' | '$-';
 
-id 
-	: IDRAW 
+id
+	: IDRAW
 	| type
 	;
 
 maybeType
-	: QUESTION type 
-	| type 
+	: QUESTION type
+	| type
 	;
-	 
-type:	BOOL_KEYWORD | INT_KEYWORD | FLOAT_KEYWORD | COLOR_KEYWORD | STRING_KEYWORD | PX_KEYWORD | TAGGEDINT_KEYWORD | TAGGEDFLOAT_KEYWORD;
+
+type:	BOOL_KEYWORD | INT_KEYWORD | FLOAT_KEYWORD | DOUBLE_KEYWORD | COLOR_KEYWORD | STRING_KEYWORD | PX_KEYWORD | TAGGEDINT_KEYWORD | TAGGEDFLOAT_KEYWORD | TAGGEDDOUBLE_KEYWORD;
 
 literal	: bl | INT | FLOAT | STRING | HEXCOLOR | LBRACE INT COMMA (INT|FLOAT) RBRACE;
 

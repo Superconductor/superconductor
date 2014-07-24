@@ -11,12 +11,12 @@ options {
   import java.util.HashMap;
   import java.util.Vector;
   import java.util.HashSet;
-  
+
   import AGEval.*;
   import aleGrammar.GenSym;
 }
 
-@lexer::header { 
+@lexer::header {
   package aleGrammar;
 }
 
@@ -35,30 +35,30 @@ options {
 //  public final Map<String, String> defaults = new HashMap<String, String>();
   public final ArrayList<AGEval.Class> classes = new ArrayList<AGEval.Class>();
   public final ArrayList<IFace> interfaces = new ArrayList<IFace>();
-  public final HashMap<String, AGEval.IFace> interfaceTable= new HashMap<String, AGEval.IFace>();  
+  public final HashMap<String, AGEval.IFace> interfaceTable= new HashMap<String, AGEval.IFace>();
   public final HashMap<String, AGEval.Class> classTable= new HashMap<String, AGEval.Class>();
   public final HashMap<String, ArrayList<String>> types = new HashMap<String, ArrayList<String>>();
   public final HashSet<String> typeVals = new HashSet<String>();
   public final HashMap<AGEval.Class, ArrayList<Cond> > condsTop = new HashMap<AGEval.Class, ArrayList<Cond> >();
   public final GenSym genSym = new GenSym();
-  public final HashSet<Assignment> assignments = new HashSet<Assignment>(); //reductions here must be added 
+  public final HashSet<Assignment> assignments = new HashSet<Assignment>(); //reductions here must be added
   public String scheduleConstraintStr = null;
 
   public final HashMap<AGEval.IFace, ExtendedClass> extendedClasses = new HashMap<AGEval.IFace, ExtendedClass>();
   public static class ExtendedVertex {
     public final boolean isInput;
     public final String maybeDefault;
-    public final String strType;    
+    public final String strType;
     public final boolean isMaybeType; //
     public ExtendedVertex(Boolean isInput_, String strType_) {
       this(isInput_, strType_, null, false);
-    }    
+    }
     public ExtendedVertex(Boolean isInput_, String strType_, boolean isMaybeType_) {
       this(isInput_, strType_, null, isMaybeType_);
-    }    
+    }
     public ExtendedVertex(Boolean isInput_, String strType_, String maybeDefault_) {
       this(isInput_, strType_, maybeDefault_, false);
-    }    
+    }
     public ExtendedVertex(Boolean isInput_, String strType_, String maybeDefault_, boolean isMaybeType_) {
       isInput = isInput_;
       strType = strType_;
@@ -77,7 +77,7 @@ options {
     public final HashSet<TraitInfo> traits = new HashSet<TraitInfo>();
 
   }
-  
+
   //FIXME static is evil
   public static int blockCounter = 0;
 
@@ -98,7 +98,7 @@ options {
 
 
   public class Case {
-    
+
     public final int id;
     public Cond cond; //parent
     public final String openBody;
@@ -120,7 +120,7 @@ options {
         if (cond.hasAssignments) {
           anyHas = true;
           break;
-        }            
+        }
       }
       hasAssignments = anyHas;
     }
@@ -137,12 +137,12 @@ options {
         if (cond.hasAssignments) {
           anyHas = true;
           break;
-        }       
-      }     
+        }
+      }
       hasAssignments = anyHas;
-    }   
+    }
   }
-  
+
   public class Cond {
     public Case pred; //parent
     public final Case testCase;
@@ -152,16 +152,16 @@ options {
     public Cond(
       Case testCase_,
       Case elseCase_,
-      ArrayList<Case> elseifs_) {        
+      ArrayList<Case> elseifs_) {
         testCase = testCase_;
         testCase.cond = this;
-        
+
         elseCase = elseCase_;
         elseCase.cond = this;
-        
+
 	elseifs = elseifs_;
 	for (Case c : elseifs) c.cond = this;
-	
+
 	boolean anyHas = testCase.hasAssignments;
 	if (!anyHas) anyHas = elseCase.hasAssignments;
 	if (!anyHas)
@@ -170,10 +170,10 @@ options {
 	      anyHas = true;
 	      break;
 	    }
-	hasAssignments = anyHas;	  	
+	hasAssignments = anyHas;
     }
   }
-  
+
   public class Assignment {
     public final boolean isReduction;
     public final AGEval.Class _class;
@@ -187,23 +187,23 @@ options {
       startBody = "";
       stepVariables = null;
       stepBody = "";
-      
+
       _class = cls;
       _sink = sink;
       _variables = variables;
       _indexedBody = indexedBody;
       loopVar = loopVar_;
     }
-    
+
     public final HashMap<String, String> startVariables;
-    public final String startBody;    
+    public final String startBody;
     public final HashMap<String, String> stepVariables;
     public final String stepBody;
     public Assignment (AGEval.Class cls, String lhs_, HashMap<String, String> startVariables_, String startBody_, HashMap<String, String> stepVariables_, String stepBody_, String loopVar_) {
       isReduction = true;
       _variables = null;
       _indexedBody = null;
-      
+
       _class = cls;
       _sink= lhs_;
       startVariables = startVariables_;
@@ -211,10 +211,10 @@ options {
       stepVariables = stepVariables_;
       stepBody = stepBody_;
       loopVar = loopVar_;
-    }    
+    }
   }
-  
-  
+
+
 }
 
 
@@ -222,37 +222,37 @@ root	: scheduleConstraints? (iface | clssTraits | clssFlat | typedef | classTrai
 
 scheduleConstraints :	 'schedule' '{' (s=STRING { scheduleConstraintStr = $s.text; })? '}';
 
-	
-typedef 
-	: TYPE name=id '=' t0=id  
+
+typedef
+	: TYPE name=id '=' t0=id
 	  { ArrayList<String> variants = new ArrayList<String>(); variants.add($t0.text); typeVals.add($t0.text); }
 	  ('|' ti=id { variants.add($ti.text); typeVals.add($ti.text); } )* ';'
 	  { types.put($name.text, variants); };
-	
-iface:	
-	IFACE id 
+
+iface:
+	IFACE id
 	{ IFace face;
 	  try { face  = new IFace($id.text); }
-	  catch (Exception e) { 
+	  catch (Exception e) {
 	    System.err.println("Failed semantic parse action: " + e.getMessage());
-	    throw new RecognitionException(); 
+	    throw new RecognitionException();
 	  } //FIXME err msg
 	  interfaces.add(face);
 	  interfaceTable.put($id.text, face);
  	  ExtendedClass clss2 = new ExtendedClass();
-	  extendedClasses.put(face, clss2); } 
+	  extendedClasses.put(face, clss2); }
 	'{' ifaceField[face, clss2]* '}';
 
-clssFlat: 
-	CLSS c=id //traits? 
-	':' i=id 
-	{AGEval.Class clss;	
+clssFlat:
+	CLSS c=id //traits?
+	':' i=id
+	{AGEval.Class clss;
 	try { clss = new AGEval.Class($c.text, interfaceTable.get($i.text)); }
-	catch (Exception e) { 
+	catch (Exception e) {
 	  System.err.println("Failed semantic parse action: " + e.getMessage());
-	  throw new RecognitionException(); 
+	  throw new RecognitionException();
 	} //FIXME err msg
-	 classes.add(clss); 
+	 classes.add(clss);
 	 classTable.put($c.text, clss);
 	 ExtendedClass clss2 = new ExtendedClass();
 	 extendedClasses.put(clss, clss2);
@@ -262,12 +262,12 @@ clssFlat:
 
 
 clssTraits
-@init { 
-  CommonTree childrenTree = null; 
-  CommonTree attributesTree = null; 
-  CommonTree actionsTree = null; 
-  CommonTree phantomsTree = null; 
-  AGEval.Class clss = null;	
+@init {
+  CommonTree childrenTree = null;
+  CommonTree attributesTree = null;
+  CommonTree actionsTree = null;
+  CommonTree phantomsTree = null;
+  AGEval.Class clss = null;
   ExtendedClass clss2 = null;
   String childrens = "";
   String attributes = "";
@@ -276,9 +276,9 @@ clssTraits
   HashSet<TraitInfo> localTraits = new HashSet<TraitInfo>();
 }
 :
-	CLSS c=id 
-	'('  
-		t0=id { 
+	CLSS c=id
+	'('
+		t0=id {
 		  TraitInfo t0Info = traits.get($t0.text);
 		  if (t0Info == null) {
 		    System.err.println("Parse error: class " + $c.text + " has unknown trait " + $t0.text);
@@ -291,7 +291,7 @@ clssTraits
 		  phantoms += t0Info.phantoms;
 	//	  System.out.println("Trait: children::" + childrens + " ~~~ attributes::" + attributes + " ~~~~ actions::" + actions + " ~~~");
 		}
-		(',' ti=id { 
+		(',' ti=id {
 		  TraitInfo tInfo  = traits.get($ti.text);
 		  if (tInfo == null) {
 		    System.err.println("class " + $c.text + " has unknown trait " + $ti.text);
@@ -302,17 +302,17 @@ clssTraits
 		  attributes += tInfo.attributes;
 		  actions += tInfo.actions;
 		  phantoms += tInfo.phantoms;
-		
-		})* 
-	')'	
-	':' i=id 
+
+		})*
+	')'
+	':' i=id
 	{
 	try { clss = new AGEval.Class($c.text, interfaceTable.get($i.text)); }
-	catch (Exception e) { 
+	catch (Exception e) {
 	  System.err.println("Failed semantic parse action: " + e.getMessage());
-	  throw new RecognitionException(); 
+	  throw new RecognitionException();
 	} //FIXME err msg
-	 classes.add(clss); 
+	 classes.add(clss);
 	 classTable.put($c.text, clss);
 	 clss2 = new ExtendedClass();
 	 clss2.traits.addAll(localTraits);
@@ -357,7 +357,7 @@ clssTraits
 	      System.err.println("expansion of class " + $c.text + " to add " + phantoms);
 	      throw new RecognitionException();
  	    }
- 	    
+
 	  try {
 	      CharStream inputstream = null;
 	      inputstream = new ANTLRStringStream("actions { " + actions+ " }");
@@ -375,12 +375,12 @@ clssTraits
 	      System.err.println("expansion of class " + $c.text + " to add " + actions);
 	      fnf.printStackTrace();
 	      System.err.println("  (class: " + clss.getName());
-	      throw new RecognitionException();	      
+	      throw new RecognitionException();
 	  }
-    
+
 	 }
 	'{' (header[false, clss, clss2] | children[false, clss] | phantom[false, clss, clss2] | body[false, clss])* '}'
- 
+
   -> ^(CLSS $c ':' $i '{' children? {childrenTree} header? {attributesTree} {phantomsTree}  body? {actionsTree} '}')
 ;
 
@@ -393,33 +393,33 @@ classTrait
 	  HashSet<String> localAttribs = new HashSet<String>();
 	  HashSet<String> localChilds = new HashSet<String>();
 	}
-	'{' 
+	'{'
 /*
-	(	
-		header[true, null, null]{attributes += $header.text;} 
+	(
+		header[true, null, null]{attributes += $header.text;}
 		| children[true, null] {children += $children.text; }
 		| body[true, null] { actions += $body.text;}
-	 )* 
+	 )*
 */
-	  (  (ATTRIBUTES '{' 
-	  	(classField[true, null,null] { attributes +=  $classField.text; localAttribs.add($classField.text); })* 
+	  (  (ATTRIBUTES '{'
+	  	(classField[true, null,null] { attributes +=  $classField.text; localAttribs.add($classField.text); })*
 	  	'}')
-	   | (CHILDREN '{' 
-	   	(';' | (child[true, null] { children +=  $child.text; localChilds.add($child.text); }) )* 
-	   	'}') 
-	   | (ACTIONS '{' 
-	   	(topStmt[true, null] { actions +=  $topStmt.text; })* 
+	   | (CHILDREN '{'
+	   	(';' | (child[true, null] { children +=  $child.text; localChilds.add($child.text); }) )*
+	   	'}')
+	   | (ACTIONS '{'
+	   	(topStmt[true, null] { actions +=  $topStmt.text; })*
 	   	'}' )
-	   | (PHANTOM '{' 
-	   	(';' | lhs { phantoms += $lhs.name; })* 
+	   | (PHANTOM '{'
+	   	(';' | lhs { phantoms += $lhs.name; })*
 	   	'}')
 	  )*
-	 '}' 
-	 { 
+	 '}'
+	 {
 	   TraitInfo trait = new TraitInfo(children, attributes, actions, phantoms);
 	   trait.attribSet.addAll(localAttribs);
-	   trait.childSet.addAll(localChilds);	   
-	   traits.put($name.text, trait); 
+	   trait.childSet.addAll(localChilds);
+	   traits.put($name.text, trait);
 	 }
 	;
 
@@ -427,18 +427,18 @@ header[Boolean pure, AGEval.Class clss, ExtendedClass clss2]: ATTRIBUTES '{' cla
 
 children[Boolean pure, AGEval.Class clss]:	CHILDREN '{' (';' | child[$pure, $clss])* '}';
 
-phantom[Boolean pure, AGEval.Class clss, ExtendedClass clss2]: 
-	PHANTOM '{' 
-	(';' | lhs { 
+phantom[Boolean pure, AGEval.Class clss, ExtendedClass clss2]:
+	PHANTOM '{'
+	(';' | lhs {
 		if (!pure) {
 		  //put in phantom assignment
 		  String clean = $lhs.name.toLowerCase();
 		  if (!clean.contains("@")) clean = "self@" + clean;
 		  clss2.phantomAttributes.add(clean);
 
-		  String loopVar = clean.split("@")[0].equals("self") ? "" : clean.split("@")[0];	
-		  HashMap<String,String> atoms = new HashMap<String, String>();		  		  
-		  Assignment abstr = new Assignment(clss, $lhs.name, atoms, "0", loopVar);	  
+		  String loopVar = clean.split("@")[0].equals("self") ? "" : clean.split("@")[0];
+		  HashMap<String,String> atoms = new HashMap<String, String>();
+		  Assignment abstr = new Assignment(clss, $lhs.name, atoms, "0", loopVar);
 		  assignments.add(abstr);
 		  if ("".equals(loopVar)) {
 			clss.apply(clss.getName().toLowerCase() + "_" + $lhs.name.replace('.','_').replace('@','_'),
@@ -451,15 +451,15 @@ phantom[Boolean pure, AGEval.Class clss, ExtendedClass clss2]:
 		        //potentially elevate binding
 		        extendedClasses.get(clss).idToLoop.put($lhs.name.replace('.','@').toLowerCase(), loopVar);
 		      } else if ("".equals(loopVar)) { /* maintain binding */ }
-		      else if (!prev.equals(loopVar)) {	      
+		      else if (!prev.equals(loopVar)) {
 		         System.err.println("assignment to variable " + clss.getName() + "::" + $lhs.name + " under mismatching loop variables (" + loopVar + " and " + prev + ")");
-	       		 throw new RecognitionException();	      
+	       		 throw new RecognitionException();
 		      } else {
 		         //reuse binding
 		      }
 		    } else {
 		      extendedClasses.get(clss).idToLoop.put($lhs.name.replace('.','@').toLowerCase(),loopVar);
-		    }		 
+		    }
 	  	}
 	} )*
 	'}';
@@ -467,17 +467,17 @@ phantom[Boolean pure, AGEval.Class clss, ExtendedClass clss2]:
 child[Boolean pure, AGEval.Class clss]
     :  i=id ':' t=id
     {
-      try { 
-        if (!$pure) $clss.addChild($i.text, interfaceTable.get($t.text)); 
+      try {
+        if (!$pure) $clss.addChild($i.text, interfaceTable.get($t.text));
       }
       catch (Exception e) {
         System.err.println("Semantic parse action: unknown child type for declaration " + clss.getName() + "::" + $i.text + " : " + $t.text +", " + e.getMessage());
         System.err.println("  Did you provide a Class rather than an Interface?");
         throw new RecognitionException();
       }
-    }  
-    
-    |  i=id ':' '[' t=id  ']' 
+    }
+
+    |  i=id ':' '[' t=id  ']'
     {
     	if (!$pure) {
     	      ExtendedClass ec = extendedClasses.get($clss);
@@ -492,11 +492,11 @@ child[Boolean pure, AGEval.Class clss]
 	        throw new RecognitionException();
 	      }
       	}
-    }  
+    }
   ;
 
 
-ifaceField[IFace container, ExtendedClass eContainer] 
+ifaceField[IFace container, ExtendedClass eContainer]
 	: INPUT p=multiId ':' maybeType
 		(({ eContainer.extendedVertices.put($p.text, new ExtendedVertex(true, $maybeType.text, $maybeType.isMaybe)); $container.addField($p.text, $maybeType.text); })
 		| ('=' literal {  eContainer.extendedVertices.put($p.text, new ExtendedVertex(true, $maybeType.text, $literal.text, $maybeType.isMaybe)); $container.addField($p.text, $maybeType.text); }))
@@ -521,128 +521,128 @@ ifaceField[IFace container, ExtendedClass eContainer]
 	;
 
 classField[Boolean pure, AGEval.Class container, ExtendedClass eContainer]
-	: INPUT p=multiId  ':' mt=maybeType 
-		((';' { 
+	: INPUT p=multiId  ':' mt=maybeType
+		((';' {
 		  if (!$pure) {
-		    eContainer.extendedVertices.put($p.text, new ExtendedVertex(true, $mt.text, $mt.isMaybe)); 
-		    $container.addField($p.text, $mt.text); 
+		    eContainer.extendedVertices.put($p.text, new ExtendedVertex(true, $mt.text, $mt.isMaybe));
+		    $container.addField($p.text, $mt.text);
 		  }
 		 })
-		| ('=' literal ';' { 
+		| ('=' literal ';' {
 		  if (!$pure) {
-		    eContainer.extendedVertices.put($p.text, new ExtendedVertex(true, $mt.text, $literal.text, $mt.isMaybe)); 
-		    $container.addField($p.text, $mt.text); 
+		    eContainer.extendedVertices.put($p.text, new ExtendedVertex(true, $mt.text, $literal.text, $mt.isMaybe));
+		    $container.addField($p.text, $mt.text);
 		  }
 		}))
-	| INPUT p=multiId ':' '?' t=id 
-		((';' {  
+	| INPUT p=multiId ':' '?' t=id
+		((';' {
 		  if (!$pure) {
-		    eContainer.extendedVertices.put($p.text, new ExtendedVertex(true, $t.text, true)); 
-		    $container.addField($p.text, "int"); 
+		    eContainer.extendedVertices.put($p.text, new ExtendedVertex(true, $t.text, true));
+		    $container.addField($p.text, "int");
 		  }
 		})
-		| ('=' v=id ';' {  
+		| ('=' v=id ';' {
 		  if (!$pure) {
-		    eContainer.extendedVertices.put($p.text, new ExtendedVertex(true, $t.text, $v.text, true)); 
-		    $container.addField($p.text, "int"); 
+		    eContainer.extendedVertices.put($p.text, new ExtendedVertex(true, $t.text, $v.text, true));
+		    $container.addField($p.text, "int");
 		  }
 		}))
-	| INPUT p=multiId ':' t=id 
-		((';' { 
+	| INPUT p=multiId ':' t=id
+		((';' {
 		   if (!$pure) {
-		     eContainer.extendedVertices.put($p.text, new ExtendedVertex(true, $t.text)); 
-		     $container.addField($p.text, "int"); 
+		     eContainer.extendedVertices.put($p.text, new ExtendedVertex(true, $t.text));
+		     $container.addField($p.text, "int");
 		   }
 		 })
 		| ('=' v=id ';' {
-  		  if (!$pure) {		  
-		    eContainer.extendedVertices.put($p.text, new ExtendedVertex(true, $t.text, $v.text)); 
+  		  if (!$pure) {
+		    eContainer.extendedVertices.put($p.text, new ExtendedVertex(true, $t.text, $v.text));
 		    $container.addField($p.text, "int");
 		  }
 		  }))
-	| VAR p2=id ':' type ';' { 
+	| VAR p2=id ':' type ';' {
 		if (!$pure) {
-			eContainer.extendedVertices.put($p2.text, new ExtendedVertex(false, $type.text)); 
-			$container.addAttribute($p2.text, $type.text); 
+			eContainer.extendedVertices.put($p2.text, new ExtendedVertex(false, $type.text));
+			$container.addAttribute($p2.text, $type.text);
 		}
 	}
-	| VAR p2=id ':' t=id { 
+	| VAR p2=id ':' t=id {
 		if (!$pure) {
-			eContainer.extendedVertices.put($p2.text, new ExtendedVertex(false, $t.text)); 
-			$container.addAttribute($p2.text, "int"); 
+			eContainer.extendedVertices.put($p2.text, new ExtendedVertex(false, $t.text));
+			$container.addAttribute($p2.text, "int");
 		}
 	} ';'
 	;
-	
-body[Boolean pure, AGEval.Class clss]  : ACTIONS '{' topStmt[$pure, $clss]* '}';	
+
+body[Boolean pure, AGEval.Class clss]  : ACTIONS '{' topStmt[$pure, $clss]* '}';
 
 topStmt[Boolean pure, AGEval.Class clss]
 	:  cond[$pure, clss, false, ""]
-	   { 
+	   {
 	   	if (!$pure) {
-		   ArrayList<Cond> cur;	     
+		   ArrayList<Cond> cur;
 		     if (condsTop.containsKey(clss)) cur = condsTop.get(clss);
-		     else { 
+		     else {
 		       cur = new ArrayList<Cond>();
 		       condsTop.put(clss, cur);
 		     }
-		     cur.add($cond.cond); 
+		     cur.add($cond.cond);
 		}
 	     }
 	 | constraint[$pure, clss, false, ""]
-	 | loop[$pure, $clss, false, ""] 
-	   { 
+	 | loop[$pure, $clss, false, ""]
+	   {
 	   	if (!$pure) {
-	 
-		   ArrayList<Cond> cur;	     
+
+		   ArrayList<Cond> cur;
 		     if (condsTop.containsKey(clss)) cur = condsTop.get(clss);
-		     else { 
+		     else {
 		       cur = new ArrayList<Cond>();
 		       condsTop.put(clss, cur);
 		     }
 		     cur.addAll($loop.conds);
-		}	     
+		}
 	   }
 	 ;
 
 loop[Boolean pure, AGEval.Class clss, boolean inCond, String loopVar] returns [ArrayList<Cond> conds, HashSet<Assignment> assigns]:
-	LOOP l=id (STAR { System.err.println("star on loop is deprecated"); })?'{' 
-	{ 
+	LOOP l=id (STAR { System.err.println("star on loop is deprecated"); })?'{'
+	{
 	  if (!"".equals(loopVar)) {
 	    System.err.println("no nested loops: violation on " + $l.text);
-	    throw new RecognitionException(); 
+	    throw new RecognitionException();
 	  }
 	  $conds = new ArrayList<Cond>();
 	  $assigns = new HashSet<Assignment>();
 	}
-	(   cond[$pure, clss, inCond, $l.text] { $conds.add($cond.cond); } 
-	  | constraint[$pure, $clss, inCond, $l.text] { $assigns.add($constraint.abstr); } )* 
+	(   cond[$pure, clss, inCond, $l.text] { $conds.add($cond.cond); }
+	  | constraint[$pure, $clss, inCond, $l.text] { $assigns.add($constraint.abstr); } )*
 	'}';
 
 cond[Boolean pure, AGEval.Class clss, boolean inCond, String loopVar] returns [Cond cond]
 	: IF '('
 	  { ArrayList<Case> elseifs = new ArrayList<Case>();
-	    HashMap<String, String> condVariables = new HashMap<String, String>(); 
+	    HashMap<String, String> condVariables = new HashMap<String, String>();
 	    HashSet<Assignment> assigns = new HashSet<Assignment>();
 	    ArrayList<Cond> conds = new ArrayList<Cond>(); }
-	  t=expr[condVariables] ')' '{' 
-	    (tCond=cond[$pure, clss, true, loopVar] { conds.add($tCond.cond); } 
+	  t=expr[condVariables] ')' '{'
+	    (tCond=cond[$pure, clss, true, loopVar] { conds.add($tCond.cond); }
 	     | tConstraint=constraint[$pure, clss, true, loopVar] { assigns.add($tConstraint.abstr); }
 	     | tLoop=loop[$pure, clss, true, loopVar] { assigns.addAll($tLoop.assigns); conds.addAll($tLoop.conds); })*
-	  ('}' ELSE IF 
-	    {  HashMap<String, String> caseVariables = new HashMap<String,String>(); 
+	  ('}' ELSE IF
+	    {  HashMap<String, String> caseVariables = new HashMap<String,String>();
 	       HashSet<Assignment> elifAssigns = new HashSet<Assignment>();
 	       ArrayList<Cond> elifConds = new ArrayList<Cond>(); }
-	    '(' elifE=expr[caseVariables] ')' '{' 
-	    (elifCond=cond[$pure, clss, true, loopVar] { elifConds.add($elifCond.cond); } 
+	    '(' elifE=expr[caseVariables] ')' '{'
+	    (elifCond=cond[$pure, clss, true, loopVar] { elifConds.add($elifCond.cond); }
 	     | elifConstraint=constraint[$pure, clss, true, loopVar] { elifAssigns.add($elifConstraint.abstr); }
 	     | elifLoop=loop[$pure, clss, true, loopVar] {  elifAssigns.addAll($elifLoop.assigns); elifConds.addAll($elifLoop.conds);  })*
 	    {  elseifs.add(new Case($elifE.openBody, caseVariables, elifAssigns, elifConds)); }
 	  )*
-	  '}' ELSE '{' 
+	  '}' ELSE '{'
 	  { HashSet<Assignment> elseAssigns = new HashSet<Assignment>();
 	    ArrayList<Cond> elseConds = new ArrayList<Cond>(); }
-	    (elseCond=cond[$pure, clss, true, loopVar] { elseConds.add($elseCond.cond); } 
+	    (elseCond=cond[$pure, clss, true, loopVar] { elseConds.add($elseCond.cond); }
 	     | elseConstraint=constraint[$pure, clss, true, loopVar] { elseAssigns.add($elseConstraint.abstr); }
 	     | elseLoop=loop[$pure, clss, true, loopVar] {  elseAssigns.addAll($elseLoop.assigns); elseConds.addAll($elseLoop.conds);  })*
 	  '}'
@@ -651,20 +651,20 @@ cond[Boolean pure, AGEval.Class clss, boolean inCond, String loopVar] returns [C
 
 constraint[Boolean pure, AGEval.Class clss, boolean inCond, String loopVar] returns [Assignment abstr]
 	: lhs ASSIGN { HashMap<String, String> atoms = new HashMap<String, String>(); } expr[atoms] ';'
-	  { 
+	  {
 	    if ($lhs.name.contains("[-1]") && "".equals(loopVar)) {
 	      System.err.println("Fold initializor must be in a loop");
 	      throw new RecognitionException();
 	    }
 	  }
 	  { $abstr = new Assignment(clss, $lhs.name, atoms, $expr.openBody, loopVar);
-	  
+
 		if (!$pure) {
 		    if (!inCond) assignments.add($abstr);
 		    if (!inCond && "".equals(loopVar)) {
 			clss.apply(clss.getName().toLowerCase() + "_" + $lhs.name.replace('.','_').replace('@','_'),
 			  $lhs.name,
-			  (String[]) atoms.keySet().toArray(new String[atoms.keySet().size()]));		  
+			  (String[]) atoms.keySet().toArray(new String[atoms.keySet().size()]));
 		    }
 		    if (extendedClasses.get(clss).idToLoop.containsKey($lhs.name.replace('.','@'))) {
 		      String prev = extendedClasses.get(clss).idToLoop.get($lhs.name.replace('.','@'));
@@ -672,9 +672,9 @@ constraint[Boolean pure, AGEval.Class clss, boolean inCond, String loopVar] retu
 		        //potentially elevate binding
 		        extendedClasses.get(clss).idToLoop.put($lhs.name.replace('.','@').toLowerCase(), loopVar);
 		      } else if ("".equals(loopVar)) { /* maintain binding */ }
-		      else if (!prev.equals(loopVar)) {	      
+		      else if (!prev.equals(loopVar)) {
 		         System.err.println("assignment to variable " + clss.getName() + "::" + $lhs.name + " under mismatching loop variables (" + loopVar + " and " + prev + ")");
-	       		 throw new RecognitionException();	      
+	       		 throw new RecognitionException();
 		      } else {
 		         //reuse binding
 		      }
@@ -686,7 +686,7 @@ constraint[Boolean pure, AGEval.Class clss, boolean inCond, String loopVar] retu
 	| i=lhs ASSIGN FOLD
 	  { if ("".equals(loopVar)) {
  	      System.err.println("reduction must be in a loop: violation on " + $lhs.text);
-	      throw new RecognitionException(); 	  
+	      throw new RecognitionException();
 	    }
 	    if ($lhs.name.contains("[-1]")) {
 	      System.err.println("x[-1].x cannot yet be the left-hand side of a fold statement");
@@ -694,12 +694,12 @@ constraint[Boolean pure, AGEval.Class clss, boolean inCond, String loopVar] retu
 	    }
 	    HashMap<String, String> startVariables = new HashMap<String, String>();
 	    HashMap<String, String> stepVariables = new HashMap<String, String>(); }
-	  start=expr[startVariables] 
-	  '..' 
+	  start=expr[startVariables]
+	  '..'
 	  step=expr[stepVariables]
 	  {
-		if (!$pure) { 
-		    $abstr = new Assignment($clss, $i.name, startVariables, $start.openBody, stepVariables, $step.openBody, loopVar); 
+		if (!$pure) {
+		    $abstr = new Assignment($clss, $i.name, startVariables, $start.openBody, stepVariables, $step.openBody, loopVar);
 		    if (!inCond) {
 		      assignments.add($abstr); //up to runtime to do expansion
 		    }
@@ -709,9 +709,9 @@ constraint[Boolean pure, AGEval.Class clss, boolean inCond, String loopVar] retu
 		        //potentially elevate binding
 		        extendedClasses.get(clss).idToLoop.put($lhs.name.replace('.','@').toLowerCase(), loopVar);
 		      } else if ("".equals(loopVar)) { /* maintain binding */ }
-		      else if (!prev.equals(loopVar)) {	      
+		      else if (!prev.equals(loopVar)) {
 		         System.err.println("assignment to variable " + clss.getName() + "::" + $lhs.name + " under mismatching loop variables (" + loopVar + " and " + prev + ")");
-	       		 throw new RecognitionException();	      
+	       		 throw new RecognitionException();
 		      } else {
 		         //reuse binding
 		      }
@@ -720,7 +720,7 @@ constraint[Boolean pure, AGEval.Class clss, boolean inCond, String loopVar] retu
 		    }
 		}
 
-	    
+
 	  }
 	  ';'
 	;
@@ -749,7 +749,7 @@ multExpr[HashMap<String,String> indexedVariables] returns [String openBody]
 	  )* { if (hasAny) $openBody = "(" + $openBody + ")"; } ;
 signExpr[HashMap<String,String> indexedVariables] returns [String openBody]
 	: { String pfx = ""; } //FIXME some reason $x.text doesn't work...
-	  x=(('+' { pfx += "+";} | '-' { pfx += "-"; }| '!' { pfx += "!"; })*) callExpr[indexedVariables] 
+	  x=(('+' { pfx += "+";} | '-' { pfx += "-"; }| '!' { pfx += "!"; })*) callExpr[indexedVariables]
 	  { $openBody = pfx.equals("") ? $callExpr.openBody : ("(" + pfx + " " + $callExpr.openBody + ")");  };
 callExpr[HashMap<String,String> indexedVariables] returns [String openBody]
 	: id '(' { $openBody = $id.text + "("; }
@@ -757,7 +757,7 @@ callExpr[HashMap<String,String> indexedVariables] returns [String openBody]
 	(',' ai=expr[indexedVariables] { $openBody += ", " + $ai.openBody; })*)?
 	')' { $openBody += ")"; }
 	| primitiveExpr[indexedVariables] { $openBody = $primitiveExpr.openBody; }
-	;	
+	;
 primitiveExpr[HashMap<String,String> indexedVariables] returns [String openBody]
 	: literal {$openBody = $literal.text;}
 	| rhs {
@@ -769,15 +769,15 @@ primitiveExpr[HashMap<String,String> indexedVariables] returns [String openBody]
  	      indexedVariables.put($rhs.name, $openBody);
 	    }
 	  }
-	| '(' expr[indexedVariables] ')' { $openBody = "(" + $expr.openBody + ")";} 
+	| '(' expr[indexedVariables] ')' { $openBody = "(" + $expr.openBody + ")";}
 	;
-	
-lhs returns [String name]	
+
+lhs returns [String name]
 	: multiId   { $name = $multiId.text; }
 	//| n=id suffixNeg '.' c=multiId { $name = $n.text + "@" + $c.text + "[-1]";}
 	| n=id '.' c=multiId  { $name = $n.text + "@" + $c.text; }
 	;
-	
+
 rhs returns [String name]
 	: lhs { $name = $lhs.name; }
 	//FIXME check in appropriate reduction
@@ -786,21 +786,21 @@ rhs returns [String name]
 	;
 
 //suffixNeg  : '[' '-1' ']';
-suffix 	: '$i' | '$$' | '$-'; 
+suffix 	: '$i' | '$$' | '$-';
 
-multiId returns [String text] 
-	: id { $text = $id.text; } 
+multiId returns [String text]
+	: id { $text = $id.text; }
 	| type { $text = $type.text; }
 	;
 
-maybeType returns [boolean isMaybe, String text] 
+maybeType returns [boolean isMaybe, String text]
 	: '?' type { $isMaybe = true; $text = $type.text; }
 	| type { $isMaybe = false; $text = $type.text; }
 	;
-	 
-type:	BOOL_KEYWORD | INT_KEYWORD | FLOAT_KEYWORD | COLOR_KEYWORD | STRING_KEYWORD | PX_KEYWORD | TAGGEDINT_KEYWORD | TAGGEDFLOAT_KEYWORD;
 
-literal	returns [String text]: 
+type:	BOOL_KEYWORD | INT_KEYWORD | FLOAT_KEYWORD | DOUBLE_KEYWORD | COLOR_KEYWORD | STRING_KEYWORD | PX_KEYWORD | TAGGEDINT_KEYWORD | TAGGEDFLOAT_KEYWORD | TAGGEDDOUBLE_KEYWORD;
+
+literal	returns [String text]:
 	prettyFloat { $text = $prettyFloat.text; }
 	| bl { $text = $bl.text; }
 	| u =( INT  | STRING | HEXCOLOR) { $text = $u.text; }
@@ -812,13 +812,13 @@ bl	returns [String text] : TRUE { $text = "true"; } | FALSE { $text = "false"; }
 
 prettyFloat returns [String text] : FLOAT { $text = maybeStripFloat($FLOAT.text);  } ;
 
-HEXCOLOR 
+HEXCOLOR
 	:	 '#' HEX_DIGIT HEX_DIGIT HEX_DIGIT
 	| 	 '#' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
 	| 	 '#' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
 	| 	 '#' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
 	;
-	
+
 
 STAR    : '*';
 
@@ -849,13 +849,15 @@ PHANTOM :	 'phantom';
 BOOL_KEYWORD	:	'bool';
 STRING_KEYWORD	:	'string';
 INT_KEYWORD	:	'int';
-FLOAT_KEYWORD	:	 'float';	
+FLOAT_KEYWORD	:	 'float';
+DOUBLE_KEYWORD    :   'double';
 COLOR_KEYWORD	:	'color';
 PX_KEYWORD	:	'px';
 TIME_KEYWORD: 'time';
 TAGGEDINT_KEYWORD: 'taggedInt';
 TAGGEDFLOAT_KEYWORD: 'taggedFloat';
-	
+TAGGEDDOUBLE_KEYWORD: 'taggedDouble';
+
 INT :	'0'..'9'+ ;
 FLOAT
     :   ('0'..'9')+ '.' ('0'..'9')* EXPONENT? 'f'?

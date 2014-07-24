@@ -1,5 +1,5 @@
 //checks identifiers after trait expansions
-//Interfaces: 
+//Interfaces:
 //  unique name
 //  disjoint set of identifiers
 //Classes:
@@ -27,7 +27,7 @@ import FTLSurface;
     import java.util.HashSet;
     import java.util.Map.Entry;
 }
-@lexer::header { 
+@lexer::header {
   package aleGrammar;
 }
 
@@ -35,11 +35,11 @@ import FTLSurface;
     public final List<String> errors = new java.util.LinkedList<String>();
     public void displayRecognitionError(String[] tokenNames,
                                         RecognitionException e) {
-        String err = getErrorHeader(e) + " " + getErrorMessage(e, tokenNames);                                        
+        String err = getErrorHeader(e) + " " + getErrorMessage(e, tokenNames);
         System.err.println(err);
         errors.add(err);
     }
-    
+
     public HashMap<String,HashSet<String>> classesVars = new HashMap<String,HashSet<String>>();
     public HashMap<String,HashSet<String>> classesInputs = new HashMap<String,HashSet<String>>();
     public HashMap<String, String> classInterface = new HashMap<String, String>();
@@ -61,13 +61,13 @@ import FTLSurface;
             System.err.println("Field repeatedly declared in " + label +": "  + id);
             throw new RecognitionException();
         }
-        store.add(id);    
+        store.add(id);
     }
     public void checkUniqueField(String id, HashSet<String> store, HashSet<String> store2, String label) throws RecognitionException {
         if (store.contains(id) || store2.contains(id)) {
             System.err.println("Field repeatedly declared in " + label +": "  + id);
             throw new RecognitionException();
-        }    
+        }
     }
 	public void checkFieldExists(String id, HashSet<String> infIds, HashSet<String> clsIds, String lbl) throws RecognitionException {
 	    if (!infIds.contains(id) && !clsIds.contains(id)) {
@@ -80,15 +80,15 @@ import FTLSurface;
 		if (iface == null) {
     	    	System.err.println("Child does not exist: " + child + " in " + child + "." + fld + " (" + lbl + ")");
     	    	throw new RecognitionException();
-    	}	    
+    	}
 	    HashSet<String> attribs = interfacesVars.get(iface); //should not be null (made when iface created)
 	    if (!attribs.contains(fld)) {
-	        System.err.println("For access (" + child + "::" + iface + ")." + fld 
+	        System.err.println("For access (" + child + "::" + iface + ")." + fld
 	            + ", fld is not a member of interface " + iface + "(" + lbl + ")");
 	        throw new RecognitionException();
 	    }
 	}
-	
+
 	public void checkChildExists(String child, HashMap<String, String>childMap, String lbl) throws RecognitionException {
 		String iface = childMap.get(child);
 		if (iface == null) {
@@ -96,9 +96,9 @@ import FTLSurface;
     	    	throw new RecognitionException();
     	}
     }
-	
-	
-	
+
+
+
 	public Boolean doesParentAssign(String cls, String field, boolean isSelfAssign) {
 	    Boolean parentAssign = false;
         String iface = classInterface.get(cls);
@@ -109,15 +109,15 @@ import FTLSurface;
                     if (isSelfAssign && parentAssign) {
                         System.err.println("Double assignment; remove one: ");
                         System.err.println("  class " + cls + " : " + iface + " { ... " + field + " :=  ...");
-                        System.err.println("  class " + p.getKey() + " { ... " + child.getKey() + "." + field + " := ..."); 
+                        System.err.println("  class " + p.getKey() + " { ... " + child.getKey() + "." + field + " := ...");
                         parentAssign = true;
                     }
                 }
             }
         }
-        return parentAssign;	
+        return parentAssign;
 	}
-	
+
 	public void checkAssignments() throws RecognitionException {
 	  Boolean allClear = true;
 	  //vars are singly assigned
@@ -136,7 +136,7 @@ import FTLSurface;
 	        } else if (selfAssign && parentAssign) {
 	            allClear = false;
 	            System.err.println("Both parent class and self class assign to a class variable: " + c.getKey() + "::" + classVarField);
-	            throw new RecognitionException();	        
+	            throw new RecognitionException();
 	        }
 	    }
 	    //check self interface variables against assignments by parent
@@ -151,7 +151,7 @@ import FTLSurface;
 	        } else if (selfAssign && parentAssign) {
 	            allClear = false;
 	            System.err.println("Both parent class and self class assign to an interface variable: " + c.getKey() + "::" + interfaceVarField);
-	            throw new RecognitionException();	        
+	            throw new RecognitionException();
 	        }
 	    }
 	    //class input fields are not assigned
@@ -160,8 +160,8 @@ import FTLSurface;
 	        if (classSelfSinks.get(c.getKey()).contains(classInputField)) { //selfAssign
 	            System.err.println("Assignment to a class input field by self: " + c.getKey() + "::" + classInputField);
 	        } else if (doesParentAssign(c.getKey(), classInputField, false)) {
-	            System.err.println("Assignment to a class input field by parent: " + c.getKey() + "::" + classInputField);	        
-	        }	       
+	            System.err.println("Assignment to a class input field by parent: " + c.getKey() + "::" + classInputField);
+	        }
 	    }
 	    //interface input fields are not assigned
 	    //  (don't check children because they'll be checked inductively)
@@ -169,10 +169,10 @@ import FTLSurface;
 	        if (classSelfSinks.get(c.getKey()).contains(interfaceInputField)) { //selfAssign
 	            System.err.println("Assignment to a class input field by self: " + c.getKey() + "::" + interfaceInputField);
 	        } else if (doesParentAssign(c.getKey(), interfaceInputField, false)) {
-	            System.err.println("Assignment to a class input field by parent: " + c.getKey() + "::" + interfaceInputField);	        
-	        }	       
+	            System.err.println("Assignment to a class input field by parent: " + c.getKey() + "::" + interfaceInputField);
+	        }
 	    }
-	    
+
 	  }
 	  if (!allClear) throw new RecognitionException();
 	}
@@ -182,9 +182,9 @@ root: scheduleConstraints? typedef*  iface* clss* { checkAssignments(); };
 
 scheduleConstraints :	 SCHEDULE LBRACE STRING? RBRACE;
 typedef : TYPE IDRAW EQ IDRAW  (PIPE IDRAW  )* SEMICOLON;
-	
-iface:	
-    IFACE IDRAW { 
+
+iface:
+    IFACE IDRAW {
         addUnique($IDRAW.text, interfacesVars, "interfaces");
         interfacesInputs.put($IDRAW.text, new HashSet<String>());
     }
@@ -192,55 +192,55 @@ iface:
     ;
 
 clss :
-	CLSS c=IDRAW { 
+	CLSS c=IDRAW {
 	    addUnique($c.text, classesVars, "classes");
-	    classesInputs.put($c.text, new HashSet<String>());	    
+	    classesInputs.put($c.text, new HashSet<String>());
 	    classChilds.put($c.text, new HashMap<String,String>());
 	    classSelfSinks.put($c.text, new HashSet<String>());
 	    classChildSinks.put($c.text, new HashMap<String, HashSet<String>>());
 	}
-	COLON i=IDRAW 
-	{ 
+	COLON i=IDRAW
+	{
 	    if (interfacesVars.get($i.text) == null) {
 	        System.err.println("Class " + $c.text + ": implements unknown interface " + $i.text);
-	        throw new RecognitionException();	
+	        throw new RecognitionException();
 	    }
 	    classInterface.put($c.text, $i.text);
 	}
 	LBRACE (
-	    header[interfacesVars.get($i.text), interfacesInputs.get($i.text), classesVars.get($c.text), classesInputs.get($c.text)] 
-	    | children[classChilds.get($c.text), classChildSinks.get($c.text)] 
-	    | phantom[(HashSet<String>)interfacesVars.get($i.text), (HashSet<String>)classesVars.get($c.text), classChilds.get($c.text), classSelfSinks.get($c.text), classChildSinks.get($c.text) ] 
-	    | body[ interfacesVars.get($i.text), 
-	            interfacesInputs.get($i.text), 
-	            classesVars.get($c.text), 
-	            classesInputs.get($c.text), 
+	    header[interfacesVars.get($i.text), interfacesInputs.get($i.text), classesVars.get($c.text), classesInputs.get($c.text)]
+	    | children[classChilds.get($c.text), classChildSinks.get($c.text)]
+	    | phantom[(HashSet<String>)interfacesVars.get($i.text), (HashSet<String>)classesVars.get($c.text), classChilds.get($c.text), classSelfSinks.get($c.text), classChildSinks.get($c.text) ]
+	    | body[ interfacesVars.get($i.text),
+	            interfacesInputs.get($i.text),
+	            classesVars.get($c.text),
+	            classesInputs.get($c.text),
 	            classChilds.get($c.text),
 	            classSelfSinks.get($c.text),
-	            classChildSinks.get($c.text)] 
+	            classChildSinks.get($c.text)]
 	)* RBRACE
     ;
 
-header[HashSet<String> infVars, HashSet<String> infInputs, HashSet<String> clsVars, HashSet<String> clsInputs]: 
-    ATTRIBUTES LBRACE 
-    ( | (classField[infVars, infInputs, clsVars, clsInputs] (SEMICOLON+ classField[infVars, infInputs, clsVars, clsInputs])*)) (|SEMICOLON) 
+header[HashSet<String> infVars, HashSet<String> infInputs, HashSet<String> clsVars, HashSet<String> clsInputs]:
+    ATTRIBUTES LBRACE
+    ( | (classField[infVars, infInputs, clsVars, clsInputs] (SEMICOLON+ classField[infVars, infInputs, clsVars, clsInputs])*)) (|SEMICOLON)
     RBRACE;
-children[HashMap<String,String> childMap, HashMap<String, HashSet<String>> childSinks]: 
-    CHILDREN LBRACE 
-    ( | (child[childMap, childSinks] (SEMICOLON+ child[childMap, childSinks])*)) (|SEMICOLON) 
+children[HashMap<String,String> childMap, HashMap<String, HashSet<String>> childSinks]:
+    CHILDREN LBRACE
+    ( | (child[childMap, childSinks] (SEMICOLON+ child[childMap, childSinks])*)) (|SEMICOLON)
     RBRACE;
-phantom[HashSet<String> infVarIds, HashSet<String> clsVarIds, HashMap<String, String> childMap, HashSet<String> selfSinks, HashMap<String, HashSet<String>> childSinks]: 
-    PHANTOM LBRACE 
-    ( | (lhs[infVarIds, clsVarIds, childMap, selfSinks, childSinks] (SEMICOLON+ lhs[infVarIds, clsVarIds, childMap, selfSinks, childSinks])*)) (|SEMICOLON) 
+phantom[HashSet<String> infVarIds, HashSet<String> clsVarIds, HashMap<String, String> childMap, HashSet<String> selfSinks, HashMap<String, HashSet<String>> childSinks]:
+    PHANTOM LBRACE
+    ( | (lhs[infVarIds, clsVarIds, childMap, selfSinks, childSinks] (SEMICOLON+ lhs[infVarIds, clsVarIds, childMap, selfSinks, childSinks])*)) (|SEMICOLON)
     RBRACE;
-    
-    
-body[HashSet<String> infVarIds, HashSet<String> infInIds, HashSet<String> clsVarIds, HashSet<String> classInIds, HashMap<String, String> childMap, HashSet<String> selfSinks, HashMap<String, HashSet<String>> childSinks]: 
+
+
+body[HashSet<String> infVarIds, HashSet<String> infInIds, HashSet<String> clsVarIds, HashSet<String> classInIds, HashMap<String, String> childMap, HashSet<String> selfSinks, HashMap<String, HashSet<String>> childSinks]:
     ACTIONS LBRACE topStmt[infVarIds, clsVarIds, childMap, selfSinks, childSinks]* RBRACE;
 
 
-child[HashMap<String,String> childMap, HashMap<String, HashSet<String>> childSinks]:  
-    n=IDRAW COLON (i=IDRAW  |  LBRACKET i=IDRAW  RBRACKET) 
+child[HashMap<String,String> childMap, HashMap<String, HashSet<String>> childSinks]:
+    n=IDRAW COLON (i=IDRAW  |  LBRACKET i=IDRAW  RBRACKET)
     {
         if (childMap.containsKey($n.text)) {
             System.err.println("Duplicate child name: " + $n.text);
@@ -278,22 +278,22 @@ classField[HashSet<String> infVars, HashSet<String> infInputs, HashSet<String> c
 	    {
 	        checkUniqueField($id.text, infVars, infInputs, "(class field duplicates  interface field)");
     	    addUniqueField($id.text, clsInputs, clsVars, "class");
-	    }	
+	    }
 	| INPUT id COLON IDRAW (EQ IDRAW)?
 	    {
 	        checkUniqueField($id.text, infVars, infInputs, "(class field duplicates  interface field)");
     	    addUniqueField($id.text, clsInputs, clsVars, "class");
-	    }	
-	| VAR i=IDRAW COLON type 
+	    }
+	| VAR i=IDRAW COLON type
 	    {
 	        checkUniqueField($i.text, infVars, infInputs, "(class field duplicates  interface field)");
     	    addUniqueField($i.text, clsVars, clsInputs, "class");
-	    }	
-	| VAR i=IDRAW COLON IDRAW 
+	    }
+	| VAR i=IDRAW COLON IDRAW
 	    {
 	        checkUniqueField($i.text, infVars, infInputs, "(class field duplicates  interface field)");
     	    addUniqueField($i.text, clsVars, clsInputs, "class");
-	    }	
+	    }
 	;
 
 topStmt[HashSet<String> infVars, HashSet<String> clsVars, HashMap<String, String> childMap, HashSet<String> selfSinks, HashMap<String, HashSet<String>> childSinks]
@@ -302,27 +302,27 @@ topStmt[HashSet<String> infVars, HashSet<String> clsVars, HashMap<String, String
 	 | loop[infVars, clsVars, childMap, selfSinks, childSinks]
 	 ;
 
-loop[HashSet<String> infVars, HashSet<String> clsVars, HashMap<String, String> childMap, HashSet<String> selfSinks, HashMap<String, HashSet<String>> childSinks] 
-    :   LOOP id { checkChildExists($id.text, childMap, "loop variable"); } LBRACE  
-        (       cond[infVars, clsVars, childMap, selfSinks, childSinks] 
-            |   constraint[infVars, clsVars, childMap, selfSinks, childSinks] | SEMICOLON)* 
+loop[HashSet<String> infVars, HashSet<String> clsVars, HashMap<String, String> childMap, HashSet<String> selfSinks, HashMap<String, HashSet<String>> childSinks]
+    :   LOOP id { checkChildExists($id.text, childMap, "loop variable"); } LBRACE
+        (       cond[infVars, clsVars, childMap, selfSinks, childSinks]
+            |   constraint[infVars, clsVars, childMap, selfSinks, childSinks] | SEMICOLON)*
         RBRACE
     ;
 
 cond[HashSet<String> infVars, HashSet<String> clsVars, HashMap<String, String> childMap, HashSet<String> selfSinks, HashMap<String, HashSet<String>> childSinks]
-	: IF LPAREN	
-	  expr RPAREN LBRACE 
+	: IF LPAREN
+	  expr RPAREN LBRACE
 	  (cond[infVars, clsVars, childMap, selfSinks, childSinks] | constraint[infVars, clsVars, childMap, selfSinks, childSinks] | SEMICOLON)*
-	  (RBRACE ELSE IF 
-	    LPAREN expr RPAREN LBRACE 
-	    (cond[infVars, clsVars, childMap, selfSinks, childSinks] | constraint[infVars, clsVars, childMap, selfSinks, childSinks] | SEMICOLON)*	    
-	  )*
-	  RBRACE ELSE LBRACE 
+	  (RBRACE ELSE IF
+	    LPAREN expr RPAREN LBRACE
 	    (cond[infVars, clsVars, childMap, selfSinks, childSinks] | constraint[infVars, clsVars, childMap, selfSinks, childSinks] | SEMICOLON)*
-	  RBRACE	  
+	  )*
+	  RBRACE ELSE LBRACE
+	    (cond[infVars, clsVars, childMap, selfSinks, childSinks] | constraint[infVars, clsVars, childMap, selfSinks, childSinks] | SEMICOLON)*
+	  RBRACE
 	;
 
-constraint[HashSet<String> infVars, HashSet<String> clsVars, HashMap<String, String> childMap, HashSet<String> selfSinks, HashMap<String, HashSet<String>> childSinks] 
+constraint[HashSet<String> infVars, HashSet<String> clsVars, HashMap<String, String> childMap, HashSet<String> selfSinks, HashMap<String, HashSet<String>> childSinks]
     : lhs[infVars, clsVars, childMap, selfSinks, childSinks] ASSIGN expr
     | lhs[infVars, clsVars, childMap, selfSinks, childSinks] ASSIGN FOLD expr DOTDOT expr
     ;
@@ -336,35 +336,35 @@ addExpr: multExpr ((PLUS|MINUS) multExpr	)* ;
 multExpr: signExpr ((STAR|DIV|MOD) signExpr)*;
 signExpr: (PLUS | MINUS|  EXCLAMATION )* callExpr;
 callExpr
-	: IDRAW LPAREN  (expr (COMMA expr)*)? RPAREN 
+	: IDRAW LPAREN  (expr (COMMA expr)*)? RPAREN
 	| primitiveExpr
-	;	
+	;
 primitiveExpr
 	: literal
-	| rhs 
+	| rhs
 	| LPAREN expr RPAREN
 	;
 
 
 lhs [HashSet<String> infVars, HashSet<String> clsVars, HashMap<String, String> childMap, HashSet<String> selfSinks, HashMap<String, HashSet<String>> childSinks]
 	: id
-	    {  
-            checkFieldExists($id.text, infVars, clsVars, "left-hand side of an assignment"); 
+	    {
+            checkFieldExists($id.text, infVars, clsVars, "left-hand side of an assignment");
             selfSinks.add($id.text);
 	    }
-	| n=id DOT f=id 
-	    { 
+	| n=id DOT f=id
+	    {
 	        if (n.equals("self")) {
-	            checkFieldExists($f.text, infVars, clsVars, "left-hand side of an assignment"); 
+	            checkFieldExists($f.text, infVars, clsVars, "left-hand side of an assignment");
 	            selfSinks.add($f.text);
 	        } else {
-	            checkChildFieldExists($f.text, $n.text, childMap, "left-hand side of an assignment"); 
+	            checkChildFieldExists($f.text, $n.text, childMap, "left-hand side of an assignment");
 	            childSinks.get($n.text).add($f.text);
 	        }
 	    }
 	;
 
-	
+
 rhs
     : id
     | id DOT id
@@ -372,20 +372,20 @@ rhs
 	| suffix DOT id
 	;
 
-suffix 	: '$i' | '$$' | '$-'; 
+suffix 	: '$i' | '$$' | '$-';
 
-id 
+id
 	: IDRAW
 	| type
 	;
 
 
 maybeType
-	: QUESTION type 
-	| type 
+	: QUESTION type
+	| type
 	;
-	 
-type:	BOOL_KEYWORD | INT_KEYWORD | FLOAT_KEYWORD | COLOR_KEYWORD | STRING_KEYWORD | PX_KEYWORD | TAGGEDINT_KEYWORD | TAGGEDFLOAT_KEYWORD;
+
+type:	BOOL_KEYWORD | INT_KEYWORD | FLOAT_KEYWORD | DOUBLE_KEYWORD | COLOR_KEYWORD | STRING_KEYWORD | PX_KEYWORD | TAGGEDINT_KEYWORD | TAGGEDFLOAT_KEYWORD | TAGGEDDOUBLE_KEYWORD;
 
 
 literal	: bl | INT | FLOAT | STRING | HEXCOLOR | LBRACE INT COMMA (INT|FLOAT) RBRACE;
