@@ -47,21 +47,33 @@ CLRunner.prototype.init = (function () {
         devices.sort(function (a, b) { return b.computeUnits - a.computeUnits; });
 
         var deviceWrapper;
-        var err = devices.length ? 
+        var err = devices.length ?
             null : new Error("No WebCL devices of specified type (" + webcl.DEVICE_TYPE_GPU + ") found");
-        for (var i = 0; i < devices.length; i++) {          
+        for (var i = 0; i < devices.length; i++) {
             var wrapped = devices[i];
             try {
-                wrapped.context = CreateContext(webcl, glr.gl, platform, [wrapped.device]);
+                wrapped.context = CreateContext(clr, webcl, glr.gl, platform, [wrapped.device]);
                 if (wrapped.context === null) {
                     throw Error("Error creating WebCL context");
                 }
+
+                if (wrapped.device.enableExtension("cl_khr_fp64")) {
+                    clr.console.log('ok!')
+                } else if (wrapped.device.enableExtension("cl_amd_fp64")) {
+                    clr.console.log('ok!')
+                } else if (wrapped.device.enableExtension("cl_APPLE_fp64_basic_ops")) {
+                    clr.console.log('ok!')
+                } else {
+                    clr.console.warn("Should skip device due to no fp64");
+                    //continue;
+                }
+
                 wrapped.queue = wrapped.context.createCommandQueue(wrapped.device, null);
             } catch (e) {
-                console.debug("Skipping device due to error", i, wrapped, e);
+                clr.console.debug("Skipping device due to error", i, wrapped, e);
                 err = e;
                 continue;
-            }           
+            }
             deviceWrapper = wrapped;
             break;
         }

@@ -1,6 +1,7 @@
 // This file contains defines and functions used by all Superconductor generated OpenCL kernel code.
 // It should always be preprended to any generated kernel source before compiling the CL kernels.`
 
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
 
 // The type we store the tokens enum as
 typedef int GrammarTokens;
