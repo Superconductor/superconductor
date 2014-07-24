@@ -305,7 +305,7 @@ function selectors(sc, sels, IdToks /* optional */) {
                 break;                
             //=====================
               default:
-                console.error('unknown combinator', op.combinator);
+                sc.console.error('unknown combinator', op.combinator);
                 throw 'err';                
             }
           } //combinator loop          
@@ -336,7 +336,7 @@ function selectors(sc, sels, IdToks /* optional */) {
 	      var sel = tryId ? nextId : nextTag;
 	      if (matchNodeSelector(data, nodeIdx, sel)) {
 	        applyProperties(data, nodeIdx, sel.properties);
-	        console.log('apply',sel,nodeIdx);
+	        sc.console.log('apply',sel,nodeIdx);
 	      }
 	      if (tryId) nextIdIdx++;
 	      else nextTagIdx++;
@@ -348,7 +348,7 @@ function selectors(sc, sels, IdToks /* optional */) {
 		  var startIdx = sc.clr.levels[l].start_idx;
 		  var endIdx = startIdx + sc.clr.levels[l].length;
 		  for (var i = startIdx; i < endIdx; i++) {
-		    console.log("matchNode",i);
+		    sc.console.log("matchNode",i);
 		    matchNode(data, i);		    
 		  }
 		}	    
@@ -357,7 +357,7 @@ function selectors(sc, sels, IdToks /* optional */) {
 	
 	///////////////
 
-    console.log("loading selector engine (slow)");
+    sc.console.log("loading selector engine (slow)");
     var ast = parse(sels);
 	var selsTok = tokenize(ast);
 	var hashes = hash(selsTok);

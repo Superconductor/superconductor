@@ -4,14 +4,14 @@
 		'flat': naive; flatten buffers into dense arrays
 		'sparse': represent long spans of zero as a dictionary
 			min span is configurable (minBlockSize)
-		'sparseMT': like 'sparse' but also split into multiple files for parallel parsing; 
+		'sparseMT': like 'sparse' but also split into multiple files for parallel parsing;
 			configurable: min span (minBlockSize) & file size (minFileSize)
 
 	commandline interface is in flattener.js
 
-	exports compress:: 
+	exports compress::
 		  file.json | jsonObj
-		* kbindings.js 
+		* kbindings.js
 		* 'flat' | 'sparse' | 'sparseMT'
 		* null | { opt minBlockSize: int, opt minFileSize: int}
 		* output.json
@@ -39,7 +39,7 @@ function chainRead(file,ret,prop) {
 				ret[prop] = str;
 				continuation()
 			}
-		});	  
+		});
 	};
 }
 function chainWrite(file,src) {
@@ -63,17 +63,17 @@ function getBuffers(flattener) {
 //opts: if sparse or sparseMT, {minBlockSize: int, ...}, where int means num bytes per dense block
 //opts: if sparseMT, {minFileSize: int, ...}, where int means num bytes per file
 exports.compress = function (jsonFilePath, kbindingsFilePath, mode, opts, outputFileJSON, cb) {
-	
-	if (!jsonFilePath || !kbindingsFilePath || !outputFileJSON) throw "Missing args";	
-	
+
+	if (!jsonFilePath || !kbindingsFilePath || !outputFileJSON) throw "Missing args";
+
 	var useSparse = mode == 'sparse' || mode == 'sparseMT';
-	var useSparseMT = mode == 'sparseMT'; 
+	var useSparseMT = mode == 'sparseMT';
 	var minBlockSize = (opts && opts.minBlockSize) ? opts.minBlockSize : 2048; //2048 for benchmarks
 	var minFileSize = (opts && opts.minFileSize) ? opts.minFileSize : (100 * 1024); //100 * 1024 for benchmarks
 
 	//at each stage, add result to ret
-	var ret = {error: 'not initialized', outputFileJSON: outputFileJSON}; 
-	
+	var ret = {error: 'not initialized', outputFileJSON: outputFileJSON};
+
 	Seq()
 			//get json if provided it as a file
 			.seq(function () {
@@ -98,29 +98,29 @@ exports.compress = function (jsonFilePath, kbindingsFilePath, mode, opts, output
 			.seq(function () {
 				var prefix = 'function kbindings () {';
 				var suffix = '}';
-	
+
 				var localK = null;
 				try {
 					localK = kbindings;
 				} catch (e) {}
-	
+
 				eval(prefix + ret.kbindingsSrc + suffix);
 				ret.kbindingsFn = kbindings;
-	
+
 				if (localK) kbindings = localK; //restore global
 				else delete kbindings;
-	
+
 				this();
 			})
 			.seq(function () {
 				var flattener = new clr.CLRunner(null, {ignoreCL: true});
 				ret.kbindingsFn.apply(flattener, []); //extend clr
-	
+
 				flattener.loadData(ret.treeJSON, true);
-				
+
 				var bufferLabels = getBuffers(flattener);
 				ret.bufferLabels = bufferLabels;
-				
+
 				//JSON
 				var tCompress = (new Date()).getTime();
 				var jsonBuffers = {tree_size: flattener.tree_size, levels: flattener.levels, tokens: flattener.tokens};
@@ -130,17 +130,17 @@ exports.compress = function (jsonFilePath, kbindingsFilePath, mode, opts, output
 					var lbl = bufferLabels[i];
 					var buff = flattener[lbl];
 					if (useSparse) {
-						jsonBuffers[lbl] = flattener[useSparseMT ? 'deflateMT' : 'deflate'](buff, minBlockSize, minFileSize);	
-									
+						jsonBuffers[lbl] = flattener[useSparseMT ? 'deflateMT' : 'deflate'](buff, minBlockSize, minFileSize);
+
 						var spArr = useSparseMT ? flattener.deflate(buff, minBlockSize) : jsonBuffers[lbl];
 						var sum = 0;
 						for (var idx in spArr.dense) {
 							sum += spArr.dense[idx].length;
 						}
 						orig += buff.length;
-						after += sum;				
+						after += sum;
 						//console.log(buff.length, 'down to', sum, ' => decreased', Math.round(100 - 100 * (sum + 0.0) / buff.length),'%');
-					} else {				
+					} else {
 						var arr = new Array(buff.length);
 						for (var j = 0; j < buff.length; j++) {
 						  arr[j] = buff[j];
@@ -148,11 +148,11 @@ exports.compress = function (jsonFilePath, kbindingsFilePath, mode, opts, output
 						jsonBuffers[lbl] = arr;
 					}
 				}
-	
+
 				if (useSparse) console.log(orig, 'down to', after, ' => decreased', Math.round(100 - 100 * (after) / orig),'%');
 				var tDoneCompress = (new Date()).getTime();
 				console.log('compressed', tDoneCompress - tCompress,'ms');
-	
+
 				ret.flatJSON = jsonBuffers;
 				this();
 			})
@@ -166,52 +166,52 @@ exports.compress = function (jsonFilePath, kbindingsFilePath, mode, opts, output
 						var lbl = ret.bufferLabels[lblIdx];
 						outgoing += ret.flatJSON[lbl].length;
 					}
-	
-	
+
+
 					ret.buffersInfo = {};
 					var done = 0;
-					var dataID = 0;				
-					for (var lblIdx = 0; lblIdx < ret.bufferLabels.length; lblIdx++){ 
+					var dataID = 0;
+					for (var lblIdx = 0; lblIdx < ret.bufferLabels.length; lblIdx++){
 						var lbl = ret.bufferLabels[lblIdx];
 						var buffMT = ret.flatJSON[lbl];
 						for (var fileIdx = 0; fileIdx < buffMT.length; fileIdx++) {
 							dataID++;
-							
+
 							var file = buffMT[fileIdx];
 							var nfo = {bufferLabel: lbl, fileIdx:  fileIdx, uniqueID: dataID, nFiles: buffMT.length};
-	
-							file.nfo = nfo;						
+
+							file.nfo = nfo;
 							summary.push(nfo);
-							
+
 							if (fileIdx == 0) {
 								ret.buffersInfo[lbl] = {
-									optTypeName: file.optTypeName, 
-									len: file.len, 
+									optTypeName: file.optTypeName,
+									len: file.len,
 									startID: dataID,
 									numFiles: buffMT.length
 								};
 							}
-											
+
 							var str = JSON.stringify(file);
 							var cont = this;
 							fs.writeFile(
-								outputFileJSON.split(".json")[0] + dataID + ".json", 
-								str, 
+								outputFileJSON.split(".json")[0] + dataID + ".json",
+								str,
 								function (err) {
 									if (err && done != -1) {
 										done = -1;
 										cont(err);
 									}
 									if (err) return;
-	
+
 									done++;
-									if (done == outgoing) 
+									if (done == outgoing)
 										cont();
 								});
 						}
-					}			
+					}
 				} else {
-					var t0 = (new Date()).getTime();			
+					var t0 = (new Date()).getTime();
 					var treeFlatJSON = JSON.stringify(ret.flatJSON); //untyped...
 					console.log('stringify',(new Date()).getTime() - t0, 'ms');
 					console.log('writing', outputFileJSON);

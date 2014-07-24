@@ -251,7 +251,7 @@ function selectors(sc, sels, IdToks /* optional */) {
 //        for (var i in props) pretty.push(i + ': ' + props[i] );
       
         var resStr = "(function (data, nodeIdx) {\n";
-//        resStr += "  console.log('applier', '" + pretty + "');\n";
+//        resStr += "  sc.console.log('applier', '" + pretty + "');\n";
         for (var i in props)
           resStr += "  data." + i + ".set(nodeIdx, " + props[i] + ");\n";
         resStr += "})";
@@ -330,7 +330,7 @@ function selectors(sc, sels, IdToks /* optional */) {
                 break;                
             //=====================
               default:
-                console.error('unknown combinator', flatHashes.combinators[combIdx + pair]);
+                sc.console.error('unknown combinator', flatHashes.combinators[combIdx + pair]);
                 throw 'err';                
             }
           } //combinator loop          
@@ -363,7 +363,7 @@ function selectors(sc, sels, IdToks /* optional */) {
 	        //FIXME gen as a switch
 	        var applier = appliers[flatHashes.props[sel.props]];
 	        applier(data, nodeIdx);
-	        console.log('apply',sel,nodeIdx);
+	        sc.console.log('apply',sel,nodeIdx);
 	      }
 	      if (tryId) nextIdIdx++;
 	      else nextTagIdx++;
@@ -383,7 +383,7 @@ function selectors(sc, sels, IdToks /* optional */) {
 	
 	///////////////
 
-    console.log("loading selector engine (GPU)");
+    sc.console.log("loading selector engine (GPU)");
     var ast = parse(sels);
 	var selsTok = tokenize(ast);
 	var appliers = makePropertyAppliers(selsTok);

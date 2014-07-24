@@ -10,10 +10,10 @@ var Seq = require('seq');
 
 //this == cb
 // function geSC() {
-	
+
 // 	var genData = function () {
 // 		var window = {};
-	
+
 // 		//========
 // 		//edits to these should also happen in examples/sc/index.html
 // 		window.vizDefaults = {
@@ -25,14 +25,14 @@ var Seq = require('seq');
 // 		  tweenMin: 0,
 // 		  tweenMax: 100,
 // 		};
-	
+
 // 		function makeSpike(val) {
 // 			return {class: "Spike", "val": val ? val : Math.random()};
 // 		}
-	
+
 // 		function makeGenerator (len) {
 // 			function clamp (v) { return Math.max(0, Math.min(1.0, v)); }
-	
+
 // 			var childs = [];
 // 			var roll = Math.random();
 // 			var range = 0.03;
@@ -43,7 +43,7 @@ var Seq = require('seq');
 // 			}
 // 			return {class: "Generator", children: { "childs": childs } };
 // 		}
-		
+
 // 		function makeRoot(numGenerators, numSpikes) {
 // 			var childs = [];
 // 			for (var i = 0; i < numGenerators; i++) {
@@ -62,14 +62,14 @@ var Seq = require('seq');
 // 							class: "Second",
 // 							children: {"childs": childs} }}};
 // 		}
-						
+
 // 		var tinyData = makeRoot(window.vizDefaults.numGenerators, window.vizDefaults.numSpikesPerGenerator);
 // 		//======
-	
-	
+
+
 // 		return tinyData;
 // 	};
-	
+
 // 	this(null, {genData: genData, base: '../../examples/linegraph-3d-2/'});
 // } //geSC
 
@@ -79,7 +79,7 @@ var geSC2 = function () {
 
 	var genData = function () {
 		var window = {};
-	
+
 		//========
 		//edits to these should also happen in examples/sc2/index.html
 		window.vizDefaults = {
@@ -91,14 +91,14 @@ var geSC2 = function () {
 		  tweenMin: 0,
 		  tweenMax: 100,
 		};
-	
+
 		function makeSpike(val) {
 			return {class: "Spike", "val": val ? val : Math.random()};
 		}
-	
+
 		function makeGenerator (len) {
 			function clamp (v) { return Math.max(0, Math.min(1.0, v)); }
-	
+
 			var childs = [];
 			var roll = Math.random();
 			var range = 0.03;
@@ -109,7 +109,7 @@ var geSC2 = function () {
 			}
 			return {class: "Generator", children: { "childs": childs } };
 		}
-		
+
 		function makeRoot(numGenerators, numSpikes) {
 			var childs = [];
 			for (var i = 0; i < numGenerators; i++) {
@@ -128,15 +128,15 @@ var geSC2 = function () {
 							class: "Second",
 							children: {"childs": childs} }}};
 		}
-	
-							
+
+
 		var tinyData = makeRoot(window.vizDefaults.numGenerators, window.vizDefaults.numSpikesPerGenerator);
 		//======
 
-	
+
 		return tinyData;
 	};
-	
+
 	this(null, {genData: genData, base: '../../examples/linegraph-3d/'});
 
 }
@@ -144,7 +144,7 @@ var geSC2 = function () {
 // function geSC3 () {
 // 	var genData = function () {
 // 		var window = {};
-	
+
 // 		//========
 // 		//edits to these should also happen in examples/sc3/index.html
 
@@ -157,14 +157,14 @@ var geSC2 = function () {
 // 		  tweenMin: 0,
 // 		  tweenMax: 100,
 // 		};
-	
+
 // 		function makeSpike(val) {
 // 			return {class: "Spike", "val": val ? val : Math.random()};
 // 		}
-	
+
 // 		function makeGenerator (len) {
 // 			function clamp (v) { return Math.max(0, Math.min(1.0, v)); }
-	
+
 // 			var childs = [];
 // 			var roll = Math.random();
 // 			var range = 0.03;
@@ -175,7 +175,7 @@ var geSC2 = function () {
 // 			}
 // 			return {class: "Generator", children: { "childs": childs } };
 // 		}
-		
+
 // 		function makeRoot(numGenerators, numSpikes) {
 // 			var childs = [];
 // 			for (var i = 0; i < numGenerators; i++) {
@@ -194,15 +194,15 @@ var geSC2 = function () {
 // 							class: "Second",
 // 							children: {"childs": childs} }}};
 // 		}
-	
-							
+
+
 // 		var tinyData = makeRoot(window.vizDefaults.numGenerators, window.vizDefaults.numSpikesPerGenerator);
 // 		//======
 
-	
+
 // 		return tinyData;
 // 	};
-	
+
 // 	this(null, {genData: genData, base: '../examples/ge/sc3/'});
 
 // }
@@ -210,7 +210,7 @@ var geSC2 = function () {
 // function geSC4 () {
 // 	var genData = function () {
 // 		var window = {};
-	
+
 // 		//========
 // 		//edits to these should also happen in examples/sc4/index.html
 
@@ -223,15 +223,15 @@ var geSC2 = function () {
 // 		  tweenMin: 0,
 // 		  tweenMax: 100,
 // 		};
-	
+
 // 		function makeSpike(val) {
-// 			return {class: "Spike", "val": val ? val : Math.random(), 
+// 			return {class: "Spike", "val": val ? val : Math.random(),
 // 				"color": 102 * (256 * 256 * 256) + 0 * (256 * 256) + 204 * (256) + 255};
 // 		}
-	
+
 // 		function makeGenerator (len) {
 // 			function clamp (v) { return Math.max(0, Math.min(1.0, v)); }
-	
+
 // 			var childs = [];
 // 			var roll = Math.random();
 // 			var range = 0.03;
@@ -242,7 +242,7 @@ var geSC2 = function () {
 // 			}
 // 			return {class: "Generator", children: { "childs": childs } };
 // 		}
-		
+
 // 		function makeRoot(numGenerators, numSpikes) {
 // 			var childs = [];
 // 			for (var i = 0; i < numGenerators; i++) {
@@ -261,15 +261,15 @@ var geSC2 = function () {
 // 							class: "Second",
 // 							children: {"childs": childs} }}};
 // 		}
-	
-							
+
+
 // 		var tinyData = makeRoot(window.vizDefaults.numGenerators, window.vizDefaults.numSpikesPerGenerator);
 // 		//======
 
-	
+
 // 		return tinyData;
 // 	};
-	
+
 // 	this(null, {genData: genData, base: '../examples/ge/sc4/'});
 
 // }
@@ -287,15 +287,15 @@ function election () {
 // function parlabdemo () {
 // 	var genData = function () {
 // 		var window = {};
-	
+
 // 		//========
 // 		//edits to these should also happen in examples/parlabdemo2013/spotifysetup/dataviz.html
-		
+
 // 		function makeNode (depth, span) {
 // 			var children = [];
 // 			if (depth) for (var i = 0; i < span; i++) children.push(makeNode(depth - 1, span));
-			
-// 			return {"class": "Node", 
+
+// 			return {"class": "Node",
 // 				"children": {"childs": children},
 // 				"title": "song title " + depth + "v" + Math.round(100 * Math.random()),
 // 				"dist_to_root": Math.random(),
@@ -308,13 +308,13 @@ function election () {
 // 			var res = {"class": "Root", "children": {"top": makeNode(depth, span) }};
 // 			return res;
 // 		}
-		
-// 		var tinyData = makeRoot(11,3);		
+
+// 		var tinyData = makeRoot(11,3);
 // 		//======
 
 // 		return tinyData;
 // 	};
-	
+
 // 	this(null, {genData: genData, base: '../examples/parlabfinal2013/spotifysetup/'});
 // }
 
@@ -323,20 +323,20 @@ function election () {
 //this == cb
 function handleExample(mode, baseName, opts, data, dirName) {
 	compress(data, dirName + 'kbindings.js', mode, baseName, dirName + baseName, this);
-} 
+}
 
 //this == cb
 function expandIntoConfigs (example) {
 	var data = example.genData();
 	var base = example.base;
 
-	var configs = [ 
+	var configs = [
 		['flat', 'data.flat.json', null, data, base],
 		['sparse', 'data.sparse.json', {minBlockSize: 2048}, data, base],
-		['sparseMT', 'data.sparse.mt.json', {minBlockSize: 2048, minFileSize: (100 * 1024)}, data, base] 
+		['sparseMT', 'data.sparse.mt.json', {minBlockSize: 2048, minFileSize: (100 * 1024)}, data, base]
 	];
 
-	this(null, configs);		
+	this(null, configs);
 }
 
 
@@ -356,14 +356,14 @@ Seq()
 			.parEach(function (cfg) {
 				handleExample.apply(this.into(cfg), cfg.slice());
 			})
-			.seq(function () {		
+			.seq(function () {
 				for (var i in this.vars)
 					console.log("vars i", this.vars[i].outputFileJSON);
 				cont();
 			});
 	})
-	.seq(function () {		
+	.seq(function () {
 		for (var i in this.vars)
 			console.log("vars i", i.toString().split(" ")[1]);
 	});
-	
+
