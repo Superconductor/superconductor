@@ -1,15 +1,23 @@
 {
-    "name": "Superconductor",
-    "description": "An in-browser big data visualization engine",
-    "version": "0.1.0",
-    "engines": { "node" : ">=0.4.0" },
-    "maintainers": [{
-        "name": "Matthew Torok",
-        "email": "mtorok@berkeley.edu"
-    }],
-    "devDependencies": {
-        "uglify-js2" : "~2.1.11",
-        "optimist"   : "~0.3.5",
-        "seq": "0.3.x"
+  "name": "Superconductor",
+  "description": "An in-browser big data visualization engine",
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=0.4.0"
+  },
+  "maintainers": [
+    {
+      "name": "Matthew Torok",
+      "email": "mtorok@berkeley.edu"
     }
+  ],
+  "devDependencies": {
+    "uglify-js2": "~2.1.11",
+    "optimist": "~0.3.5",
+    "seq": "0.3.x"
+  },
+  "dependencies": {
+    "node-webgl": "^0.4.3",
+    "node-webcl": "^0.8.3"
+  }
 }

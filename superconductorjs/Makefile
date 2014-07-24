@@ -2,7 +2,7 @@ GEN_PATH ?= ./tmp
 NODE_PATH ?= ./node_modules
 JS_COMPILER ?= $(NODE_PATH)/uglify-js2/bin/uglifyjs2
 CHUNKER = ./tools/kernel-chunker.js
-EXTRA_BACKENDS ?= 
+EXTRA_BACKENDS ?=
 
 all: \
 	superconductor.js \
@@ -29,8 +29,11 @@ superconductor.js: \
 	Makefile \
 	./src/SCException.js \
 	./src/main.js \
-	./lib/J3DIMath.js \
+	./src/utils.js \
+	./src/events.js \
+	./lib/gl-matrix.js \
 	./src/GLRunner.js \
+	./src/Camera.js \
 	./src/CLDataWrapper.js \
 	./src/CLRunner.js \
 	./src/webcl/CLRunner.webcl.js ./src/webcl/GLRunner.webcl.js ./src/webcl/main.webcl.js \
