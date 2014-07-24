@@ -3,12 +3,12 @@ CLRunner.prototype.init = (function () {
 
     //////////
 
-    var CreateContext = function (webcl, gl, platform, devices) {
-        if (typeof webcl.enableExtension == "function") { 
+    var CreateContext = function (clr, webcl, gl, platform, devices) {
+        if (typeof webcl.enableExtension == "function") {
             webcl.enableExtension("KHR_GL_SHARING");
             return webcl.createContext(gl, devices);
         } else {
-            console.debug("[cl.js] Detected old WebCL platform.");
+            clr.console.debug("[cl.js] Detected old WebCL platform.");
             var extension = webcl.getExtension("KHR_GL_SHARING");
             if (extension === null) {
                 throw new Error("Could not create a shared CL/GL context using the WebCL extension system");
@@ -22,8 +22,7 @@ CLRunner.prototype.init = (function () {
         }
     }
 
-    var CreateCL = function (webcl, glr) { // -> {devices, context, queue}
-
+    var CreateCL = function (clr, webcl, glr) { // -> {devices, context, queue}
         if (typeof(webcl) === "undefined") {
             throw new Error("WebCL does not appear to be supported in your browser");
         } else if (webcl === null) {
@@ -81,8 +80,8 @@ CLRunner.prototype.init = (function () {
             throw err;
         }
 
-        console.debug("Device", deviceWrapper);
-        
+        clr.console.debug("Device", deviceWrapper);
+
         return {
             devices: [deviceWrapper.device],
             context: deviceWrapper.context,
@@ -92,8 +91,8 @@ CLRunner.prototype.init = (function () {
 
     //////////////
 
-    var initNew = function (glr, cfg) {
-        
+    return function (glr, cfg) {
+
         if (!cfg) cfg = {};
         cfg.ignoreCL = cfg.hasOwnProperty('ignoreCL') ? cfg.ignoreCL : false;
         initOld.call(this, glr, cfg);
@@ -101,26 +100,24 @@ CLRunner.prototype.init = (function () {
         if (cfg.ignoreCL) return;
 
         this.cl = webcl;
-        var clObj = new CreateCL(webcl, glr);
+        var clObj = new CreateCL(this, webcl, glr);
         var self = this;
         ['devices', 'context', 'queue'].forEach(function (lbl) {
             self[lbl] = clObj[lbl];
         });
         this.clVBO = null;
     };
-    return initNew;
+
 }());
 
 
 CLRunner.prototype.runRenderTraversalAsync = (function () {
     var original = CLRunner.prototype.runRenderTraversalAsync;
-
-    var patch = function (cb) {
+    return function (cb) {
         if (this.cfg.ignoreCL) return original.call(this, cb);
-        
         try {
             var clr = this;
-            var glVBO = clr.glr.reallocateVBO(this.getRenderBufferSize());               
+            var glVBO = clr.glr.reallocateVBO(this.getRenderBufferSize());
             clr.setVBO(glVBO);
 
             var lastVisitNum = 0;
@@ -138,16 +135,21 @@ CLRunner.prototype.runRenderTraversalAsync = (function () {
             clr.queue.enqueueReleaseGLObjects([clr.clVBO]);
             clr.queue.finish();
             var startT = new Date().getTime();
-            console.debug("render pass", startT - preT, "ms");
+            this.console.debug("render pass", startT - preT, "ms");
 
-            return cb();            
+            /*
+            if (clr.getRenderBufferSize() < 10000) {
+                console.error('FIXME vbo',
+                    new CLDataWrapper(clr, new Float32Array(clr.getRenderBufferSize()), clr.clVBO)
+                        .getBatched(0, clr.getRenderBufferSize()));
+            }
+            */
 
+            return cb();
         } catch (e) {
             return cb({msg: 'pre render err', v: e})
         }
     };
-
-    return patch;
 }());
 
 
@@ -174,18 +176,18 @@ CLRunner.prototype.buildKernels = function(cb) {
     try {
         this.program.build(this.devices);
     } catch(e) {
-        console.error("Error loading WebCL kernels: " + e.message);
-        console.error("Inputs:", {headers: this.kernelHeaders, source: this.kernelSource});
-        console.error("Build status: " + this.program.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_STATUS));
-        // console.error("Build log: " + this.program.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_LOG));
+        this.console.error("Error loading WebCL kernels: " + e.message);
+        this.console.error("Inputs:", {headers: this.kernelHeaders, source: this.kernelSource});
+        this.console.error("Build status: " + this.program.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_STATUS));
+        // this.console.error("Build log: " + this.program.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_LOG));
         window.clSource = kernels;
-        console.error("Source:\n" + kernels);
+        this.console.error("Source:\n" + kernels);
         return cb(new SCException("Could not build kernels"))
     }
     try {
         this._gen_getKernels(cb); //FIXME why cb here and at end?
     } catch (e) {
-        console.error('could not gen_getKernels', e);
+        this.console.error('could not gen_getKernels', e);
         return cb(e);
     }
     return cb(); //FIXME why cb also at gen_getKernels?
@@ -224,8 +226,8 @@ CLRunner.prototype.runTraversalsAsync = (function () {
             visits.push(pfx + i);
         }
 
-        return (function loop (step) {        
-            if (step == visits.length) { 
+        return (function loop (step) {
+            if (step == visits.length) {
                 return cb.call(clr);
             } else {
                 var fnName = visits[step];
@@ -250,7 +252,8 @@ CLRunner.prototype.allocVbo = function (size, optBase) {
             return view;
         }
     }
-    console.debug('allocing vbo copy', size);
+    //FIXME some reason crashing in chrome on decently sized arrays
+    this.console.debug('allocing vbo copy', size, optBase ? optBase.length : 'no base');
     return optBase ? new Float32Array(optBase) : new Float32Array(size);
 };
 CLRunner.prototype.freeVbo = function (vbo) {
@@ -268,9 +271,9 @@ CLRunner.prototype.setVBO = function(glVBO) {
                 this.clVBO.release();
             }
         }
-        this.clVBO = this.context.createFromGLBuffer(this.cl.MEM_WRITE_ONLY, glVBO);
+        this.clVBO = this.context.createFromGLBuffer(this.cl.MEM_READ_WRITE, glVBO);
     } catch(e) {
-        console.error("Error creating a shared OpenCL buffer from a WebGL buffer: " + e.message);
+        this.console.error("Error creating a shared OpenCL buffer from a WebGL buffer: " + e.message);
     }
 };
 
@@ -279,36 +282,36 @@ CLRunner.prototype.setVBO = function(glVBO) {
 
 CLRunner.prototype.setSelectors = function (selectors) {
     if (this.cfg.ignoreCL) throw new SCException('Function only for CL-enabled use');
-    
+
     var startT = new Date().getTime();
-    
+
     var srcName = "seEngine" + Math.round(Math.random() * 1000000); //TODO remove (helps with stale instr cache platform bug)
     var src = this.selectorEngine(selectors, this.tokens).kernelMaker(srcName);
-//    console.log(src);
-    
+//    this.console.log(src);
+
     var headers = "";
-    headers += "typedef unsigned int GrammarTokens;\n";     
-    headers += "typedef unsigned int NodeIndex;\n";     
+    headers += "typedef unsigned int GrammarTokens;\n";
+    headers += "typedef unsigned int NodeIndex;\n";
     headers += this.offsets;//tokens: "enum zzz {abc=4, asdf, fdas};\n";
     var kernelSrc = headers + "  " + src;
 
-    try {               
-        this.programSelectors = this.context.createProgram(kernelSrc);  
+    try {
+        this.programSelectors = this.context.createProgram(kernelSrc);
         this.programSelectors.build(this.devices[0]);
         this.selKernel = this.programSelectors.createKernel(srcName);
     } catch (e) {
-        console.error("Error loading WebCL selectors: " + e.message);
-        console.error("Inputs:", {
+        this.console.error("Error loading WebCL selectors: " + e.message);
+        this.console.error("Inputs:", {
             fullSource: kernelSrc,
             selSource: src
         });
-        console.error("Build status: " + this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_STATUS));
-        console.error(kernelSrc);
-        console.error("Build log: " + this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_LOG));
+        this.console.error("Build status: " + this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_STATUS));
+        this.console.error(kernelSrc);
+        this.console.error("Build log: " + this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_LOG));
         throw {error: e};
-    }           
-    
-    console.debug("Selector compile time:", new Date().getTime() - startT, 'ms');
+    }
+
+    this.console.debug("Selector compile time:", new Date().getTime() - startT, 'ms');
 };
 
 CLRunner.prototype.runSelectors = function () {
@@ -321,16 +324,15 @@ CLRunner.prototype.runSelectors = function () {
     if (!kernel) throw 'no selectors; call setSelectors';
 
     this._gen_setKernelArguments(kernel);
-    
     if (!this.cl_selectors_buffer) { //FIXME remove this debugging buffer (entry per node)
         this.selectors_buffer = new Int32Array(this.grammartokens_buffer_1.length);
         this.cl_selectors_buffer = this.context.createBuffer(this.cl.MEM_READ_WRITE, this.selectors_buffer.byteLength);
-    }   
+    }
     kernel.setArg(6, this.cl_selectors_buffer); //FIXME remove hardcoding
-    
+
     var globalWorkSize = new Int32Array(1);
     globalWorkSize[0] = this.tree_size;
-    
+
     var runStartT = new Date().getTime();
 
 
@@ -338,29 +340,31 @@ CLRunner.prototype.runSelectors = function () {
         this.queue.enqueueNDRangeKernel(kernel, null, globalWorkSize, null);
         this.queue.finish();
     } catch (e) {
-        console.error("Error running WebCL selectors: " + e.message);
-        //console.error("Inputs:", {fullSource: kernelSrc, selSource: src });
-        console.error("Build status: " + this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_STATUS));
-        console.error("Build log: " + this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_LOG));
-        throw {error: e};
-    }  
 
-    //FIXME remove (debugging)  
+        this.console.error("Error running WebCL selectors: " + e.message);
+        //this.console.error("Inputs:", {fullSource: kernelSrc, selSource: src });
+        this.console.error("Build status: " + this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_STATUS));
+        this.console.error("Build log: " + this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_LOG));
+        throw {error: e};
+    }
+
+    //FIXME remove (debugging)
     try {
         this.queue.enqueueReadBuffer(this.cl_selectors_buffer, true, 0, this.selectors_buffer.byteLength, this.selectors_buffer);
         var count = 0;
         for (var i = 0; i < this.selectors_buffer.length; i++) count += this.selectors_buffer[i];
-        console.debug("applied", count, "instances of CSS properties");
+
+        this.console.debug("applied", count, "instances of CSS properties");
     } catch (e) {
-        console.error("Error checking run of WebCL selectors: " + e.message);
-        //console.error("Inputs:", {fullSource: kernelSrc, selSource: src });
-        console.error("Build status: " + this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_STATUS));
-        console.error("Build log: ", this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_LOG));
+        this.console.error("Error checking run of WebCL selectors: " + e.message);
+        //this.console.error("Inputs:", {fullSource: kernelSrc, selSource: src });
+        this.console.error("Build status: " + this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_STATUS));
+        this.console.error("Build log: ", this.programSelectors.getBuildInfo(this.devices[0], this.cl.PROGRAM_BUILD_LOG));
         throw {error: e};
     }
-    
+
     var endT = new Date().getTime();
-    console.debug("Selector create instance time:", runStartT - startT, "ms, Selector compute time", endT - runStartT, 'ms');    
+    this.console.debug("Selector create instance time:", runStartT - startT, "ms, Selector compute time", endT - runStartT, 'ms');
 };
 
 CLRunner.prototype.setAndRunSelectors = function (selectors) {
@@ -368,7 +372,8 @@ CLRunner.prototype.setAndRunSelectors = function (selectors) {
     var startT = new Date().getTime();
     this.setSelectors(selectors);
     this.runSelectors();
-    console.debug("Total selectors time", new Date().getTime() - startT, 'ms');
+
+    this.console.debug("Total selectors time", new Date().getTime() - startT, 'ms');
 };
 
 
