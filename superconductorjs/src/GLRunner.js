@@ -1,18 +1,31 @@
 // Manages the rendering of the visualization
-function GLRunner(canvas, cfg) {
-	this.init(canvas, cfg);
+function GLRunner(canvas, camera, cfg) {
+	Superconductor.prototype.setupConsole.call(this);
+
+	this.canvas = canvas;
+	this.camera = camera;
+	this.cfg = Superconductor.utils.extend({
+		ignoreGL: false,
+		antialias: true
+	}, cfg);
+
+	this.init.apply(this, arguments);
 }
 
 //Use initialization method rather than constructor to facilitate monkey-patched backends
-GLRunner.prototype.init = function (canvas, cfg) {
-	this.canvas = canvas;
-	this.cfg = cfg;
-	cfg.ignoreGL = cfg.hasOwnProperty('ignoreGL') ? cfg.ignoreGL : false;
-	cfg.antialias = cfg.hasOwnProperty("antialias") ? cfg.antialias : true;
-
+GLRunner.prototype.init = function (canvas, camera, cfg) {
     this.initCanvas();
+};
+
+
+if (typeof module != 'undefined') {
+    var glbl = (function () { return this; })();
+    ['mat4', 'vec3', 'vec4', 'glMatrix']
+        .forEach(function (name) {
+            glbl[name] = module.exports[name];
+        });
 }
- 
+
  //Common functions (e.g., painting)
  //May be copied into a worker so must not contain open variables (unless other env)
  //Different backends will augment
@@ -30,7 +43,7 @@ GLRunner.prototype.init = function (canvas, cfg) {
 		var red_blended   = (((1 - fk) * red_start)   + (fk * red_end)) & 255;
 		var green_blended = (((1 - fk) * green_start) + (fk * green_end)) & 255;
 		var blue_blended  = (((1 - fk) * blue_start)  + (fk * blue_end)) & 255;
-	
+
 		return (red_blended << 24) + (green_blended << 16) + (blue_blended << 8) + 255;
 	},
     rgb: function(r, g, b) {
@@ -41,17 +54,18 @@ GLRunner.prototype.init = function (canvas, cfg) {
     },
     Circle_size: function () { return 50; },
     CircleZ_size: function () { return 50; },
-	ArcZ_size: function (x, y, z, radius, alpha, sectorAng, w, colorRgb) { 
+
+	ArcZ_size: function (x, y, z, radius, alpha, sectorAng, w, colorRgb) {
 
 		//circle
 		if (sectorAng >= 360)
 			return 50;
-		
+
 		//skip small
 		//TODO what if zoomed in? Line?
 		if (w < 0.001 || sectorAng < 0.02)
 			return 0;
-		
+
 		var NUM_VERT_ARC = 20;
 
 		return sectorAng >= 180 ? NUM_VERT_ARC * 6
@@ -60,9 +74,10 @@ GLRunner.prototype.init = function (canvas, cfg) {
 			: sectorAng >= 25 ? NUM_VERT_ARC * 2
 			:  NUM_VERT_ARC;
 	},
-	Arc_size: function (x, y, radius, alpha, sectorAng, w, colorRgb) { 
+
+	Arc_size: function (x, y, radius, alpha, sectorAng, w, colorRgb) {
 		return ArcZ_size(x, y, 0, radius, alpha, sectorAng, w, colorRGB);
-	},	
+	},
 	Rectangle_size: function () { return 6; },
 	RectangleOutline_size: function () { return 12; },
 	RectangleOutlineZ_size: function () { return 12; },
@@ -84,29 +99,33 @@ GLRunner.prototype.init = function (canvas, cfg) {
 
 //Package env for constructing a worker
 GLRunner.prototype.envStr = function () {
-	function exportGlobal (name, val) {		
+
+	function exportGlobal (name, val) {
 		return typeof(val) == "function" ?
 			(val.toString().replace(/^function/, "function " + name))
 			: ("" + name + " = " + JSON.stringify(val));
 	}
 	var res = "";
-	for (i in this.env) 
+
+	for (i in this.env)
 		res += exportGlobal(i, this.env[i]) + ";\n";
-	return res;	
+	return res;
 };
 
+
 //Maybe workers; pure canvas
+//Use initialization method rather than constructor to facilitate monkey-patched backends
 //FIXME pos should use context transforms
 GLRunner.prototype.initCanvas = function () {
 
-	this.context = this.canvas.getContext("2d");    
+	this.context = this.canvas.getContext("2d");
 	var canvas = this.canvas;
 	var context = this.context;
 
     //sets context in case multiple renderers
     this.startRender = function () {
         if (!window.sc) window.sc = {};
-        window.sc.context = this.context; 
+        window.sc.context = this.context;
     }
 
 
@@ -119,7 +138,9 @@ GLRunner.prototype.initCanvas = function () {
 	canvas.style.width = w / devicePixelRatio;
 	canvas.style.height = h / devicePixelRatio;
 
-	var pos = [ 0, 0, 1.0, 1.0 ];
+	// FIXME
+	this.console.error("FIXME: Canvas renderer code not updated for use with Camera object");
+	var pos = [ 0, 0, 1.0, 20 ];
 	this.position = {};
 	this.position.__defineGetter__("x", function () { return pos[0]; });
 	this.position.__defineGetter__("y", function () { return pos[1]; });
@@ -132,6 +153,9 @@ GLRunner.prototype.initCanvas = function () {
 	this.setW = function (w) {
 		pos[3] = w;
 	}
+    this.__defineGetter__("vertex_w", function () { //needed for 2D camera
+        return pos[3];
+    });
 
 	for (var i in this.env)
 		window[i] = this.env[i];
@@ -142,7 +166,7 @@ GLRunner.prototype.initCanvas = function () {
 	window.Circle_draw = function () { }
 	window.CircleZ_draw = function () { }
 
-	//FIXME optimize use of paths		
+	//FIXME optimize use of paths
 	window.Rectangle_draw = function(_, _, _, x, y, w, h, color) {
 		window.sc.context.beginPath();
 		window.sc.context.rect(pos[2] * pos[3] * (pos[0] + x), pos[2] * pos[3] * (pos[1] + y), pos[2] * pos[3] * w, pos[2] * pos[3] * h);
@@ -172,49 +196,24 @@ GLRunner.prototype.initCanvas = function () {
 	window.Line3D_draw = function (_, _, _, x1, y1, z1, x2, y2, z2, thickness, color) {
 		window.Line_draw(0, 0, 0, x1, y1, x2, y2, thickness, color);
 	}
-	
+
 	var nop = function () { };
 	var kills = [ "Arc_size", "ArcZ_size", "Circle_size", "CircleZ_size", "Line_size", "Line3D_size", "RectangleOutline_size", "Rectangle_size", "paintStart", "RectangleZ_size", "glBufferMacro" ];
-	kills.forEach(function(fnName) { 
+	kills.forEach(function(fnName) {
 		window[fnName] = nop; });
 };
 
-GLRunner.prototype.renderFrame = function() { 
+
+GLRunner.prototype.renderFrame = function() {
 	//FIXME rerun last pass because camera may have moved
+	throw new Error("Tried to render a frame, but Canvas renderer imlicitly renders objects");
 };
 
-
-// Sets the object translation to (x, y, z)
-GLRunner.prototype.setPosition = function(xPos, yPos, zPos) {
-	this.position = {x: xPos, y: yPos, z: zPos};
-    this.updateModelView();
-};
-
-
-// Moves the scene by (x, y, z) relative to the current position
-GLRunner.prototype.movePosition = function(x, y, z) {
-	this.setPosition(this.position.x + x, this.position.y + y, this.position.z + z);
-};
-
-
-// Sets the object rotation
-GLRunner.prototype.setRotation = function(xDeg, yDeg, zDeg) {
-    this.rotation = {x: xDeg, y: yDeg, z: zDeg};
-    this.updateModelView();
-};
-
-
-GLRunner.prototype.rotate = function(xDeg, yDeg, zDeg) {
-    this.rotation.x += xDeg;
-    this.rotation.y += yDeg;
-    this.rotation.z += zDeg;
-    this.updateModelView();
-};
 
 // Sets the W attribute of the vertices drawn
 GLRunner.prototype.setW = function(w) {
 	if (this.cfg.ignoreGL) {
-		console.warn('setW not implemented for non-GL backends');
+		this.console.warn('setW not implemented for non-GL backends');
 		return;
 	}
 

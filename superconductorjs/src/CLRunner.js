@@ -1,24 +1,27 @@
 // Manages the layout and vertex generation of the visualization
 // glr is the GLRunner object resposible for rendering the visualization
-// ignoreCL = true => use this just for data flattening 
+// ignoreCL = true => use this just for data flattening
 function CLRunner(glr, cfg) {
 	this.init(glr, cfg);
 }
 
 //Use initialization method rather than constructor to facilitate monkey-patched backends
 CLRunner.prototype.init = function (glr, cfg) {
+    var clr = this;
+
+    Superconductor.prototype.setupConsole.call(this);
 
 	if (!cfg) cfg = {};
 	this.cfg = {
 		ignoreGL: cfg.hasOwnProperty("ignoreGL") ? cfg.ignoreGL : false
-	};	
+	};
 	for (i in cfg) this.cfg[i] = cfg[i];
 
 	this.glr = glr;
 
 	// A map of CLDataWrapper objects for each input field in the grammar
 	this.proxyData = {};
-}
+};
 
 // Given the Javascript source of a layout engine, evals that source in this context and then
 // finishes preperations of the layout engine
@@ -31,16 +34,16 @@ CLRunner.prototype.loadLayoutEngine = function(engineSource, cb) {
     cb();
 };
 
-CLRunner.prototype.runTraversalsAsync = function (cb) {	
-    var clr = this;    
+CLRunner.prototype.runTraversalsAsync = function (cb) {
+    var clr = this;
 	var visits = [];
     var pfx = "_gen_run_visitAsync_";
     for (var i = 0; clr[pfx + (i + 1)]; i++) {
         visits.push(pfx + i);
     }
 
-    return (function loop (step) {        
-        if (step == visits.length) { 
+    return (function loop (step) {
+        if (step == visits.length) {
             return cb.call(clr);
         } else {
             var fnName = visits[step];
@@ -52,15 +55,15 @@ CLRunner.prototype.runTraversalsAsync = function (cb) {
 };
 
 CLRunner.prototype.layoutAsync = function(cb) {
+    var clr = this;
     var startT = new Date().getTime();
     this.runTraversalsAsync(function(err) {
         if (err) return cb(err);
-        
-    	console.debug('prerender layout passes', (new Date().getTime() - startT), 'ms');
+     	clr.console.debug('prerender layout passes', (new Date().getTime() - startT), 'ms');
 
         this.runRenderTraversalAsync(
-        	function (err) { 
-        		if (!err) console.debug('all layout passes', (new Date().getTime() - startT), 'ms');
+        	function (err) {
+        		if (!err) clr.console.debug('all layout passes', (new Date().getTime() - startT), 'ms');
         		cb(err); });
     });
 };
@@ -81,28 +84,27 @@ CLRunner.prototype.treeSize = function (data) {
 			} else res += this.treeSize(c);
 		}
 	}
-	return res;		
+	return res;
 };
-	
-CLRunner.prototype.flattenEdges = function(res, node, nodeCont, absIdx, level, leftmostChildIdx) {
 
+CLRunner.prototype.flattenEdges = function(res, node, nodeCont, absIdx, level, leftmostChildIdx) {
 	if (node.children) {
 		var rollCount = 0;
-		
+
 		for (var lbl in node.children) {
 			var c = node.children[lbl];
-			
+
 			// FIXME 'class' is a reserved word. Rename field in JSON to something else.
 			var fld = 'fld_' + node.class.toLowerCase() + "_child_" + lbl.toLowerCase() + "_leftmost_child";
 			if (!this[fld]) {
-				console.error("Flattening EXN: input data provides child+fld that was not declared in grammar:", fld);				
+				this.console.error("Flattening EXN: input data provides child+fld that was not declared in grammar:", fld);
 				throw ("could not fld " + fld + " (" + lbl + ")");
 			}
-			this[fld][absIdx] = leftmostChildIdx + rollCount - absIdx; //relative to node				
-			
-			
-			if (c instanceof Array) {				
-				for (var ci = 0; ci < c.length - 1; ci++) {	
+			this[fld][absIdx] = leftmostChildIdx + rollCount - absIdx; //relative to node
+
+
+			if (c instanceof Array) {
+				for (var ci = 0; ci < c.length - 1; ci++) {
 					var childIdx = leftmostChildIdx + rollCount + ci;
 					this.right_siblings[childIdx] = 1; //relative
 				}
@@ -124,7 +126,7 @@ CLRunner.prototype.flattenEdges = function(res, node, nodeCont, absIdx, level, l
 			} else {
 				//FIXME default zero, skip?
 				var childIdx = leftmostChildIdx + rollCount;
-				this.right_siblings[childIdx] = 0;			
+				this.right_siblings[childIdx] = 0;
 				this.parent[childIdx] = absIdx;
 				this.left_siblings[childIdx] = rollCount ? 1 : 0;
 				rollCount++;
@@ -137,7 +139,7 @@ CLRunner.prototype.tokens = [];
 CLRunner.prototype.tokenize = function (str) {
 	var idx = this.tokens.indexOf(str);
 	if (idx != -1) return idx;
-	
+
 	this.tokens.push(str);
 	return this.tokens.length - 1;
 };
@@ -147,9 +149,9 @@ CLRunner.prototype.warnedParseFields = {}
 CLRunner.prototype.flattenNode = function(res, node, nodeCont, absIdx, level, leftmostChildIdx) {
 
 	this.flattenEdges(res, node, nodeCont, absIdx, level, leftmostChildIdx);
-	
+
 	for (var i in node) {
-		if (i == 'children') continue; 
+		if (i == 'children') continue;
 		else if (i == 'class') {
 			var ntype = this.classToToken(node['class']);
 			this.grammartokens_buffer_1[absIdx] = ntype;
@@ -161,7 +163,7 @@ CLRunner.prototype.flattenNode = function(res, node, nodeCont, absIdx, level, le
 			var j = i.toLowerCase();
 			if (i.indexOf("_") != -1) {
 				if (!this.warnedParseFields[i]) {
-					console.warn("Flattener: stripping '_' from input field", i);
+					this.console.warn("Flattener: stripping '_' from input field", i);
 					this.warnedParseFields[i] = true;
 				}
 				j = j.replace("_","");
@@ -177,16 +179,16 @@ CLRunner.prototype.flattenNode = function(res, node, nodeCont, absIdx, level, le
 				continue;
 			}
 			if (!this.ignoredParseFields[j]) {
-				console.warn("Flattener: could not find field ", j, " in schema, tried class and interface ", fld);
+				this.console.warn("Flattener: could not find field ", j, " in schema, tried class and interface ", fld);
 				this.ignoredParseFields[j] = true;
 			}
-		}			
+		}
 	}
 };
 
 
 CLRunner.prototype.flatten = function (data, treeSize) {
-	var res = {treeSize: treeSize, levels: [], proxy: this.proxyData};	
+	var res = {treeSize: treeSize, levels: [], proxy: this.proxyData};
 	var level = [{k:'root',v: data, mult: false, parentIdx: -1}];
 	var nextLevel = [];
 	var absIdx = 0;
@@ -197,15 +199,15 @@ CLRunner.prototype.flatten = function (data, treeSize) {
 
 		for (var i = 0; i < level.length; i++) {
 
-			var nodeCont = level[i];				
+			var nodeCont = level[i];
 			var node = nodeCont.v;
 
-			this.flattenNode(res, node, nodeCont, absIdx, level, leftmostChildIdx);															
+			this.flattenNode(res, node, nodeCont, absIdx, level, leftmostChildIdx);
 			if (node.children) for (var j in node.children) {
 				var c = node.children[j];
 				if (c instanceof Array) {
-				for (var k = 0; k < c.length; k++) 
-					nextLevel.push({k: k, v: c[k], mult: true, i: k, parentIdx: absIdx});							
+				for (var k = 0; k < c.length; k++)
+					nextLevel.push({k: k, v: c[k], mult: true, i: k, parentIdx: absIdx});
 				leftmostChildIdx += c.length;
 				} else {
 				nextLevel.push({k: j, v: c, mult: false, parentIdx: absIdx});
@@ -213,70 +215,71 @@ CLRunner.prototype.flatten = function (data, treeSize) {
 				}
 			}
 			absIdx++;
-		}			
+		}
 		level = nextLevel;
-		nextLevel = [];		
+		nextLevel = [];
 	}
 
 	return res;
-};	
-	
+};
+
 
 // This function takes in the tree-like JSON data representing our tree, then allocates the CPU-side
-// typed arrays which will hold the flattened data, flattens & splits the JSON into the typed 
+// typed arrays which will hold the flattened data, flattens & splits the JSON into the typed
 // arrays, then allocates the GPU memory, creates proxy objects (for interacting with GPU data,) and
 // and transfers the CPU-side data to the GPU.
 CLRunner.prototype.loadData = function(data, skipProxies) {
 	this.tree_size = this.treeSize(data);
-	
+
 	this._gen_allocateHostBuffers(this.tree_size);
 	this._gen_allocateHostProxies(this.tree_size);
-	
+
 	// Flatten + structure split the tree and writes it to the CPU-side TypedArrays
 	var t0 = (new Date()).getTime();
 	var fd = this.flatten(data, this.tree_size);
 	var t1 = (new Date()).getTime();
-	console.debug('flattening', t1 - t0, 'ms');
-	
+
+	this.console.debug('flattening', t1 - t0, 'ms');
+
 	this.levels = fd.levels;
 
 	if (!this.cfg.ignoreCL) {
-	
-		console.debug('tree size', this.tree_size);
-		
-		this._gen_allocateClBuffers();	
-		console.debug('cl alloc');
-	
+
+		this.console.debug('tree size', this.tree_size);
+
+		this._gen_allocateClBuffers();
+		this.console.debug('cl alloc');
+
 		this._gen_allocateProxyObjects();
-		console.debug('proxy alloc');
-	
+		this.console.debug('proxy alloc');
+
 		var t2 = (new Date()).getTime();
-		this._gen_transferTree();		
+		this._gen_transferTree();
 		var t3 = (new Date()).getTime();
-		console.debug('GPU transfer time', t3 - t2, 'ms');
-	
+		this.console.debug('GPU transfer time', t3 - t2, 'ms');
+
 	} else if (!skipProxies) {
-		this._gen_allocateProxyObjects();	
+		this._gen_allocateProxyObjects();
 	}
 };
 
 
 //Convert typed or untyped array into a sparse format that condenses zeros
 //Optionally specify minimum size to block a sequence of zeros
-//returns original array size, constructor, dictionary of zeros (mapping start to length), 
+//returns original array size, constructor, dictionary of zeros (mapping start to length),
 // and dense values (dictionary mapping start to an array of values)
 // [number] => {len: int, optTypeName: arrayTypeName, zeros: {start: length}, dense: {start: [ number] }}
 CLRunner.prototype.deflate = function (arr, minBlockSize /* optional */) {
 	var res = {zeros: {}, dense: {}, len: arr.length};
-	
+
 	try {
 		res.optTypeName = arr.constructor.toString().split(" ")[1].split("(")[0]; //function Float32Array(...
 	} catch (e) {
 		res.optTypeName = null;
 	}
-	
+
 	if (!minBlockSize) minBlockSize = 64;
-	
+
 	for (var i = 0; i < arr.length; i++) {
 		var zeroCount = 0;
 		for (var j = i; j < arr.length; j++) {
@@ -293,23 +296,23 @@ CLRunner.prototype.deflate = function (arr, minBlockSize /* optional */) {
 			for (var j = i; j < Math.min(arr.length, i + minBlockSize); j++) {
 				if ((arr[j] == 0) && (j - i >= minBlockSize)) break;
 				else denseCount++;
-			}			
+			}
 			var sub = [];
 			for (var k = 0; k < denseCount; k++) sub.push(arr[i + k]);
 			//FIXME: for above, sub = arr.slice(i, i + denseCount) crashes node for stringifying the result
 			res.dense[i] = sub;
 			i += denseCount - 1;
-			continue;						
+			continue;
 		}
 	}
-			
+
 	return res;
 }
 
 CLRunner.prototype.deflateMT = function(arr, minBlockSize, minFileSize) {
     var deflated = this.deflate(arr, minBlockSize);
     var makeChunk = function () {  return {dense: {}, optTypeName: deflated.optTypeName}; }
-    
+
     if (!minFileSize) minFileSize = 1 * 1e3;
     var res = [];
     var firstChunk = makeChunk();
@@ -380,7 +383,7 @@ CLRunner.prototype.inflateChunk = function (spArr, denseSubArr, offset) {
 			var buff = spArr.dense[lbl];
 			var len = buff.length;
 			for (var i = 0; i < len; i++) {
-				denseSubArr[start + i - offset] = buff[i];			
+				denseSubArr[start + i - offset] = buff[i];
 			}
 		}
 	}
@@ -418,8 +421,9 @@ CLRunner.prototype.inflate = function (spArr, nativeConstructors) {
 
 //overlap: whether to overlap sending to the GPU or not
 // if not, must copy big GPU buffer later
-CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumWorkers, intoGPU, intoCPU, cb) {	
+CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumWorkers, intoGPU, intoCPU, cb) {
 
+    var clr = this;
 
 	var returned = false;
 	function succeed (v)  {
@@ -437,7 +441,7 @@ CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumW
 
 	var bufferNames = data.bufferLabels;
 	for (var i in bufferNames) {
-		var lbl = bufferNames[i];		
+		var lbl = bufferNames[i];
 		this[lbl] = this.allocArray(data.buffersInfo[lbl], nativeConstructors);
 	}
 
@@ -447,7 +451,7 @@ CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumW
 		q.push(data.summary[i]);
 		summaryMap[data.summary[i].uniqueID] = data.summary[i];
 	}
-	
+
     var workerFn = function() {
     	var global = self;
         onmessage = function(m) {
@@ -458,7 +462,7 @@ CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumW
                 if (xhr.readyState == 4 && xhr.status == 200) {
                 	var spArr = null;
 
-                	try { 
+                	try {
                 		spArr = JSON.parse(xhr.responseText);
                     } catch (e) {
                         postMessage({
@@ -467,9 +471,9 @@ CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumW
                         });
                     	return;
                     }
-                    
+
                     try {
-                        
+
 						var min = Number.MAX_VALUE;
 						var max = 0;
 						if (spArr.dense) {
@@ -480,8 +484,8 @@ CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumW
 								max = Math.max(max, end);
 							}
 						}
-						if (min == Number.MAX_VALUE) min = 0;                            
-						
+						if (min == Number.MAX_VALUE) min = 0;
+
 						var len = max - min;
 						var dense;
 						if (false) {
@@ -489,18 +493,24 @@ CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumW
 							var arrConstructor = global[spArr.optTypeName];
 							dense = new arrConstructor(len);
 						} else {
-							switch (spArr.optTypeName) {
-								case "Int32Array":
-									dense = new Int32Array(len);
-									break;
-								case "Float32Array":
-									dense = new Float32Array(len);
-									break;
-								default:
-									throw 'unknown arr type' + spArr.optTypeName;
-							}
+                            var objs = {
+                                Int8Array: Int8Array,
+                                Uint8Array: Uint8Array,
+                                Uint8Array: Uint8ClampedArray,
+                                Int16Array: Int16Array,
+                                Uint16Array: Uint16Array,
+                                Int32Array: Int32Array,
+                                Uint32Array: Uint32Array,
+                                Float32Array: Float32Array,
+                                Float64Array: Float64Array
+                            };
+                            var cons = objs[spArr.optTypeName]
+                            if (!cons) {
+                                postMessage({error: 'uknown type ' + spArr.optTypeName});
+                            }
+                            dense = new cons(len);
 						}
-	
+
 						inflateChunk(spArr, dense, min);
 						postMessage({
 							postTime: new Date().getTime(),
@@ -509,7 +519,7 @@ CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumW
 							end: max,
 							dense: dense
 						});
-                        
+
                     } catch (e) {
                         postMessage({
                             error: e.toString() + "::" + spArr.optTypeName + "::" + self[spArr.optTypeName],
@@ -522,7 +532,7 @@ CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumW
             xhr.send(null);
         };
     };
-	
+
     var parser = function() {
         var inflateFnStr = "function inflateChunk" + CLRunner.prototype.inflateChunk.toString().substr("function".length).slice(0, -1) + " } ";
         var workerStr = inflateFnStr + workerFn.toString().substr("function () {".length).slice(0, -1);
@@ -538,7 +548,7 @@ CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumW
             var worker = new Worker(workerBlob);
             worker.onmessage = function(m) {
                 if (m.error) {
-                    console.error("worker err", m.error);
+                    clr.console.error("worker err", m.error);
                     worker.terminate();
                 }
                 try {
@@ -549,7 +559,7 @@ CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumW
 	            }
             };
             worker.spawn = function () {
-                if (q.length > 0) worker.postMessage(toUrl(rootFile, q.shift())); else console.warn("worker init on empty q; slow init?");
+                if (q.length > 0) worker.postMessage(toUrl(rootFile, q.shift())); else clr.console.warn("worker init on empty q; slow init?");
             };
             worker.name = count;
             return worker;
@@ -566,28 +576,28 @@ CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumW
     var launchTime = new Date().getTime();
     for (var t = 0; t < numLaunch; t++) {
         parsers.push(parser(q, file, function(chunk) {
-        
+
         	try {
 	        	messagePassTime += new Date().getTime() - chunk.postTime;
-	        	
+
 				var t0 = new Date().getTime();
 				if (intoGPU) {
 					that.queue.enqueueWriteBuffer( //FIXME make non-blocking or, if allowable, do in worker
-						that['cl_' + chunk.nfo.bufferLabel], true, chunk.start * chunk.dense.BYTES_PER_ELEMENT, 
+						that['cl_' + chunk.nfo.bufferLabel], true, chunk.start * chunk.dense.BYTES_PER_ELEMENT,
 						chunk.dense.byteLength, chunk.dense);
-				} 
+				}
 				if (intoCPU) {
 					var dense = that[chunk.nfo.bufferLabel];
 					dense.set(chunk.dense, chunk.start);
-				}			
+				}
 				var endTime = new Date().getTime();
 				memCopyTime += (endTime - t0);
-	            
+
 	            ready++;
 	            if (ready == data.summary.length) {
-	            	console.debug('memcpy time (' + (intoGPU ? 'GPU' : 'no GPU' ) + ',' + (intoCPU? 'CPU' : 'no CPU') + ')', memCopyTime, 'ms');
-	            	console.debug('messagePassTime time (may include memcpy time)', messagePassTime, 'ms');
-	            	console.debug(parsers.length, 'all worker launch-to-reduce time', endTime - launchTime, 'ms');
+	            	clr.console.debug('memcpy time (' + (intoGPU ? 'GPU' : 'no GPU' ) + ',' + (intoCPU? 'CPU' : 'no CPU') + ')', memCopyTime, 'ms');
+	            	clr.console.debug('messagePassTime time (may include memcpy time)', messagePassTime, 'ms');
+	            	clr.console.debug(parsers.length, 'all worker launch-to-reduce time', endTime - launchTime, 'ms');
 	            	succeed("done");
 	            }
 	        } catch (e) {
@@ -602,10 +612,19 @@ CLRunner.prototype.inflateMt = function (file, data, nativeConstructors, maxNumW
 
 //find typed array constructors in window
 CLRunner.prototype.getArrayConstructors = function () {
-	var cNames = ["Int8Array", "Int16Array", "Int32Array","Uint8Array", "Uint16Array", "Uint32Array", "Float32Array", "Float64Array"];
+	var cNames = [
+    "Int8Array",
+    "Uint8ClampedArray",
+    "Int16Array",
+    "Uint16Array",
+    "Int32Array",
+    "Uint32Array",
+    "Float32Array",
+    "Float64Array"];
+
 	var res = {};
-	for (var i = 0; i < cNames.length; i++) 
-		if (window[cNames[i]]) 
+	for (var i = 0; i < cNames.length; i++)
+		if (window[cNames[i]])
 			res[cNames[i]] = window[cNames[i]];
 	return res;
 }
@@ -613,12 +632,12 @@ CLRunner.prototype.getArrayConstructors = function () {
 //if !doTransfer, assume CLBuffers and transfer already happened
 CLRunner.prototype.loadDataFlatFinish = function (doTransfer) {
 	var t0 = new Date().getTime();
-	this._gen_allocateHostProxies(this.tree_size);	
+	this._gen_allocateHostProxies(this.tree_size);
     if (doTransfer) this._gen_allocateClBuffers();
-	this._gen_allocateProxyObjects();	
+	this._gen_allocateProxyObjects();
 	var t1 = new Date().getTime();
 	if (doTransfer) this._gen_transferTree();
-    console.debug("overhead:", new Date().getTime() - t0, "ms (gpu transfer sub-time:", new Date().getTime() - t1, "ms)");
+    this.console.debug("overhead:", new Date().getTime() - t0, "ms (gpu transfer sub-time:", new Date().getTime() - t1, "ms)");
 }
 
 //Similar to loadData except fetch pre-flattened buffers (incl. tree size + tree levels info)
@@ -631,19 +650,19 @@ CLRunner.prototype.loadDataFlat = function (data) {
 		return res;
 	}
 	var bufferNames = getBufferNames(data);
-	
+
 	if (bufferNames.length == 0) throw new SCException('received no buffers');
 	if (!data.tree_size) throw new SCException('no tree size');
 	if (!data.levels) throw new SCException('no tree level info');
 	if (!data.tokens) throw new SCException('no tree token info');
 
 	this.tree_size = data.tree_size;
-	this.levels = data.levels;	
+	this.levels = data.levels;
 	this.tokens = data.tokens; //merge?
 
-	
+
 	//copy flat json => typed arrays.
-	var constructors = this.getArrayConstructors();			
+	var constructors = this.getArrayConstructors();
 	for (var lbl in data) {
 		if (!lbl.match("_buffer_1")) continue;
 		this[lbl] = this.inflate(data[lbl], constructors);
@@ -655,7 +674,7 @@ CLRunner.prototype.loadDataFlatMt = function(digestFile, digestData, optNumMaxWo
 
 	var data = digestData;
     var bufferNames = data.bufferLabels;
-    
+
     if (!data.bufferLabels || bufferNames.length == 0) throw new SCException("received no buffers");
     if (!data.tree_size) throw new SCException("no tree size");
     if (!data.levels) throw new SCException("no tree level info");
@@ -664,10 +683,10 @@ CLRunner.prototype.loadDataFlatMt = function(digestFile, digestData, optNumMaxWo
     this.tree_size = data.tree_size;
     this.levels = data.levels;
     this.tokens = data.tokens;
-    
-	var constructors = this.getArrayConstructors();			
 
-	var that = this;		
+	var constructors = this.getArrayConstructors();
+
+	var that = this;
 	this.inflateMt(digestFile, data, constructors, optNumMaxWorkers, intoGPU, intoCPU, function () {
 		that.loadDataFlatFinish(false);
 		cb();
@@ -677,7 +696,7 @@ CLRunner.prototype.loadDataFlatMt = function(digestFile, digestData, optNumMaxWo
 
 //assume gl/clVBO realloc was already called by normal layout passes
 CLRunner.prototype.runRenderTraversalAsync = function (cb) {
-    try {        
+    try {
         var clr = this;
         var lastVisitNum = 0;
         var pfx = "_gen_run_visitAsync_";
@@ -690,12 +709,12 @@ CLRunner.prototype.runRenderTraversalAsync = function (cb) {
     	//clean canvas and update vbo as needed
         this.glr.canvas.width = this.glr.canvas.width;
         this.glr.startRender(); //set context
-        
-        var preT = new Date().getTime();        
+
+        var preT = new Date().getTime();
         travFn.call(clr, visitFn, clr.jsvbo ? clr.jsvbo : null, true,
         	function (err) {
         		if (err) return cb(err);
-        		console.debug("render pass", new Date().getTime() - preT, "ms");
+        		clr.console.debug("render pass", new Date().getTime() - preT, "ms");
 	            try {
 	                return cb();
 	            } catch (e) {
@@ -731,14 +750,14 @@ CLRunner.prototype.bottomUpTraversalAsync = function(kernel, vbo, isRendering, c
 
 
 CLRunner.prototype.topDownTraversal = function(kernel, vbo) {
-	var s0 = new Date().getTime();	
+	var s0 = new Date().getTime();
 	if (this.cfg.ignoreCL) {
 		for (var i = 0; i < this.levels.length; i++) {
 			var startIdx = this.levels[i].start_idx;
 			var endIdx = startIdx + this.levels[i].length;
 			for (var idx = startIdx; idx < endIdx; idx++) {
-				kernel.call(this, idx, this.tree_size, 
-				this.float_buffer_1, this.int_buffer_1, this.grammartokens_buffer_1, this.nodeindex_buffer_1, vbo);
+				kernel.call(this, idx, this.tree_size,
+				this.int_buffer_1, this.float_buffer_1, this.double_buffer_1, this.grammartokens_buffer_1, this.nodeindex_buffer_1, vbo);
 			}
 		}
 	} else {
@@ -759,7 +778,7 @@ CLRunner.prototype.topDownTraversal = function(kernel, vbo) {
 			}
 		}
 	}
-	console.debug(this.cfg.ignoreCL ? 'CPU' : 'GPU', 'topDown pass', new Date().getTime() - s0, 'ms');
+	this.console.debug(this.cfg.ignoreCL ? 'CPU' : 'GPU', 'topDown pass', new Date().getTime() - s0, 'ms');
 };
 
 
@@ -770,18 +789,18 @@ CLRunner.prototype.bottomUpTraversal = function(kernel, vbo) {
 			var startIdx = this.levels[i].start_idx;
 			var endIdx = startIdx + this.levels[i].length;
 			for (var idx = startIdx; idx < endIdx; idx++) {
-				kernel.call(this, idx, this.tree_size, 
-				this.float_buffer_1, this.int_buffer_1, this.grammartokens_buffer_1, this.nodeindex_buffer_1, vbo);
+				kernel.call(this, idx, this.tree_size,
+				this.int_buffer_1, this.float_buffer_1, this.double_buffer_1, this.grammartokens_buffer_1, this.nodeindex_buffer_1, vbo);
 			}
 		}
 	} else {
 		if (typeof webcl.enableExtension == "function") {
 			for (var i = this.levels.length - 1; i >= 0; i--) {
 				kernel.setArg(0, new Uint32Array( [this.levels[i]["start_idx"]] ));
-				var globalWorkSize = new Int32Array( [this.levels[i]["length"]] );				
+				var globalWorkSize = new Int32Array( [this.levels[i]["length"]] );
 				this.queue.enqueueNDRangeKernel(kernel, 1, [], globalWorkSize, []);
 				this.queue.finish();
-			}				
+			}
 		} else {
 			var types = WebCLKernelArgumentTypes;
 			for (var i = this.levels.length - 1; i >= 0; i--) {
@@ -789,10 +808,10 @@ CLRunner.prototype.bottomUpTraversal = function(kernel, vbo) {
 				var globalWorkSize = new Int32Array( [this.levels[i]["length"]] );
 				this.queue.enqueueNDRangeKernel(kernel, null, globalWorkSize, null);
 				this.queue.finish();
-			}				
+			}
 		}
  	}
-	console.debug(this.cfg.ignoreCL ? 'CPU' : 'GPU', 'bottomUp pass', new Date().getTime() - s0, 'ms');
+	this.console.debug(this.cfg.ignoreCL ? 'CPU' : 'GPU', 'bottomUp pass', new Date().getTime() - s0, 'ms');
 };
 
 
@@ -803,12 +822,12 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
 	var PredTokens = {'*': 0};
 	var OpTokens = {' ': 0, '>': 1, '+': 2};
 
-	if (!IdToks) IdToks = [];	
+	if (!IdToks) IdToks = [];
 	if (IdToks.indexOf('') == -1) IdToks.push('');
 
 	var StarTok = PredTokens['*'];
 	var NoIdTok = IdToks.indexOf('');
-	
+
 	//phase 0: parsing
     /////////////
     function parsePredicate(predStr) {
@@ -818,7 +837,7 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
             : hashIdx > 0 ? predStr.substring(0, hashIdx)
             : '*',
         id: hashIdx == -1 ? '' :  predStr.substring(1 + hashIdx)
-      };      
+      };
     }
     function parsePredicates(predsStr) {
       var res = [];
@@ -834,16 +853,16 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
             var des = pars[pi].trim().split(" ");
             for (var di = 0; di < des.length; di++) {
               if (di > 0) sel.push({combinator: ' '});
-              sel.push(parsePredicate(des[di]));              
+              sel.push(parsePredicate(des[di]));
             }
           }
         }
-        if (sel.length > 0) res.push(sel); 
+        if (sel.length > 0) res.push(sel);
       }
-      return res;    
+      return res;
     }
-    
-    
+
+
     function parseVal(valStrRaw) {
     	var valStr = valStrRaw.toLowerCase().trim();
     	if (valStr.length == 0) throw 'Bad CSS selector property value (it was empty): ' + valStr;
@@ -855,13 +874,13 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
 				}
 				if (code.length == 6){
 					// Hex colors are always full opacity
-					code = 'FF' + code;					
+					code = 'FF' + code;
 				}
 				return parseInt(code, 16);
 			} catch (e) {
 				throw 'Bad hex color conversion on CSS property value ' + valStr;
 			}
-			
+
 		}  else if ((valStr.slice(0,4) == "rgb(") && (valStr.slice(-1) == ")")) {
 			try {
 				var code = valStr.slice(4);
@@ -871,7 +890,7 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
 			} catch (e) {
 				throw 'Bad RGB color conversion on CSS property value ' + valStr;
 			}
-		}  else { 
+		}  else {
 			try {
 				var val = parseFloat(valStrRaw);
 				if (val != Math.round(val)) val = val + "f";
@@ -881,7 +900,7 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
 			}
 		}
     }
-    
+
     function parseProperties(propsStr) {
       var res = {};
       var props = collapse(propsStr,/( ;)|(; )|(;;)/g,';').trim().split(";");
@@ -894,7 +913,7 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
       }
       return res;
     }
-    
+
     function collapse(str,before,after) {
       var raw = str.replace(before,after);
       var rawOld;
@@ -904,9 +923,9 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
       } while (rawOld != raw);
       return raw;
     }
-    
+
     function parse(css) {
-      var res = [];      
+      var res = [];
       var selsRaw = collapse(css,/  |\t|\n|\r/g,' ').split("}");
       for (var si = 0; si < selsRaw.length; si++) {
         if (selsRaw[si].indexOf("{") == -1) continue;
@@ -916,14 +935,14 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
         res.push(
           {predicates: parsePredicates(selRaw),
            properties: parseProperties(propsRaw)});
-                
+
       }
       return res;
     }
-      
-	
-	
-	
+
+
+
+
 	//phase 1: tokenization
 	function tokenizePred(pred) {
 	  if (pred.tag) {
@@ -932,7 +951,7 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
 	  } else {
 	    pred.tag = 0;
 	  }
-	  
+
 	  if (pred.id) {
 	  	var idClean = pred.id.toLowerCase();
 	  	var idx = IdToks.indexOf(idClean);
@@ -943,9 +962,9 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
 	    pred.id = idx;
 	  } else {
 	    pred.id = NoIdTok;
-	  }	  
+	  }
 	}
-	
+
 	function tokenizeOp(op) {
 	  if (op.combinator) {
 	    op.combinator = OpTokens[op.combinator];
@@ -955,7 +974,7 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
 	}
 
 
-	function tokenize(sels) {	
+	function tokenize(sels) {
 		var selsTok = jQuery.extend(true, [], sels);
 		for (var s = 0; s < selsTok.length; s++) {
 			var sel = selsTok[s];
@@ -963,10 +982,10 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
 			for (var p = 0; p < sel.predicates.length; p++) {
 			  var pred = sel.predicates[p];
 			  pred.raw = sel.raw.predicates[p];
-			  tokenizePred(pred[0]);		  
+			  tokenizePred(pred[0]);
 			  for (var t = 1; t < pred.length; t+=2) {
 				tokenizeOp(pred[t]);
-				tokenizePred(pred[t+1]);  
+				tokenizePred(pred[t+1]);
 			  }
 			}
 		}
@@ -989,7 +1008,7 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
       }
       return a * Math.pow(2,30) + b * Math.pow(2,24) + c * Math.pow(2,12) + line;
     }
-    
+
     function addSel(hash, sel, pred, lbl, hit) {
       var lookup = pred[ pred.length - 1][lbl];
       var arr = hash[lookup];
@@ -999,8 +1018,8 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
       }
       arr.push(hit);
     }
-    
-    function hash(selsTok) {      
+
+    function hash(selsTok) {
       //map last tag and ID to selectors (tagged with priority)
       //use lexical ordering for specificity (later > earlier)
       var idHash = {};
@@ -1013,9 +1032,9 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
           var lastP = pred[pred.length - 1];
           var hit = {
             propList: i,
-            pred: pred, 
+            pred: pred,
             specificity: specificity(pred, i),
-            properties: sel.properties 
+            properties: sel.properties
           };
           if (lastP.id != NoIdTok) {
             addSel(idHash, sel, pred, 'id', hit);
@@ -1023,25 +1042,25 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
             addSel(tagHash, sel, pred, 'tag', hit);
           } else {
             star.push(hit);
-          }          
+          }
         }
       }
       var sorter = function (a,b) { return a.specificity - b.specificity; };
       for (var i in idHash) idHash[i].sort(sorter);
       for (var i in tagHash) tagHash[i].sort(sorter);
       //star is implicitly already lowest-to-highest
-      return {idHash: idHash, tagHash: tagHash, star: star};      
+      return {idHash: idHash, tagHash: tagHash, star: star};
     }
-    
+
 	function makeMatcher(hashes) {
-            		  
+
       var preParams = "unsigned int tree_size, __global float* float_buffer_1, __global int* int_buffer_1, __global GrammarTokens* grammartokens_buffer_1, __global NodeIndex* nodeindex_buffer_1, __global int* selectors_buffer";
       var preArgs = "tree_size, float_buffer_1, int_buffer_1, grammartokens_buffer_1, nodeindex_buffer_1, selectors_buffer";
-	  
+
 	  var makeOuterLoopHelpers = function () {
-	  
+
 	    res = "";
-	    
+
 	    res += "unsigned int matchPredicate(" + preParams + ", unsigned int tagTok, unsigned int idTok, unsigned int nodeindex) {\n";
 	    res += "  if (idTok != " + NoIdTok + ") { \n";
 	    res += "    if (idTok != id(nodeindex)) return 0;\n";
@@ -1050,8 +1069,8 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
 	    res += "    if (tagTok != displayname(nodeindex)) return 0;\n";
 	    res += "  }\n";
 	    res += "  return 1;\n";
-	    res += "}\n"; 
-	    
+	    res += "}\n";
+
 	    var makeGetNumSel = function (hashName, hash) {
 	        var res = "";
             res += "unsigned int getNumSel" + hashName + "(unsigned int token) {\n";
@@ -1060,12 +1079,12 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
                 res += "    case " + i + ":\n";
                 res += "      return " + hash[i].length + ";\n";
                 res += "      break;\n";
-            }	    
+            }
             res += "    default:\n";
             res += "      return 0;\n";
             res += "  }\n";
-            res += "}\n";	
-            return res;    
+            res += "}\n";
+            return res;
 	    };
 	    res += makeGetNumSel('Id', hashes.idHash);
 	    res += makeGetNumSel('Tag', hashes.tagHash);
@@ -1101,20 +1120,20 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
             res += "    default: //should be unreachable\n";
             res += "      return 0;\n";
             res += "  }\n";
-            res += "}\n";        
+            res += "}\n";
             return res;
         };
 	    res += makeGetSpec('Id', hashes.idHash);
 	    res += makeGetSpec('Tag', hashes.tagHash);
-	    
+
 	    res += "unsigned int getSpecStar(unsigned int offset) {\n";
 	    res += makeGetSpecSels(hashes.star);
 	    res += "}\n";
-	    
-	    
+
+
 	    var makeMatchSelector_ijSels = function (hashName, selsName, sels) {
 	    	var res = "";
-	    	
+
 	    	    for (var j = 0; j < sels.length; j++) {
                     var sel = sels[j];
                     res += "unsigned int matchSelector" + hashName + "_" + selsName + "_" + j + "(" + preParams + ", unsigned int nodeindex) {\n";
@@ -1149,18 +1168,18 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
                                     res += "  nextSib = 0;\n";
                                     break;
                                 //=====================
-                                case OpTokens['+']:   
-                                    res += "  //'+'\n";           
+                                case OpTokens['+']:
+                                    res += "  //'+'\n";
                                     res += "  if (left_siblings(nextNodeIdx - nextSib) == 0) return 0;\n";
                                     res += "  nextSib++;\n";
                                     res += "  if (!matchPredicate(" + preArgs + ", " + pred.tag + ", " + pred.id + ", nextNodeIdx - nextSib)) return 0;\n";
                                     break;
                                 //=====================
                                 default:
-                                    console.error('unknown combinator', op.combinator);
-                                    throw 'err';                
+                                    clr.console.error('unknown combinator', op.combinator);
+                                    throw 'err';
                             }
-                        }	            
+                        }
                     }
                     res += "  return 1;\n";
                     res += "}\n";
@@ -1169,25 +1188,25 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
                     for (var p in sel.properties) {
                         res += "  " + p + "(nodeindex) = " + sel.properties[p] + ";\n";
                         count++;
-                    }	            
+                    }
                     res += "  return " + count + ";\n";
                     res += "}\n";
                 }
             return res;
 	    };
-	
+
         var makeMatchSelector_ij = function (hashName, hash) {
-            var res = "";        
+            var res = "";
             for (var i in hash) {
                 var sels = hash[i];
                 res += makeMatchSelector_ijSels(hashName, i, sels);
-            }	
+            }
             return res;
-        };    
+        };
 	    res += makeMatchSelector_ij('Id', hashes.idHash);
 	    res += makeMatchSelector_ij('Tag', hashes.tagHash);
 	    res += makeMatchSelector_ijSels('Star', "", hashes.star);
-        
+
         var makeMatchSelectorSels = function (hashName, selsName, sels) {
         	var res = "";
 
@@ -1202,11 +1221,11 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
 			}
 			res += "        default: //should be unreachable\n";
 			res += "          return 0;\n";
-			res += "      }\n";        	
-        	
+			res += "      }\n";
+
         	return res;
         };
-        
+
         var makeMatchSelector = function (hashName, hash) {
             var res = "";
             res += "unsigned int matchSelector" + hashName + "(" + preParams + ", unsigned int token, unsigned int offset, unsigned int nodeindex) {\n";
@@ -1220,13 +1239,13 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
             }
             res += "    default: //should be unreachable\n";
             res += "      return 0;\n";
-            res += "  }\n";	    
+            res += "  }\n";
             res += "}\n";
             return res;
-	    }	    
+	    }
 	    res += makeMatchSelector('Id', hashes.idHash);
 	    res += makeMatchSelector('Tag', hashes.tagHash);
-	    
+
 	    res += "unsigned int matchSelectorStar(" + preParams + ", unsigned int offset, unsigned int nodeindex) {\n";
 	    res += makeMatchSelectorSels("Star", "", hashes.star);
 	    res += "}\n";
@@ -1238,7 +1257,7 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
 
 	  var matchNodeGPU = function (indexName, indent) {
 	    if (!indent) indent = "  ";
-	  
+
 	    var src = "\n";
 	    src += "unsigned int nodeid = id(" + indexName + ");\n";
 	    src += "unsigned int numSelId = getNumSelId(nodeid);\n";
@@ -1254,11 +1273,11 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
 	    src += "      ( (curTag != numSelTag) && (getSpecId(nodeid, curId) >= getSpecTag(tagid, curTag))) ? 0 :\n";
 	    src += "      ( (curStar != numSelStar) && (getSpecId(nodeid, curId) >= getSpecStar(curStar))) ? 0 : 1;\n";
 	    src += "  if (tryId) {\n";
-	    src += "    matches += matchSelectorId(" + preArgs + ", nodeid, curId, " + indexName + ");\n";	    
+	    src += "    matches += matchSelectorId(" + preArgs + ", nodeid, curId, " + indexName + ");\n";
 	    src += "    curId++;\n";
 	    src += "  } else if ((curTag != numSelTag) && ((curStar == numSelStar) || (getSpecTag(tagid, curTag) >= getSpecStar(curStar)))) {\n";
-	    src += "    matches += matchSelectorTag(" + preArgs + ", tagid, curTag, " + indexName + ");\n";	    
-	    src += "    curTag++;\n";	
+	    src += "    matches += matchSelectorTag(" + preArgs + ", tagid, curTag, " + indexName + ");\n";
+	    src += "    curTag++;\n";
 	    src += "  } else { \n";
 	    src += "    matches += matchSelectorStar(" + preArgs + ", curStar, " + indexName + ");\n";
 	    src += "    curStar++;\n";
@@ -1266,14 +1285,14 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
 	    src += "}\n";
         src += "selectors_buffer[" + indexName + "] = matches;\n";
 	    return src.replace(/\n/g,"\n" + indent);
-	
+
 	  };
-	
+
 	  return function (kernelName) {
 	    var src = "";
-	    
+
 	    src += makeOuterLoopHelpers();
-	    
+
 	    src += "__kernel void " + kernelName + " (unsigned int start_idx, unsigned int tree_size, __global float* float_buffer_1, __global int* int_buffer_1, __global GrammarTokens* grammartokens_buffer_1, __global NodeIndex* nodeindex_buffer_1, __global int* selectors_buffer) {\n";
 	    src += "  unsigned int nodeindex = get_global_id(0) + start_idx;\n";
 	    src += matchNodeGPU("nodeindex");
@@ -1282,10 +1301,10 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
 
 	  };
 	}
-	
+
 	///////////////
 
-    console.debug("loading selector engine (GPU)");
+    clr.console.debug("loading selector engine (GPU)");
     var ast = parse(sels);
 	var selsTok = tokenize(ast);
 	var hashes = hash(selsTok);
@@ -1296,7 +1315,7 @@ CLRunner.prototype.selectorEngine = function selectorsCL(sels, IdToks /* optiona
     return res;
 };
 //================
-		
+
 try {
 	exports.CLRunner = CLRunner;
 } catch (e) {
